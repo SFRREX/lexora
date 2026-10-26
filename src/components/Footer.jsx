@@ -18,7 +18,7 @@ export default function Footer({ onSelectView }) {
   ];
 
   return (
-    <footer className="bg-[#0b0d10] dark:bg-[#0b0d10] text-slate-400 py-12 border-t border-slate-800/80 dark:border-[#1e232e] transition-colors">
+    <footer className="bg-white dark:bg-[#0b0d10] text-slate-600 dark:text-slate-400 py-12 border-t border-slate-200 dark:border-[#1e232e] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-8">
           {/* Brand */}
@@ -30,16 +30,21 @@ export default function Footer({ onSelectView }) {
               aria-label="Lexora – return to Writing Studio"
             >
               <img
-                src="/icon.png"
+                src="/icon-light.png"
                 alt="Lexora Logo"
-                className="w-7 h-7 rounded-md object-contain shadow-xs border border-[#4fa3a8]/30 group-hover:scale-105 transition-transform bg-[#121417]"
+                className="w-7 h-7 rounded-md object-contain shadow-xs border border-slate-200 dark:hidden group-hover:scale-105 transition-transform bg-white"
               />
-              <span className="text-lg font-semibold text-white tracking-tight">Lexora</span>
-              <span className="text-[10px] text-[#74b6ba] font-medium px-1.5 py-0.5 rounded bg-[#132226] border border-[#23484d]">
+              <img
+                src="/icon-dark.png"
+                alt="Lexora Logo"
+                className="w-7 h-7 rounded-md object-contain shadow-xs border border-[#4fa3a8]/30 hidden dark:block group-hover:scale-105 transition-transform bg-[#121417]"
+              />
+              <span className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">Lexora</span>
+              <span className="text-[10px] text-[#286468] dark:text-[#74b6ba] font-medium px-1.5 py-0.5 rounded bg-[#eef6f7] dark:bg-[#132226] border border-[#c4e1e3] dark:border-[#23484d]">
                 Suite
               </span>
             </button>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               The Art of Better Words. Empowering scholars, writers, and researchers with AI text detection,
               unslop academic refinement, and empirical detector research.
             </p>

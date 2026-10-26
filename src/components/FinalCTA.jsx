@@ -11,9 +11,14 @@ export default function FinalCTA() {
           {/* Logo icon */}
           <div className="inline-flex p-2 rounded-2xl bg-[#f0f7f8] dark:bg-[#101b1e] border border-[#c2e2e5] dark:border-[#1f3f44] mb-5 shadow-xs">
             <img
-              src="/icon.png"
+              src="/icon-light.png"
               alt="Lexora Logo"
-              className="w-10 h-10 object-contain rounded-xl"
+              className="w-10 h-10 object-contain rounded-xl dark:hidden"
+            />
+            <img
+              src="/icon-dark.png"
+              alt="Lexora Logo"
+              className="w-10 h-10 object-contain rounded-xl hidden dark:block"
             />
           </div>
 

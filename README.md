@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="public/logo.png" alt="Lexora AI Intelligence Suite" width="220" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="public/logo-light.png">
+    <img src="public/logo-dark.png" alt="Lexora AI Intelligence Suite" width="220" />
+  </picture>
 </p>
 
 <h1 align="center">Lexora Intelligence Suite</h1>
