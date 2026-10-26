@@ -1,0 +1,118 @@
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const FAQ_ITEMS = [
+  {
+    question: 'Does Lexora fix grammar and improve sentences automatically?',
+    answer:
+      'Yes. Lexora analyzes your text for grammar, punctuation, and style issues using Google Gemini AI when connected, with an offline deterministic fallback. You can choose whether to correct grammar, shorten, simplify, or adjust the tone.',
+  },
+  {
+    question: 'How does Lexora provide free AI text detection?',
+    answer:
+      'Commercial detectors like GPTZero often charge expensive monthly subscriptions. Lexora provides free detection out of the box using our Google Gemini neural detector and local stylometrics engine (analyzing burstiness and type-token ratio) with zero subscription fees.',
+  },
+  {
+    question: 'What is Academic Unslop and citation protection?',
+    answer:
+      'The Academic Refiner detects and strips stereotypical AI filler phrases (e.g. "delve into", "pivotal role", "testament to") while safeguarding scholarly citations (e.g. [1, 2], Smith et al., 2023) and empirical statistics from modification.',
+  },
+  {
+    question: 'Can I replace individual words?',
+    answer:
+      'Yes. The Word Enhancer allows you to look up context-aware alternatives grouped by tone (Professional, Casual, Stronger, Simpler) and apply them directly to your sentences.',
+  },
+  {
+    question: 'Will rewriting alter my scientific or scholarly meaning?',
+    answer:
+      'Lexora is engineered to preserve core factual meaning and statistical values. We offer balanced and conservative refinement levels so you maintain complete control over the degree of transformation.',
+  },
+  {
+    question: 'Can I use Lexora for manuscripts, emails, and essays?',
+    answer:
+      'Lexora is built for academic papers, journal manuscripts, thesis drafts, professional correspondence, and daily writing tasks.',
+  },
+];
+
+export default function FAQ() {
+  const [openIndex, setOpenIndex] = useState(null);
+
+  function toggle(index) {
+    setOpenIndex(openIndex === index ? null : index);
+  }
+
+  return (
+    <section id="faq" className="py-20 bg-white dark:bg-[#0c0a09] scroll-mt-16 transition-colors">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-stone-900 dark:text-stone-100 mb-3 tracking-tight">
+            Frequently Asked Questions.
+          </h2>
+          <p className="text-base sm:text-lg text-stone-500 dark:text-stone-400 max-w-xl mx-auto">
+            Everything you need to know about Lexora and text processing.
+          </p>
+        </div>
+
+        <div className="space-y-3.5" role="list">
+          {FAQ_ITEMS.map((item, i) => {
+            const isOpen = openIndex === i;
+            return (
+              <div
+                key={i}
+                className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                  isOpen
+                    ? 'border-teal-300 dark:border-teal-800/80 bg-teal-50/20 dark:bg-teal-950/20 shadow-xs'
+                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/70 hover:border-stone-300 dark:hover:border-stone-700'
+                }`}
+                role="listitem"
+              >
+                <button
+                  onClick={() => toggle(i)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggle(i);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${i}`}
+                >
+                  <span className="text-sm font-semibold text-stone-800 dark:text-stone-200 pr-4">
+                    {item.question}
+                  </span>
+                  <ChevronDown
+                    size={18}
+                    className={`text-stone-400 dark:text-stone-500 shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      id={`faq-answer-${i}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                      role="region"
+                      aria-labelledby={`faq-q-${i}`}
+                    >
+                      <div className="px-5 pb-4 text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                        {item.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
