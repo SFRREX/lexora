@@ -38,19 +38,19 @@ function renderRefinedDiff(original, refined) {
             return (
               <mark
                 key={idx}
-                className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-medium px-1 rounded transition-colors"
+                className="bg-[#eef6f7] dark:bg-[#152329] text-[#1c4b4f] dark:text-[#a0dfe4] border border-[#a2d0d3]/80 dark:border-[#224448] font-medium px-1 rounded transition-colors"
                 title="Upgraded scholarly phrasing"
               >
                 {token}
               </mark>
             );
           }
-          return <span key={idx} className="text-stone-900 dark:text-stone-200">{token}</span>;
+          return <span key={idx} className="text-slate-900 dark:text-slate-200">{token}</span>;
         })}
       </div>
-      <div className="text-xs text-stone-400 dark:text-stone-500 flex items-center gap-2 pt-2 border-t border-stone-100 dark:border-stone-800">
-        <span className="w-2.5 h-2.5 rounded bg-emerald-200 dark:bg-emerald-800 border border-emerald-400 dark:border-emerald-600 inline-block" />
-        <span className="text-stone-600 dark:text-stone-400 font-medium">Highlighted tokens indicate upgraded scholarly phrasing and purged clichés</span>
+      <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#222734]">
+        <span className="w-2.5 h-2.5 rounded bg-[#b0d8db] dark:bg-[#224448] border border-[#38858a] dark:border-[#4fa3a8] inline-block" />
+        <span className="text-slate-600 dark:text-slate-400 font-medium">Highlighted tokens indicate upgraded scholarly phrasing and purged clichés</span>
       </div>
     </div>
   );
@@ -155,30 +155,29 @@ export default function AcademicRefiner({ onSelectView }) {
   const refinedWordCount = result?.refinedText?.trim()
     ? result.refinedText.trim().split(/\s+/).filter(Boolean).length
     : 0;
-
   return (
     <section id="academic-refiner" className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto transition-colors">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/50 border border-teal-200/80 dark:border-teal-800/80 text-teal-800 dark:text-teal-300 text-xs font-semibold tracking-wide uppercase mb-3 shadow-xs">
-          <BookOpen size={14} className="text-teal-600 dark:text-teal-400" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eef6f7] dark:bg-[#121f24] border border-[#a2d0d3]/80 dark:border-[#224448] text-[#23585c] dark:text-[#74b6ba] text-xs font-semibold tracking-wide uppercase mb-3 shadow-xs">
+          <BookOpen size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
           Feature B &bull; Meaning-Preserving Scholarly Polish
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold font-heading text-stone-900 dark:text-stone-100 tracking-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-slate-100 tracking-tight">
           Lexora Academic Refiner
         </h1>
-        <p className="mt-3 text-base sm:text-lg text-stone-600 dark:text-stone-400 leading-relaxed">
+        <p className="mt-3 text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
           Transform draft prose into precise, publication-ready academic writing.
           Strips AI slop and promotional buzzwords while strictly preserving citations, empirical statistics, and author intent.
         </p>
       </div>
 
       {/* Strict Ethical Non-Evasion Guarantee */}
-      <div className="mb-8 p-4 bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/70 dark:border-teal-900/50 rounded-xl flex items-start gap-3 text-teal-950 dark:text-teal-200 text-xs sm:text-sm transition-colors">
-        <ShieldCheck size={20} className="text-teal-700 dark:text-teal-400 shrink-0 mt-0.5" />
+      <div className="mb-8 p-4 bg-[#f0f7f8] dark:bg-[#121920] border border-[#bcdfe2] dark:border-[#223340] rounded-xl flex items-start gap-3 text-slate-800 dark:text-slate-200 text-xs sm:text-sm transition-colors">
+        <ShieldCheck size={20} className="text-[#38858a] dark:text-[#4fa3a8] shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <h2 className="font-semibold text-xs sm:text-sm">Authorship & Integrity Safeguard</h2>
-          <p className="text-teal-900/90 dark:text-teal-300/90 leading-relaxed text-xs">
+          <h2 className="font-semibold text-xs sm:text-sm text-[#1b4346] dark:text-[#a0dfe4]">Authorship & Integrity Safeguard</h2>
+          <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">
             The Academic Refiner is designed for scholarly clarity and academic rigor.
             It <strong>never fabricates citations</strong>, never alters numerical data, and is strictly independent from AI detectors.
             Lexora does not produce or advertise detector evasion loops.
@@ -187,11 +186,11 @@ export default function AcademicRefiner({ onSelectView }) {
       </div>
 
       {/* Tool Controls Bar */}
-      <div className="bg-white dark:bg-stone-900/90 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-4 sm:p-6 shadow-sm dark:shadow-none mb-6 transition-colors">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-stone-100 dark:border-stone-800">
+      <div className="bg-white dark:bg-[#14171f] rounded-2xl border border-slate-200/90 dark:border-[#222734] p-4 sm:p-6 shadow-sm dark:shadow-none mb-6 transition-colors">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100 dark:border-[#222734]">
           {/* Editing Goal Selector */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
               Editing Goal
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -205,15 +204,15 @@ export default function AcademicRefiner({ onSelectView }) {
                     onClick={() => setMode(g.id)}
                     className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-teal-600 dark:border-teal-500 bg-teal-50/60 dark:bg-teal-950/60 text-teal-950 dark:text-teal-200 shadow-xs'
-                        : 'border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700 text-stone-700 dark:text-stone-300 bg-stone-50/40 dark:bg-stone-950/40'
+                        ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
+                        : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-[#0c0e12]'
                     }`}
                   >
                     <div className="flex items-center gap-2 font-semibold text-xs sm:text-sm">
-                      <Icon size={16} className={isSelected ? 'text-teal-700 dark:text-teal-400' : 'text-stone-400 dark:text-stone-500'} />
+                      <Icon size={16} className={isSelected ? 'text-[#38858a] dark:text-[#4fa3a8]' : 'text-slate-400 dark:text-slate-500'} />
                       {g.label}
                     </div>
-                    <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1 line-clamp-2 leading-tight">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-tight">
                       {g.description}
                     </p>
                   </button>
@@ -225,8 +224,8 @@ export default function AcademicRefiner({ onSelectView }) {
           {/* Intensity & Presets */}
           <div className="flex flex-col justify-between">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2 flex items-center gap-1.5">
-                <Sliders size={14} className="text-teal-600 dark:text-teal-400" />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                <Sliders size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
                 Editing Intensity
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -235,12 +234,12 @@ export default function AcademicRefiner({ onSelectView }) {
                   onClick={() => setLevel('conservative')}
                   className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
                     level === 'conservative'
-                      ? 'border-teal-600 dark:border-teal-500 bg-teal-50/60 dark:bg-teal-950/60 text-teal-950 dark:text-teal-200 shadow-xs'
-                      : 'border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700 text-stone-700 dark:text-stone-300 bg-stone-50/40 dark:bg-stone-950/40'
+                      ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
+                      : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-[#0c0e12]'
                   }`}
                 >
                   <div className="font-semibold text-xs sm:text-sm">Conservative</div>
-                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 leading-tight">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                     Preserves exact sentence frames; fixes syntax and clumsy phrasing only.
                   </p>
                 </button>
@@ -250,12 +249,12 @@ export default function AcademicRefiner({ onSelectView }) {
                   onClick={() => setLevel('balanced')}
                   className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
                     level === 'balanced'
-                      ? 'border-teal-600 dark:border-teal-500 bg-teal-50/60 dark:bg-teal-950/60 text-teal-950 dark:text-teal-200 shadow-xs'
-                      : 'border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700 text-stone-700 dark:text-stone-300 bg-stone-50/40 dark:bg-stone-950/40'
+                      ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
+                      : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-[#0c0e12]'
                   }`}
                 >
                   <div className="font-semibold text-xs sm:text-sm">Balanced (Recommended)</div>
-                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 leading-tight">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
                     Elevates vocabulary, cuts AI stock tropes, and refines rhythmic cadence.
                   </p>
                 </button>
@@ -263,8 +262,8 @@ export default function AcademicRefiner({ onSelectView }) {
             </div>
 
             {/* Presets */}
-            <div className="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center gap-2">
-              <span className="text-xs text-stone-500 dark:text-stone-400 font-medium">Try Preset:</span>
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#222734] flex items-center gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Try Preset:</span>
               {PRESETS.map((p, idx) => (
                 <button
                   key={idx}
@@ -274,7 +273,7 @@ export default function AcademicRefiner({ onSelectView }) {
                     setResult(null);
                     setError(null);
                   }}
-                  className="px-2.5 py-1 text-xs bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700 rounded-md transition-colors cursor-pointer"
+                  className="px-2.5 py-1 text-xs bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] rounded-md transition-colors cursor-pointer"
                 >
                   {p.label}
                 </button>
@@ -285,7 +284,7 @@ export default function AcademicRefiner({ onSelectView }) {
 
         {/* Input Textarea */}
         <div className="mt-6">
-          <label htmlFor="academic-input" className="block text-sm font-semibold text-stone-800 dark:text-stone-200 mb-2">
+          <label htmlFor="academic-input" className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
             Draft Text for Refinement
           </label>
           <textarea
@@ -294,12 +293,12 @@ export default function AcademicRefiner({ onSelectView }) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Paste your abstract, literature review, grant proposal, or manuscript section here..."
-            className="w-full p-4 text-stone-800 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-600 bg-stone-50/50 dark:bg-stone-950/70 border border-stone-200 dark:border-stone-800 rounded-xl focus:bg-white dark:focus:bg-stone-900 focus:outline-none focus:ring-2 focus:ring-teal-600 dark:focus:ring-teal-500 focus:border-transparent transition-all font-normal leading-relaxed text-sm sm:text-base resize-y shadow-inner"
+            className="w-full p-4 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 bg-slate-50/70 dark:bg-[#0c0e12] border border-slate-200 dark:border-[#262c3b] rounded-xl focus:bg-white dark:focus:bg-[#10131a] focus:outline-none focus:ring-2 focus:ring-[#38858a]/20 focus:border-[#38858a] dark:focus:border-[#4fa3a8] transition-all font-normal leading-relaxed text-sm sm:text-base resize-y shadow-inner"
           />
 
           {/* Action buttons footer */}
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-stone-100 dark:border-stone-800">
-            <div className="text-xs font-medium text-stone-500 dark:text-stone-400">
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-[#222734]">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
               {wordCount} words &bull; {text.length} characters
             </div>
 
@@ -308,7 +307,7 @@ export default function AcademicRefiner({ onSelectView }) {
                 type="button"
                 onClick={handlePaste}
                 disabled={isLoading}
-                className="px-3.5 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#222835] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
                 title="Paste from clipboard"
               >
                 <ClipboardPaste size={14} />
@@ -319,7 +318,7 @@ export default function AcademicRefiner({ onSelectView }) {
                 type="button"
                 onClick={handleClear}
                 disabled={isLoading || (!text && !result)}
-                className="px-3.5 py-2 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                className="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#222835] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
               >
                 <RotateCcw size={14} />
                 Clear
@@ -329,7 +328,7 @@ export default function AcademicRefiner({ onSelectView }) {
                 type="button"
                 onClick={handleRefine}
                 disabled={isLoading || !text.trim()}
-                className="px-5 py-2 text-xs font-semibold text-white bg-teal-600 dark:bg-teal-500 hover:bg-teal-700 dark:hover:bg-teal-600 rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2 text-xs font-semibold text-white bg-[#38858a] hover:bg-[#2c6e73] rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -357,32 +356,32 @@ export default function AcademicRefiner({ onSelectView }) {
 
       {/* Results Comparison View */}
       {result && (
-        <div className="bg-white dark:bg-stone-900/90 rounded-2xl border border-stone-200/80 dark:border-stone-800 shadow-sm dark:shadow-none p-6 mb-12 space-y-6 transition-colors">
+        <div className="bg-white dark:bg-[#14171f] rounded-2xl border border-slate-200/90 dark:border-[#222734] shadow-sm dark:shadow-none p-6 mb-12 space-y-6 transition-colors">
           {/* Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100 dark:border-stone-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-[#222734]">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-md text-xs font-bold uppercase bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                <span className="px-2.5 py-1 rounded-md text-xs font-bold uppercase bg-[#eef6f7] dark:bg-[#152329] text-[#23585c] dark:text-[#a0dfe4] border border-[#a2d0d3]/80 dark:border-[#224448]">
                   {result.mode} &bull; {result.level}
                 </span>
-                <span className="text-xs text-stone-500 dark:text-stone-400">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   Engine: <strong>{result.source}</strong>
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 mt-1">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                 Refinement Complete
               </h3>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 bg-stone-100 dark:bg-stone-800 rounded-lg p-0.5 border border-stone-200 dark:border-stone-700">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1a1e27] rounded-lg p-0.5 border border-slate-200 dark:border-[#282f3d]">
                 <button
                   type="button"
                   onClick={() => setViewMode('side-by-side')}
                   className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                     viewMode === 'side-by-side'
-                      ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-100 shadow-xs font-semibold'
-                      : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200'
+                      ? 'bg-white dark:bg-[#252c3a] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                   title="Side-by-side comparison"
                 >
@@ -394,8 +393,8 @@ export default function AcademicRefiner({ onSelectView }) {
                   onClick={() => setViewMode('highlighted')}
                   className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                     viewMode === 'highlighted'
-                      ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-100 shadow-xs font-semibold'
-                      : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200'
+                      ? 'bg-white dark:bg-[#252c3a] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                   title="Highlight upgraded phrasing"
                 >
@@ -407,8 +406,8 @@ export default function AcademicRefiner({ onSelectView }) {
                   onClick={() => setViewMode('clean')}
                   className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1 cursor-pointer ${
                     viewMode === 'clean'
-                      ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-stone-100 shadow-xs font-semibold'
-                      : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200'
+                      ? 'bg-white dark:bg-[#252c3a] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                   title="Clean refined text"
                 >
@@ -420,7 +419,7 @@ export default function AcademicRefiner({ onSelectView }) {
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-teal-600 dark:bg-teal-500 hover:bg-teal-700 dark:hover:bg-teal-600 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#38858a] hover:bg-[#2c6e73] text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? 'Copied!' : 'Copy Refined Text'}
@@ -430,41 +429,41 @@ export default function AcademicRefiner({ onSelectView }) {
 
           {/* Diagnostics badges */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 bg-stone-50 dark:bg-stone-950/60 rounded-xl border border-stone-200/70 dark:border-stone-800">
-              <div className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+            <div className="p-3 bg-slate-50/80 dark:bg-[#0c0e12] rounded-xl border border-slate-200/70 dark:border-[#222734]">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Citations Verified
               </div>
-              <div className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mt-0.5 flex items-center gap-1.5">
+              <div className="text-sm font-bold text-[#38858a] dark:text-[#4fa3a8] mt-0.5 flex items-center gap-1.5">
                 <ShieldCheck size={16} />
                 {result.preservedCitations?.length || 0} Preserved (100%)
               </div>
             </div>
 
-            <div className="p-3 bg-stone-50 dark:bg-stone-950/60 rounded-xl border border-stone-200/70 dark:border-stone-800">
-              <div className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+            <div className="p-3 bg-slate-50/80 dark:bg-[#0c0e12] rounded-xl border border-slate-200/70 dark:border-[#222734]">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Clichés Purged
               </div>
-              <div className="text-sm font-bold text-teal-700 dark:text-teal-400 mt-0.5 flex items-center gap-1.5">
+              <div className="text-sm font-bold text-[#2c6e73] dark:text-[#74b6ba] mt-0.5 flex items-center gap-1.5">
                 <Sparkles size={14} />
                 {result.unslopCount} Stock Phrases
               </div>
             </div>
 
-            <div className="p-3 bg-stone-50 dark:bg-stone-950/60 rounded-xl border border-stone-200/70 dark:border-stone-800">
-              <div className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+            <div className="p-3 bg-slate-50/80 dark:bg-[#0c0e12] rounded-xl border border-slate-200/70 dark:border-[#222734]">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Sentence Rhythm
               </div>
-              <div className="text-sm font-bold text-stone-800 dark:text-stone-200 mt-0.5 flex items-center gap-1.5">
-                <Activity size={14} className="text-teal-600 dark:text-teal-400" />
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 flex items-center gap-1.5">
+                <Activity size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
                 Burstiness: {result.refinedMetrics?.burstiness || 48.0}
               </div>
             </div>
 
-            <div className="p-3 bg-stone-50 dark:bg-stone-950/60 rounded-xl border border-stone-200/70 dark:border-stone-800">
-              <div className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+            <div className="p-3 bg-slate-50/80 dark:bg-[#0c0e12] rounded-xl border border-slate-200/70 dark:border-[#222734]">
+              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Word Count Delta
               </div>
-              <div className="text-sm font-bold text-stone-800 dark:text-stone-200 mt-0.5">
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
                 {wordCount} &rarr; {refinedWordCount} ({refinedWordCount - wordCount >= 0 ? `+${refinedWordCount - wordCount}` : refinedWordCount - wordCount})
               </div>
             </div>
@@ -472,15 +471,15 @@ export default function AcademicRefiner({ onSelectView }) {
 
           {/* Editorial Highlights */}
           {result.editorialHighlights?.length > 0 && (
-            <div className="p-4 bg-teal-50/50 dark:bg-teal-950/30 border border-teal-200/70 dark:border-teal-900/50 rounded-xl">
-              <div className="text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300 mb-2 flex items-center gap-1.5">
-                <CheckCircle2 size={15} className="text-teal-600 dark:text-teal-400" />
+            <div className="p-4 bg-[#f0f7f8] dark:bg-[#121c21] border border-[#c0e0e3] dark:border-[#204045] rounded-xl">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#1c4b4f] dark:text-[#a0dfe4] mb-2 flex items-center gap-1.5">
+                <CheckCircle2 size={15} className="text-[#38858a] dark:text-[#4fa3a8]" />
                 Scholarly Editorial Report
               </div>
-              <ul className="space-y-1 text-xs sm:text-sm text-teal-950 dark:text-teal-200">
+              <ul className="space-y-1 text-xs sm:text-sm text-slate-800 dark:text-slate-200">
                 {result.editorialHighlights.map((hl, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-teal-600 dark:text-teal-400 font-bold">•</span>
+                    <span className="text-[#38858a] dark:text-[#4fa3a8] font-bold">•</span>
                     <span>{hl}</span>
                   </li>
                 ))}
@@ -505,47 +504,47 @@ export default function AcademicRefiner({ onSelectView }) {
           {/* Comparison Panels */}
           {viewMode === 'side-by-side' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-stone-50 dark:bg-stone-950/60 rounded-xl border border-stone-200 dark:border-stone-800">
-                <div className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2">
+              <div className="p-4 bg-slate-50/70 dark:bg-[#0c0e12] rounded-xl border border-slate-200 dark:border-[#222734]">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                   Original Text
                 </div>
-                <div className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed whitespace-pre-wrap font-normal">
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-normal">
                   {result.originalText}
                 </div>
               </div>
 
-              <div className="p-4 bg-teal-50/40 dark:bg-teal-950/30 rounded-xl border border-teal-200 dark:border-teal-900/60">
-                <div className="text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300 mb-2 flex items-center justify-between">
+              <div className="p-4 bg-[#f0f7f8] dark:bg-[#121c21] rounded-xl border border-[#c0e0e3] dark:border-[#204045]">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#1c4b4f] dark:text-[#a0dfe4] mb-2 flex items-center justify-between">
                   <span>Refined Output ({result.mode})</span>
-                  <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold">Ready for Review</span>
+                  <span className="text-[#23585c] dark:text-[#74b6ba] text-[11px] font-semibold">Ready for Review</span>
                 </div>
-                <div className="text-sm text-stone-900 dark:text-stone-100 leading-relaxed whitespace-pre-wrap font-normal">
+                <div className="text-sm text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap font-normal">
                   {result.refinedText}
                 </div>
               </div>
             </div>
           ) : viewMode === 'highlighted' ? (
-            <div className="p-5 bg-teal-50/30 dark:bg-teal-950/20 rounded-xl border border-teal-200 dark:border-teal-900/50">
-              <div className="text-xs font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300 mb-2">
+            <div className="p-5 bg-[#f0f7f8] dark:bg-[#121c21] rounded-xl border border-[#c0e0e3] dark:border-[#204045]">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#1c4b4f] dark:text-[#a0dfe4] mb-2">
                 Refined Prose (Key Word Enhancements Highlighted)
               </div>
               {renderRefinedDiff(result.originalText, result.refinedText)}
             </div>
           ) : (
-            <div className="p-5 bg-stone-50/60 dark:bg-stone-950/60 rounded-xl border border-stone-200 dark:border-stone-800">
-              <div className="text-base text-stone-900 dark:text-stone-100 leading-relaxed whitespace-pre-wrap font-normal">
+            <div className="p-5 bg-slate-50/70 dark:bg-[#0c0e12] rounded-xl border border-slate-200 dark:border-[#222734]">
+              <div className="text-base text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap font-normal">
                 {result.refinedText}
               </div>
             </div>
           )}
 
           {/* Suite Cross-Navigation Action Bar */}
-          <div className="pt-4 border-t border-stone-100 dark:border-stone-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="pt-4 border-t border-slate-100 dark:border-[#222734] flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 dark:bg-teal-500 hover:bg-teal-700 dark:hover:bg-teal-600 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-[#38858a] hover:bg-[#2c6e73] text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? 'Copied to Clipboard!' : 'Copy Refined Text'}
@@ -557,7 +556,7 @@ export default function AcademicRefiner({ onSelectView }) {
                   setText(result.refinedText);
                   setResult(null);
                 }}
-                className="px-3.5 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] hover:bg-slate-50 dark:hover:bg-[#202634] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 title="Send refined text back into the editor to refine further"
               >
                 <ArrowLeftRight size={13} />
@@ -570,9 +569,9 @@ export default function AcademicRefiner({ onSelectView }) {
                 <button
                   type="button"
                   onClick={() => onSelectView('checker')}
-                  className="px-3.5 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#202634] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <ShieldAlert size={14} className="text-emerald-600 dark:text-emerald-400" />
+                  <ShieldAlert size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
                   <span>Verify in AI Checker</span>
                   <ArrowRight size={13} />
                 </button>
@@ -580,9 +579,9 @@ export default function AcademicRefiner({ onSelectView }) {
                 <button
                   type="button"
                   onClick={() => onSelectView('studio')}
-                  className="px-3.5 py-2 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#202634] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Sparkles size={14} className="text-teal-600 dark:text-teal-400" />
+                  <Sparkles size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
                   <span>Open in Writing Studio</span>
                 </button>
               </div>

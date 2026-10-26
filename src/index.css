@@ -2,37 +2,37 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── Design System Semantic Tokens ─────────── */
+/* ── Design System Semantic Tokens (Lexora Obsidian & Slate-Teal Logo Palette) ── */
 :root {
-  --bg-page: #fafaf9;
+  --bg-page: #f8fafc;
   --bg-surface: #ffffff;
-  --bg-subtle: #f5f5f4;
-  --bg-muted: #e7e5e4;
-  --border-subtle: #e7e5e4;
-  --border-strong: #d6d3d1;
-  --text-main: #1c1917;
-  --text-muted: #57534e;
-  --text-subtle: #78716c;
-  --accent: #0d9488;
-  --accent-hover: #0f766e;
-  --accent-light: #f0fdfa;
-  --accent-border: #99f6e4;
+  --bg-subtle: #f1f5f9;
+  --bg-muted: #e2e8f0;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
+  --accent: #2e757a;
+  --accent-hover: #235c60;
+  --accent-light: #eef6f7;
+  --accent-border: #b8dfe2;
 }
 
 .dark {
-  --bg-page: #0c0a09;
-  --bg-surface: #1c1917;
-  --bg-subtle: #292524;
-  --bg-muted: #44403c;
-  --border-subtle: #292524;
-  --border-strong: #44403c;
-  --text-main: #fafaf9;
-  --text-muted: #d6d3d1;
-  --text-subtle: #a8a29e;
-  --accent: #14b8a6;
-  --accent-hover: #2dd4bf;
-  --accent-light: rgba(20, 184, 166, 0.12);
-  --accent-border: rgba(45, 212, 191, 0.3);
+  --bg-page: #0f1115;
+  --bg-surface: #151820;
+  --bg-subtle: #1c202a;
+  --bg-muted: #272d3b;
+  --border-subtle: #222734;
+  --border-strong: #313849;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+  --accent: #4fa3a8;
+  --accent-hover: #62b7bc;
+  --accent-light: rgba(79, 163, 168, 0.12);
+  --accent-border: rgba(79, 163, 168, 0.28);
 }
 
 /* ── Smooth scroll ──────────────────────────── */
@@ -67,23 +67,23 @@ h1, h2, h3, h4, .font-heading {
 }
 
 ::selection {
-  background-color: #ccfbf1;
-  color: #0f766e;
+  background-color: #d1eaed;
+  color: #174549;
 }
 
 .dark ::selection {
-  background-color: #134e4a;
-  color: #5eead4;
+  background-color: #1d3e42;
+  color: #8ed6db;
 }
 
 /* ── Accessible Focus visible indicators ────── */
 :focus-visible {
-  outline: 2px solid #0d9488;
+  outline: 2px solid #3b8288;
   outline-offset: 2px;
 }
 
 .dark :focus-visible {
-  outline: 2px solid #2dd4bf;
+  outline: 2px solid #5eaeb3;
   outline-offset: 2px;
 }
 
@@ -101,16 +101,17 @@ button, a, [role="button"], [role="radio"], [role="tab"] {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d6d3d1;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
+  background: #94a3b8;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #44403c;
+  background: #252b38;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #57534e;
+  background: #333b4c;
 }
+

@@ -66,7 +66,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafaf9] dark:bg-[#0c0a09] text-stone-900 dark:text-stone-100 antialiased flex flex-col justify-between transition-colors duration-250">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f1115] text-slate-900 dark:text-slate-100 antialiased flex flex-col justify-between transition-colors duration-250">
       <Navbar currentView={currentView} onSelectView={handleSelectView} />
       <main className="pt-16 flex-grow">
         {currentView === 'studio' && (

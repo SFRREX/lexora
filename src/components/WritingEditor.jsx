@@ -104,18 +104,18 @@ export default function WritingEditor({ onSelectView }) {
   }
 
   return (
-    <section id="editor" className="py-20 bg-stone-50/50 dark:bg-stone-950/40 scroll-mt-16 transition-colors">
+    <section id="editor" className="py-20 bg-[#f8fafc] dark:bg-[#0f1115] scroll-mt-16 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border border-teal-200/80 dark:border-teal-800/80 rounded-full mb-3 shadow-xs">
-            <Sparkles size={13} className="text-teal-600 dark:text-teal-400" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-[#23585c] dark:text-[#74b6ba] bg-[#eef6f7] dark:bg-[#121f24] border border-[#a2d0d3]/80 dark:border-[#224448] rounded-full mb-3 shadow-xs">
+            <Sparkles size={13} className="text-[#38858a] dark:text-[#4fa3a8]" />
             AI-Powered Writing Studio
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-stone-900 dark:text-stone-100 mb-3 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
             Your Personal Writing Assistant
           </h2>
-          <p className="text-base sm:text-lg text-stone-500 dark:text-stone-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
             Paste your text, choose an improvement, and make every sentence clearer.
           </p>
         </div>
@@ -130,19 +130,19 @@ export default function WritingEditor({ onSelectView }) {
         </div>
 
         {/* Editor container */}
-        <div className="bg-white dark:bg-stone-900/90 rounded-3xl border border-stone-200/80 dark:border-stone-800 shadow-md shadow-stone-200/40 dark:shadow-none p-4 sm:p-6 lg:p-8 transition-colors">
+        <div className="bg-white dark:bg-[#14171f] rounded-3xl border border-slate-200/90 dark:border-[#222734] shadow-md shadow-slate-200/40 dark:shadow-none p-4 sm:p-6 lg:p-8 transition-colors">
           {/* Editor grid */}
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Input panel */}
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="editor-input" className="text-sm font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
-                  <AlignLeft size={16} className="text-stone-400 dark:text-stone-500" />
+                <label htmlFor="editor-input" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <AlignLeft size={16} className="text-slate-400 dark:text-slate-500" />
                   Original text
                 </label>
-                <div className="flex items-center gap-3 text-xs text-stone-400 dark:text-stone-500">
+                <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                   <span>
-                    <strong className="text-stone-600 dark:text-stone-300 font-semibold">{inputWords}</strong> {inputWords === 1 ? 'word' : 'words'}
+                    <strong className="text-slate-600 dark:text-slate-300 font-semibold">{inputWords}</strong> {inputWords === 1 ? 'word' : 'words'}
                   </span>
                   <span>·</span>
                   <span>{inputChars} chars</span>
@@ -169,7 +169,7 @@ export default function WritingEditor({ onSelectView }) {
                   }
                 }}
                 placeholder="Paste or type your text here. Check grammar, find better words, or improve your sentences..."
-                className="flex-1 min-h-[220px] lg:min-h-[280px] w-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50/60 dark:bg-stone-950/70 p-4 sm:p-5 text-sm sm:text-base text-stone-800 dark:text-stone-100 leading-relaxed resize-y placeholder:text-stone-400 dark:placeholder:text-stone-600 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 dark:focus:border-teal-500 focus:bg-white dark:focus:bg-stone-900 transition-all shadow-inner"
+                className="flex-1 min-h-[220px] lg:min-h-[280px] w-full rounded-2xl border border-slate-200 dark:border-[#262c3b] bg-slate-50/70 dark:bg-[#0c0e12] p-4 sm:p-5 text-sm sm:text-base text-slate-800 dark:text-slate-100 leading-relaxed resize-y placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#38858a]/20 focus:border-[#38858a] dark:focus:border-[#4fa3a8] focus:bg-white dark:focus:bg-[#10131a] transition-all shadow-inner"
                 aria-label="Original text input"
               />
 
@@ -177,7 +177,7 @@ export default function WritingEditor({ onSelectView }) {
               <div className="flex flex-wrap items-center gap-2 mt-4">
                 <button
                   onClick={handlePaste}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-stone-600 dark:text-stone-300 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700/80 hover:text-stone-900 dark:hover:text-stone-100 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-slate-50 dark:hover:bg-[#202634] hover:text-slate-900 dark:hover:text-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"
                   aria-label="Paste text from clipboard"
                   title="Paste from clipboard"
                 >
@@ -187,7 +187,7 @@ export default function WritingEditor({ onSelectView }) {
 
                 <button
                   onClick={handleLoadExample}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-stone-600 dark:text-stone-300 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700/80 hover:text-stone-900 dark:hover:text-stone-100 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-slate-50 dark:hover:bg-[#202634] hover:text-slate-900 dark:hover:text-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"
                   aria-label="Load example text"
                 >
                   <FileText size={15} />
@@ -196,7 +196,7 @@ export default function WritingEditor({ onSelectView }) {
 
                 <button
                   onClick={handleClear}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-stone-600 dark:text-stone-300 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700/80 hover:text-stone-900 dark:hover:text-stone-100 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-slate-50 dark:hover:bg-[#202634] hover:text-slate-900 dark:hover:text-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"
                   aria-label="Clear all text"
                 >
                   <Trash2 size={15} />
@@ -204,13 +204,13 @@ export default function WritingEditor({ onSelectView }) {
                 </button>
 
                 <div className="ml-auto flex items-center gap-3">
-                  <span className="hidden sm:inline text-xs text-stone-400 dark:text-stone-500">
-                    <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded text-[10px] font-mono text-stone-600 dark:text-stone-400">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded text-[10px] font-mono text-stone-600 dark:text-stone-400">Enter</kbd>
+                  <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-500">
+                    <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded text-[10px] font-mono text-slate-600 dark:text-slate-400">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded text-[10px] font-mono text-slate-600 dark:text-slate-400">Enter</kbd>
                   </span>
                   <button
                     onClick={handleProcess}
                     disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 min-h-[42px] text-sm font-semibold text-white bg-teal-600 dark:bg-teal-500 rounded-xl hover:bg-teal-700 dark:hover:bg-teal-600 disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-teal-700/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 min-h-[42px] text-sm font-semibold text-white bg-[#38858a] hover:bg-[#2c6e73] rounded-xl disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-[#38858a]/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#38858a] focus:ring-offset-2 dark:focus:ring-offset-[#14171f] cursor-pointer"
                     aria-label="Improve text"
                   >
                     {loading ? (
@@ -233,7 +233,7 @@ export default function WritingEditor({ onSelectView }) {
             <div>
               {error ? (
                 <div className="flex flex-col h-full">
-                  <label className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Improved text
                   </label>
                   <div
@@ -252,13 +252,13 @@ export default function WritingEditor({ onSelectView }) {
                 </div>
               ) : loading ? (
                 <div className="flex flex-col h-full">
-                  <label className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Improved text
                   </label>
-                  <div className="flex-1 min-h-[220px] lg:min-h-[280px] rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-950/40 p-5 flex flex-col items-center justify-center transition-colors">
-                    <Loader2 size={24} className="animate-spin text-teal-600 dark:text-teal-400 mb-3" />
-                    <p className="text-sm font-medium text-stone-700 dark:text-stone-200">Refining your words…</p>
-                    <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">Applying {TOOL_LIST.find(t => t.id === selectedTool)?.label || 'corrections'}</p>
+                  <div className="flex-1 min-h-[220px] lg:min-h-[280px] rounded-2xl border border-slate-200 dark:border-[#222734] bg-slate-50/50 dark:bg-[#0c0e12] p-5 flex flex-col items-center justify-center transition-colors">
+                    <Loader2 size={24} className="animate-spin text-[#38858a] dark:text-[#4fa3a8] mb-3" />
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Refining your words…</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Applying {TOOL_LIST.find(t => t.id === selectedTool)?.label || 'corrections'}</p>
                   </div>
                 </div>
               ) : (

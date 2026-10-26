@@ -24,13 +24,13 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-20 bg-stone-50/60 dark:bg-stone-950/40 border-y border-stone-200/60 dark:border-stone-800/80 transition-colors">
+    <section className="py-20 bg-slate-50/70 dark:bg-[#0c0e12] border-y border-slate-200/80 dark:border-[#1e232e] transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-stone-900 dark:text-stone-100 mb-3 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-white mb-3 tracking-tight">
             Better Writing in Three Simple Steps.
           </h2>
-          <p className="text-base sm:text-lg text-stone-500 dark:text-stone-400 max-w-xl mx-auto">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
             Transform any draft in seconds with our streamlined workflow.
           </p>
         </div>
@@ -45,16 +45,16 @@ export default function HowItWorks() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: i * 0.12, duration: 0.4 }}
-                className="bg-white dark:bg-stone-900/90 rounded-3xl border border-stone-200/80 dark:border-stone-800 p-7 text-center relative shadow-xs hover:shadow-md transition-all"
+                className="bg-white dark:bg-[#14171f] rounded-3xl border border-slate-200 dark:border-[#252b38] p-7 text-center relative shadow-xs hover:shadow-md hover:border-[#4fa3a8]/50 transition-all"
               >
-                <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-100 dark:border-teal-800/60 flex items-center justify-center text-teal-700 dark:text-teal-400 mx-auto mb-5 shadow-xs">
+                <div className="w-14 h-14 rounded-2xl bg-[#eef6f7] dark:bg-[#122023] border border-[#c2e2e5] dark:border-[#1f3f44] flex items-center justify-center text-[#2c6e73] dark:text-[#74b6ba] mx-auto mb-5 shadow-xs">
                   <Icon size={24} />
                 </div>
-                <span className="inline-block text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-50/90 dark:bg-teal-950/80 border border-teal-200/70 dark:border-teal-800/80 px-2.5 py-0.5 rounded-full mb-3">
+                <span className="inline-block text-xs font-bold text-[#286468] dark:text-[#74b6ba] bg-[#dbeff1] dark:bg-[#162e32] border border-[#b2dce0] dark:border-[#23484d] px-2.5 py-0.5 rounded-full mb-3">
                   Step {step.number}
                 </span>
-                <h3 className="text-lg font-semibold font-heading text-stone-900 dark:text-stone-100 mb-2">{step.title}</h3>
-                <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed">{step.description}</p>
+                <h3 className="text-lg font-semibold font-heading text-slate-900 dark:text-white mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{step.description}</p>
               </motion.div>
             );
           })}

@@ -2,22 +2,36 @@ import { ArrowRight } from 'lucide-react';
 
 export default function FinalCTA() {
   return (
-    <section className="py-20 bg-gradient-to-br from-teal-700 via-teal-800 to-emerald-900 dark:from-teal-950 dark:via-stone-900 dark:to-emerald-950 border-t border-teal-600/30 dark:border-stone-800 relative overflow-hidden transition-colors">
-      <div className="absolute inset-0 bg-radial from-teal-500/10 via-transparent to-transparent pointer-events-none" />
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <h2 className="text-3xl sm:text-4xl font-bold font-heading text-white mb-4 tracking-tight">
-          Your Ideas Deserve Better Words.
-        </h2>
-        <p className="text-lg text-teal-100 dark:text-stone-300 mb-8 max-w-xl mx-auto">
-          Fix mistakes, improve your sentences, and express yourself with confidence.
-        </p>
-        <a
-          href="#editor"
-          className="inline-flex items-center gap-2 px-7 py-3.5 min-h-[44px] text-base font-semibold text-teal-900 dark:text-teal-950 bg-white dark:bg-teal-100 rounded-xl hover:bg-teal-50 dark:hover:bg-white shadow-lg shadow-teal-950/30 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-teal-800"
-        >
-          Start Improving Your Writing
-          <ArrowRight size={18} />
-        </a>
+    <section className="py-20 sm:py-28 bg-[#f8fafc] dark:bg-[#0f1115] border-t border-slate-200/80 dark:border-[#1e232e] relative transition-colors">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-white dark:bg-[#14171f] border border-slate-200 dark:border-[#252b38] p-8 sm:p-14 text-center shadow-xl dark:shadow-2xl dark:shadow-black/60 relative overflow-hidden">
+          {/* Subtle logo accent hairline */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-[#4fa3a8] to-transparent" />
+
+          {/* Logo icon */}
+          <div className="inline-flex p-2 rounded-2xl bg-[#f0f7f8] dark:bg-[#101b1e] border border-[#c2e2e5] dark:border-[#1f3f44] mb-5 shadow-xs">
+            <img
+              src="/icon.png"
+              alt="Lexora Logo"
+              className="w-10 h-10 object-contain rounded-xl"
+            />
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-white mb-4 tracking-tight">
+            Your Ideas Deserve Better Words.
+          </h2>
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto leading-relaxed">
+            Fix mistakes, refine academic drafts, and express yourself with professional clarity and confidence.
+          </p>
+
+          <a
+            href="#editor"
+            className="inline-flex items-center gap-2 px-8 py-3.5 min-h-[46px] text-base font-semibold text-white bg-[#2c6e73] hover:bg-[#23585c] dark:bg-[#38858a] dark:hover:bg-[#459da2] rounded-xl shadow-md shadow-[#2c6e73]/25 dark:shadow-[#38858a]/25 transition-all hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4fa3a8]"
+          >
+            Start Improving Your Writing
+            <ArrowRight size={18} />
+          </a>
+        </div>
       </div>
     </section>
   );

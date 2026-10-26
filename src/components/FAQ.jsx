@@ -43,13 +43,13 @@ export default function FAQ() {
   }
 
   return (
-    <section id="faq" className="py-20 bg-white dark:bg-[#0c0a09] scroll-mt-16 transition-colors">
+    <section id="faq" className="py-20 bg-white dark:bg-[#0f1115] scroll-mt-16 transition-colors">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-stone-900 dark:text-stone-100 mb-3 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-white mb-3 tracking-tight">
             Frequently Asked Questions.
           </h2>
-          <p className="text-base sm:text-lg text-stone-500 dark:text-stone-400 max-w-xl mx-auto">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
             Everything you need to know about Lexora and text processing.
           </p>
         </div>
@@ -62,8 +62,8 @@ export default function FAQ() {
                 key={i}
                 className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                   isOpen
-                    ? 'border-teal-300 dark:border-teal-800/80 bg-teal-50/20 dark:bg-teal-950/20 shadow-xs'
-                    : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/70 hover:border-stone-300 dark:hover:border-stone-700'
+                    ? 'border-[#4fa3a8] dark:border-[#224448] bg-[#f0f7f8] dark:bg-[#121c1f] shadow-xs'
+                    : 'border-slate-200 dark:border-[#242936] bg-white dark:bg-[#14171f] hover:border-slate-300 dark:hover:border-[#2d3444]'
                 }`}
                 role="listitem"
               >
@@ -75,16 +75,16 @@ export default function FAQ() {
                       toggle(i);
                     }
                   }}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500"
+                  className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4fa3a8]"
                   aria-expanded={isOpen}
                   aria-controls={`faq-answer-${i}`}
                 >
-                  <span className="text-sm font-semibold text-stone-800 dark:text-stone-200 pr-4">
+                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 pr-4">
                     {item.question}
                   </span>
                   <ChevronDown
                     size={18}
-                    className={`text-stone-400 dark:text-stone-500 shrink-0 transition-transform duration-200 ${
+                    className={`text-slate-400 dark:text-slate-500 shrink-0 transition-transform duration-200 ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -102,7 +102,7 @@ export default function FAQ() {
                       role="region"
                       aria-labelledby={`faq-q-${i}`}
                     >
-                      <div className="px-5 pb-4 text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                      <div className="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                         {item.answer}
                       </div>
                     </motion.div>

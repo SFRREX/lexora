@@ -52,13 +52,13 @@ const cardVariants = {
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 bg-white dark:bg-[#0c0a09] scroll-mt-16 transition-colors">
+    <section id="features" className="py-20 bg-white dark:bg-[#0f1115] scroll-mt-16 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-stone-900 dark:text-stone-100 mb-3 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-white mb-3 tracking-tight">
             Everything You Need to Write with Confidence.
           </h2>
-          <p className="text-base sm:text-lg text-stone-500 dark:text-stone-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
             From small grammar mistakes to better word choices, improve your writing one sentence at a time.
           </p>
         </div>
@@ -74,13 +74,13 @@ export default function Features() {
                 whileInView="visible"
                 viewport={{ once: true, margin: '-40px' }}
                 variants={cardVariants}
-                className="group p-6 sm:p-7 rounded-3xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-stone-900/80 hover:border-teal-400/80 dark:hover:border-teal-500/80 hover:shadow-lg hover:shadow-stone-200/50 dark:hover:shadow-none hover:-translate-y-0.5 transition-all duration-200"
+                className="group p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-[#242936] bg-white dark:bg-[#14171f] hover:border-[#4fa3a8] dark:hover:border-[#4fa3a8] hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/40 hover:-translate-y-0.5 transition-all duration-200"
               >
-                <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center text-teal-700 dark:text-teal-400 mb-5 group-hover:bg-teal-600 dark:group-hover:bg-teal-500 group-hover:text-white transition-all duration-200 shadow-xs">
+                <div className="w-12 h-12 rounded-2xl bg-[#eef6f7] dark:bg-[#122023] border border-[#c2e2e5] dark:border-[#1f3f44] flex items-center justify-center text-[#2c6e73] dark:text-[#74b6ba] mb-5 group-hover:bg-[#2c6e73] dark:group-hover:bg-[#38858a] group-hover:text-white transition-all duration-200 shadow-xs">
                   <Icon size={22} />
                 </div>
-                <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-2 font-heading tracking-tight">{feature.title}</h3>
-                <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 font-heading tracking-tight">{feature.title}</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{feature.description}</p>
               </motion.div>
             );
           })}
