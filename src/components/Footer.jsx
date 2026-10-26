@@ -30,9 +30,9 @@ export default function Footer({ onSelectView }) {
               aria-label="Lexora – return to Writing Studio"
             >
               <img
-                src="/logo.png"
+                src="/icon.png"
                 alt="Lexora Logo"
-                className="w-7 h-7 rounded-md object-cover shadow-xs border border-teal-500/30 group-hover:scale-105 transition-transform"
+                className="w-7 h-7 rounded-md object-contain shadow-xs border border-teal-500/30 group-hover:scale-105 transition-transform bg-[#121417]"
               />
               <span className="text-lg font-semibold text-white tracking-tight">Lexora</span>
               <span className="text-[10px] text-teal-400 font-medium px-1.5 py-0.5 rounded bg-teal-950/80 border border-teal-800/60">

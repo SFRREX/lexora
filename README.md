@@ -1,7 +1,13 @@
-# Lexora Intelligence Suite
+<p align="center">
+  <img src="public/logo.png" alt="Lexora AI Intelligence Suite" width="220" />
+</p>
 
-> **The Art of Better Words.**  
-> A production-grade AI writing enhancement, neural text detection, academic unslop, and empirical detector research suite built with React 19, Vite 8, and Tailwind CSS v4.
+<h1 align="center">Lexora Intelligence Suite</h1>
+
+<p align="center">
+  <strong>The Art of Better Words.</strong><br>
+  A production-grade AI writing enhancement, neural text detection, academic unslop, and empirical detector research suite built with React 19, Vite 8, and Tailwind CSS v4.
+</p>
 
 ---
 

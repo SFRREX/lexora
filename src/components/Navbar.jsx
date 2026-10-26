@@ -84,9 +84,9 @@ export default function Navbar({ currentView, onSelectView }) {
           aria-label="Lexora – return to Writing Studio"
         >
           <img
-            src="/logo.png"
+            src="/icon.png"
             alt="Lexora Logo"
-            className="w-8 h-8 rounded-lg object-cover shadow-xs border border-teal-500/30 group-hover:scale-105 transition-transform"
+            className="w-8 h-8 rounded-lg object-contain shadow-xs border border-teal-500/30 group-hover:scale-105 transition-transform bg-[#121417]"
           />
           <span className="text-xl font-bold text-stone-900 dark:text-stone-50 tracking-tight">
             Lexora
