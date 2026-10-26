@@ -1,5 +1,3 @@
-import { PenLine } from 'lucide-react';
-
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Footer({ onSelectView }) {
@@ -28,12 +26,14 @@ export default function Footer({ onSelectView }) {
             <button
               type="button"
               onClick={() => onSelectView && onSelectView('studio')}
-              className="flex items-center gap-2 mb-2 group text-left cursor-pointer rounded-lg p-1 -m-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+              className="flex items-center gap-2.5 mb-2 group text-left cursor-pointer rounded-lg p-1 -m-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
               aria-label="Lexora – return to Writing Studio"
             >
-              <span className="w-7 h-7 rounded-md bg-teal-600 flex items-center justify-center text-white">
-                <PenLine size={15} />
-              </span>
+              <img
+                src="/logo.png"
+                alt="Lexora Logo"
+                className="w-7 h-7 rounded-md object-cover shadow-xs border border-teal-500/30 group-hover:scale-105 transition-transform"
+              />
               <span className="text-lg font-semibold text-white tracking-tight">Lexora</span>
               <span className="text-[10px] text-teal-400 font-medium px-1.5 py-0.5 rounded bg-teal-950/80 border border-teal-800/60">
                 Suite

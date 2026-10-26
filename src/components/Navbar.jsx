@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Menu,
   X,
-  PenLine,
   ShieldAlert,
   BookOpen,
   FlaskConical,
@@ -81,12 +80,14 @@ export default function Navbar({ currentView, onSelectView }) {
         <button
           type="button"
           onClick={() => handleViewSelect('studio')}
-          className="flex items-center gap-2 group text-left cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-lg p-1"
+          className="flex items-center gap-2.5 group text-left cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-lg p-1"
           aria-label="Lexora – return to Writing Studio"
         >
-          <span className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-white shadow-xs group-hover:bg-teal-700 transition-colors">
-            <PenLine size={18} strokeWidth={2.2} />
-          </span>
+          <img
+            src="/logo.png"
+            alt="Lexora Logo"
+            className="w-8 h-8 rounded-lg object-cover shadow-xs border border-teal-500/30 group-hover:scale-105 transition-transform"
+          />
           <span className="text-xl font-bold text-stone-900 dark:text-stone-50 tracking-tight">
             Lexora
           </span>
