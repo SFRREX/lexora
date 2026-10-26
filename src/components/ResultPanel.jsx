@@ -139,7 +139,7 @@ export default function ResultPanel({
       </div>
 
       <div
-        className={`flex-1 min-h-[220px] lg:min-h-[280px] rounded-2xl border p-4 sm:p-5 text-sm sm:text-base leading-relaxed whitespace-pre-wrap transition-colors ${
+        className={`flex-1 min-h-55 lg:min-h-70 rounded-2xl border p-4 sm:p-5 text-sm sm:text-base leading-relaxed whitespace-pre-wrap transition-colors ${
           result
             ? 'bg-[#f0f7f8] dark:bg-[#121c21] border-[#c0e0e3] dark:border-[#204045] text-slate-800 dark:text-slate-100'
             : 'bg-slate-50/70 dark:bg-[#0c0e12] border-slate-200 dark:border-[#222734] text-slate-400 dark:text-slate-500'
@@ -185,7 +185,7 @@ export default function ResultPanel({
         <div className="flex flex-wrap items-center gap-2 mt-4">
           <button
             onClick={handleCopy}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] text-xs sm:text-sm font-semibold rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-10 text-xs sm:text-sm font-semibold rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer ${
               copied
                 ? 'bg-[#2c6e73] text-white border-[#2c6e73]'
                 : 'text-[#1c4b4f] dark:text-[#a0dfe4] bg-[#eef6f7] dark:bg-[#152329] border-[#a2d0d3] dark:border-[#224448] hover:bg-[#deeff1] dark:hover:bg-[#1a2d35]'
@@ -198,7 +198,7 @@ export default function ResultPanel({
 
           <button
             onClick={onRetry}
-            className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-slate-50 dark:hover:bg-[#202634] hover:text-slate-900 dark:hover:text-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 min-h-10 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-slate-50 dark:hover:bg-[#202634] hover:text-slate-900 dark:hover:text-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"
             aria-label="Try again"
           >
             <RotateCcw size={14} />
@@ -211,7 +211,7 @@ export default function ResultPanel({
                 navigator.clipboard.writeText(result);
                 onSelectView('checker');
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-[#eef6f7] dark:hover:bg-[#152329] hover:text-[#23585c] dark:hover:text-[#a0dfe4] hover:border-[#a2d0d3] dark:hover:border-[#224448] transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 min-h-10 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-[#eef6f7] dark:hover:bg-[#152329] hover:text-[#23585c] dark:hover:text-[#a0dfe4] hover:border-[#a2d0d3] dark:hover:border-[#224448] transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"
               title="Copy result and scan in AI Checker"
             >
               <ShieldAlert size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
@@ -221,7 +221,7 @@ export default function ResultPanel({
 
           <button
             onClick={onReplaceOriginal}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:border-[#38858a] dark:hover:border-[#4fa3a8] hover:text-[#23585c] dark:hover:text-[#a0dfe4] hover:bg-[#eef6f7]/60 dark:hover:bg-[#152329] transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] ml-auto cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-10 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:border-[#38858a] dark:hover:border-[#4fa3a8] hover:text-[#23585c] dark:hover:text-[#a0dfe4] hover:bg-[#eef6f7]/60 dark:hover:bg-[#152329] transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] ml-auto cursor-pointer"
             aria-label="Replace original text with improved version"
             title="Send this version back to the original text input"
           >

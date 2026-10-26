@@ -61,7 +61,7 @@ export default function BeforeAfter() {
         <div className="text-center">
           <a
             href="#editor"
-            className="inline-flex items-center gap-2 px-7 py-3 min-h-[44px] text-sm font-semibold text-white bg-[#2c6e73] hover:bg-[#23585c] dark:bg-[#38858a] dark:hover:bg-[#459da2] rounded-xl shadow-md shadow-[#2c6e73]/20 dark:shadow-[#38858a]/20 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4fa3a8]"
+            className="inline-flex items-center gap-2 px-7 py-3 min-h-11 text-sm font-semibold text-white bg-[#2c6e73] hover:bg-[#23585c] dark:bg-[#38858a] dark:hover:bg-[#459da2] rounded-xl shadow-md shadow-[#2c6e73]/20 dark:shadow-[#38858a]/20 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4fa3a8]"
           >
             Try It Yourself
             <ArrowRight size={16} />

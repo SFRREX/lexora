@@ -224,7 +224,7 @@ export default function AcademicRefiner({ onSelectView }) {
           {/* Intensity & Presets */}
           <div className="flex flex-col justify-between">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                 <Sliders size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
                 Editing Intensity
               </label>
