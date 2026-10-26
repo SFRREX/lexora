@@ -104,7 +104,7 @@ export default function WritingEditor({ onSelectView }) {
   }
 
   return (
-    <section id="editor" className="py-20 bg-[#f8fafc] dark:bg-[#0f1115] scroll-mt-16 transition-colors">
+    <section id="editor" className="py-20 scroll-mt-16 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="text-center mb-8">

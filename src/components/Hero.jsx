@@ -5,7 +5,7 @@ export default function Hero({ onSelectView }) {
   return (
     <section
       id="top"
-      className="relative min-h-[90vh] flex items-center overflow-hidden bg-[#f8fafc] dark:bg-[#0f1115] pt-16 pb-12 transition-colors duration-250"
+      className="relative min-h-[90vh] flex items-center overflow-hidden pt-16 pb-12 transition-colors duration-250"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">

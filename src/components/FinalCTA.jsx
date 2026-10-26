@@ -2,7 +2,7 @@ import { ArrowRight } from 'lucide-react';
 
 export default function FinalCTA() {
   return (
-    <section className="py-20 sm:py-28 bg-[#f8fafc] dark:bg-[#0f1115] border-t border-slate-200/80 dark:border-[#1e232e] relative transition-colors">
+    <section className="py-20 sm:py-28 relative transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-white dark:bg-[#14171f] border border-slate-200 dark:border-[#252b38] p-8 sm:p-14 text-center shadow-xl dark:shadow-2xl dark:shadow-black/60 relative overflow-hidden">
           {/* Subtle logo accent hairline */}

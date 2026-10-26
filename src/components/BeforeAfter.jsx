@@ -2,7 +2,7 @@ import { ArrowRight, CheckCircle2, ArrowRightLeft } from 'lucide-react';
 
 export default function BeforeAfter() {
   return (
-    <section className="py-20 bg-white dark:bg-[#0f1115] transition-colors">
+    <section className="py-20 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-[#286468] dark:text-[#74b6ba] bg-[#eef6f7] dark:bg-[#142226] border border-[#c4e1e3] dark:border-[#224448] rounded-full mb-3 shadow-xs">
@@ -19,7 +19,7 @@ export default function BeforeAfter() {
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           {/* Original */}
-          <div className="rounded-3xl border border-slate-200 dark:border-[#232834] bg-slate-50/70 dark:bg-[#14171f] p-6 sm:p-7 shadow-xs">
+          <div className="rounded-3xl border border-slate-200 dark:border-[#232834] bg-white dark:bg-[#14171f] p-6 sm:p-7 shadow-xs">
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/60 dark:border-[#222734]">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Original

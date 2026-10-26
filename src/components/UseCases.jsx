@@ -25,7 +25,7 @@ const CASES = [
 
 export default function UseCases() {
   return (
-    <section className="py-20 bg-slate-50/70 dark:bg-[#0c0e12] border-t border-slate-200/80 dark:border-[#1e232e] transition-colors">
+    <section className="py-20 transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-[#286468] dark:text-[#74b6ba] bg-[#eef6f7] dark:bg-[#142226] border border-[#c4e1e3] dark:border-[#224448] rounded-full mb-3 shadow-xs">

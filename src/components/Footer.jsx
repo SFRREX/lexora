@@ -18,7 +18,7 @@ export default function Footer({ onSelectView }) {
   ];
 
   return (
-    <footer className="bg-white dark:bg-[#0b0d10] text-slate-600 dark:text-slate-400 py-12 border-t border-slate-200 dark:border-[#1e232e] transition-colors">
+    <footer className="text-slate-600 dark:text-slate-400 py-12 border-t border-slate-200/80 dark:border-[#1e232e] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-8">
           {/* Brand */}
@@ -92,7 +92,7 @@ export default function Footer({ onSelectView }) {
           </div>
         </div>
 
-        <div className="border-t border-[#1e232e] pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+        <div className="border-t border-slate-200 dark:border-[#1e232e] pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
           <div>© {CURRENT_YEAR} Lexora Intelligence Suite. All rights reserved.</div>
           <div className="text-[11px] text-slate-500">
             Research-backed implementation adhering to NAACL, Cambridge Data & Policy, and Springer benchmarks.

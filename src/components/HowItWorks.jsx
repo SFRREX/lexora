@@ -24,7 +24,7 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-20 bg-slate-50/70 dark:bg-[#0c0e12] border-y border-slate-200/80 dark:border-[#1e232e] transition-colors">
+    <section className="py-20 transition-colors">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-white mb-3 tracking-tight">

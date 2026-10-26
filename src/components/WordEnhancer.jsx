@@ -99,7 +99,7 @@ export default function WordEnhancer() {
   }
 
   return (
-    <section id="word-enhancer" className="py-20 bg-[#f8fafc] dark:bg-[#0f1115] scroll-mt-16 transition-colors">
+    <section id="word-enhancer" className="py-20 scroll-mt-16 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-10">
