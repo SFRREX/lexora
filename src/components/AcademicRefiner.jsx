@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   BookOpen,
   Sparkles,
@@ -19,38 +19,103 @@ import {
   FileText,
   CheckCircle2,
   ArrowLeftRight,
+  Upload,
+  Download,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { runAcademicRefinement } from '../services/suiteServices.js';
 
+/**
+ * Computes exact word-by-word sequence diff using Longest Common Subsequence (LCS)
+ */
+function computeTokenDiff(original, refined) {
+  if (!original || !refined) return [];
+  const origWords = original.trim().split(/\s+/).filter(Boolean);
+  const refWords = refined.trim().split(/\s+/).filter(Boolean);
+
+  const n = origWords.length;
+  const m = refWords.length;
+
+  if (n === 0) return refWords.map((w) => ({ word: w, type: 'added' }));
+  if (m === 0) return [];
+
+  // Memory guard for huge documents
+  if (n * m > 400000) {
+    const origSet = new Set(origWords.map((w) => w.toLowerCase()));
+    return refWords.map((w) => ({
+      word: w,
+      type: origSet.has(w.toLowerCase()) ? 'equal' : 'added',
+    }));
+  }
+
+  // LCS Matrix
+  const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      if (origWords[i].toLowerCase() === refWords[j].toLowerCase()) {
+        dp[i + 1][j + 1] = dp[i][j] + 1;
+      } else {
+        dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+    }
+  }
+
+  // Backtrack diff path
+  let i = n;
+  let j = m;
+  const ops = [];
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && origWords[i - 1].toLowerCase() === refWords[j - 1].toLowerCase()) {
+      ops.push({ type: 'equal', word: refWords[j - 1] });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      ops.push({ type: 'added', word: refWords[j - 1] });
+      j--;
+    } else if (i > 0) {
+      ops.push({ type: 'removed', word: origWords[i - 1] });
+      i--;
+    }
+  }
+
+  return ops.reverse();
+}
+
 function renderRefinedDiff(original, refined) {
   if (!original || !refined) return refined;
-  const origTokens = original.trim().split(/(\s+)/);
-  const refTokens = refined.trim().split(/(\s+)/);
-  const origSet = new Set(origTokens.map((w) => w.toLowerCase()));
+  const diffOps = computeTokenDiff(original, refined);
 
   return (
     <div className="space-y-3">
       <div className="leading-relaxed flex flex-wrap gap-1 text-sm sm:text-base font-normal">
-        {refTokens.map((token, idx) => {
-          if (/^\s+$/.test(token)) return <span key={idx}> </span>;
-          const isEnhanced = !origSet.has(token.toLowerCase());
-          if (isEnhanced) {
+        {diffOps.map((op, idx) => {
+          if (op.type === 'removed') {
+            return null;
+          }
+          if (op.type === 'added') {
             return (
               <mark
                 key={idx}
-                className="bg-[#eef6f7] dark:bg-[#152329] text-[#1c4b4f] dark:text-[#a0dfe4] border border-[#a2d0d3]/80 dark:border-[#224448] font-medium px-1 rounded transition-colors"
-                title="Upgraded scholarly phrasing"
+                className="bg-[#dff3e8] dark:bg-[#132d20] text-[#0f5b33] dark:text-[#7ce3ab] border border-[#a3e2bc] dark:border-[#1d5234] font-medium px-1.5 py-0.5 rounded text-sm transition-colors"
+                title="Upgraded scholarly phrasing / formal substitution"
               >
-                {token}
+                {op.word}
               </mark>
             );
           }
-          return <span key={idx} className="text-slate-900 dark:text-slate-200">{token}</span>;
+          return (
+            <span key={idx} className="text-slate-900 dark:text-slate-200">
+              {op.word}
+            </span>
+          );
         })}
       </div>
       <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#222734]">
-        <span className="w-2.5 h-2.5 rounded bg-[#b0d8db] dark:bg-[#224448] border border-[#38858a] dark:border-[#4fa3a8] inline-block" />
-        <span className="text-slate-600 dark:text-slate-400 font-medium">Highlighted tokens indicate upgraded scholarly phrasing and purged clichés</span>
+        <span className="w-2.5 h-2.5 rounded bg-[#dff3e8] dark:bg-[#132d20] border border-[#38858a] dark:border-[#4fa3a8] inline-block" />
+        <span className="text-slate-600 dark:text-slate-400 font-medium">
+          Highlighted tokens indicate contractions expanded, transitions added, active phrases made passive, and upgraded synonyms
+        </span>
       </div>
     </div>
   );
@@ -85,6 +150,10 @@ const GOALS = [
 
 const PRESETS = [
   {
+    label: 'Conversational Draft (Contractions & Active Voice)',
+    text: `We conducted the trials last month, but we didn't find any major defects in the model. It's really important to look at the dataset because it'll help us get good outcomes for the study [1, 2]. The researchers observed that this can't operate without substantial training samples (Johnson et al., 2023). In order to make sure the pipeline runs fast, we need to fix the memory allocation.`,
+  },
+  {
     label: 'AI-Fluff Sample (Needs Unslop)',
     text: `In recent years, the realm of artificial intelligence has witnessed a profound transformation with the rise of autonomous multi-agent architectures. These cutting-edge frameworks delve into complex environments to facilitate seamless coordination and decision-making. By leveraging advanced reinforcement learning, modern agents unlock new possibilities across diverse industries. It is important to note that this paradigm shift underscores the pivotal role of collaborative intelligence in navigating multifaceted technological landscapes [1, 2].`,
   },
@@ -104,6 +173,14 @@ export default function AcademicRefiner({ onSelectView }) {
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState('side-by-side'); // 'side-by-side' | 'highlighted' | 'clean'
 
+  // Transformation Method Toggles
+  const [expandContractions, setExpandContractions] = useState(true);
+  const [addTransitions, setAddTransitions] = useState(false);
+  const [passiveVoice, setPassiveVoice] = useState(false);
+  const [formalSynonyms, setFormalSynonyms] = useState(true);
+
+  const fileInputRef = useRef(null);
+
   async function handlePaste() {
     try {
       const clipText = await navigator.clipboard.readText();
@@ -118,6 +195,35 @@ export default function AcademicRefiner({ onSelectView }) {
     }
   }
 
+  function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      if (typeof content === 'string') {
+        setText(content);
+        setResult(null);
+        setError(null);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  function handleDownload() {
+    if (!result?.refinedText) return;
+    const blob = new Blob([result.refinedText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lexora-refined-${mode}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function handleRefine() {
     if (!text.trim()) {
       setError('Please provide text to refine.');
@@ -129,7 +235,14 @@ export default function AcademicRefiner({ onSelectView }) {
     setResult(null);
 
     try {
-      const data = await runAcademicRefinement(text, { mode, level });
+      const data = await runAcademicRefinement(text, {
+        mode,
+        level,
+        expandContractions,
+        addTransitions,
+        passiveVoice,
+        formalSynonyms,
+      });
       setResult(data);
     } catch (err) {
       setError(err.message || 'Academic refinement failed.');
@@ -152,9 +265,15 @@ export default function AcademicRefiner({ onSelectView }) {
   }
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const sentenceCount = text.trim() ? (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).length : 0;
+
   const refinedWordCount = result?.refinedText?.trim()
     ? result.refinedText.trim().split(/\s+/).filter(Boolean).length
     : 0;
+  const refinedSentenceCount = result?.refinedText?.trim()
+    ? (result.refinedText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).length
+    : 0;
+
   return (
     <section id="academic-refiner" className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto transition-colors">
       {/* Header */}
@@ -168,7 +287,7 @@ export default function AcademicRefiner({ onSelectView }) {
         </h1>
         <p className="mt-3 text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
           Transform draft prose into precise, publication-ready academic writing.
-          Strips AI slop and promotional buzzwords while strictly preserving citations, empirical statistics, and author intent.
+          Strips AI slop, expands contractions, adds scholarly transitions, and converts active voice while strictly preserving citations and empirical data.
         </p>
       </div>
 
@@ -262,7 +381,7 @@ export default function AcademicRefiner({ onSelectView }) {
             </div>
 
             {/* Presets */}
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#222734] flex items-center gap-2">
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#222734] flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Try Preset:</span>
               {PRESETS.map((p, idx) => (
                 <button
@@ -282,27 +401,155 @@ export default function AcademicRefiner({ onSelectView }) {
           </div>
         </div>
 
+        {/* Scholarly Transformation Methods */}
+        <div className="pt-5 pb-2">
+          <div className="flex items-center justify-between mb-2.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <Sparkles size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
+              Scholarly Transformation Methods
+            </label>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">
+              Select desired transformation methods for formalization
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            {/* 1. Formal Contractions */}
+            <button
+              type="button"
+              onClick={() => setExpandContractions((prev) => !prev)}
+              className={`p-3 text-left rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                expandContractions
+                  ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#152329] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
+                  : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-400 bg-slate-50/40 dark:bg-[#0c0e12]'
+              }`}
+            >
+              {expandContractions ? (
+                <CheckSquare size={16} className="text-[#38858a] dark:text-[#4fa3a8] shrink-0 mt-0.5" />
+              ) : (
+                <Square size={16} className="text-slate-400 dark:text-slate-600 shrink-0 mt-0.5" />
+              )}
+              <div>
+                <div className="font-semibold text-xs sm:text-sm">Expand Contractions</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                  don't &rarr; do not, can't &rarr; cannot
+                </div>
+              </div>
+            </button>
+
+            {/* 2. Academic Transitions */}
+            <button
+              type="button"
+              onClick={() => setAddTransitions((prev) => !prev)}
+              className={`p-3 text-left rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                addTransitions
+                  ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#152329] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
+                  : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-400 bg-slate-50/40 dark:bg-[#0c0e12]'
+              }`}
+            >
+              {addTransitions ? (
+                <CheckSquare size={16} className="text-[#38858a] dark:text-[#4fa3a8] shrink-0 mt-0.5" />
+              ) : (
+                <Square size={16} className="text-slate-400 dark:text-slate-600 shrink-0 mt-0.5" />
+              )}
+              <div>
+                <div className="font-semibold text-xs sm:text-sm">Academic Transitions</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                  Injects Moreover, Consequently, Therefore
+                </div>
+              </div>
+            </button>
+
+            {/* 3. Objective Passive Voice */}
+            <button
+              type="button"
+              onClick={() => setPassiveVoice((prev) => !prev)}
+              className={`p-3 text-left rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                passiveVoice
+                  ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#152329] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
+                  : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-400 bg-slate-50/40 dark:bg-[#0c0e12]'
+              }`}
+            >
+              {passiveVoice ? (
+                <CheckSquare size={16} className="text-[#38858a] dark:text-[#4fa3a8] shrink-0 mt-0.5" />
+              ) : (
+                <Square size={16} className="text-slate-400 dark:text-slate-600 shrink-0 mt-0.5" />
+              )}
+              <div>
+                <div className="font-semibold text-xs sm:text-sm">Passive Voice</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                  We conducted &rarr; Was conducted
+                </div>
+              </div>
+            </button>
+
+            {/* 4. Scholarly Synonyms */}
+            <button
+              type="button"
+              onClick={() => setFormalSynonyms((prev) => !prev)}
+              className={`p-3 text-left rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                formalSynonyms
+                  ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#152329] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
+                  : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-400 bg-slate-50/40 dark:bg-[#0c0e12]'
+              }`}
+            >
+              {formalSynonyms ? (
+                <CheckSquare size={16} className="text-[#38858a] dark:text-[#4fa3a8] shrink-0 mt-0.5" />
+              ) : (
+                <Square size={16} className="text-slate-400 dark:text-slate-600 shrink-0 mt-0.5" />
+              )}
+              <div>
+                <div className="font-semibold text-xs sm:text-sm">Scholarly Synonyms</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                  help &rarr; facilitate, big &rarr; substantial
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* Input Textarea */}
-        <div className="mt-6">
-          <label htmlFor="academic-input" className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
-            Draft Text for Refinement
-          </label>
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="academic-input" className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
+              Draft Text for Refinement
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.md"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+          </div>
+
           <textarea
             id="academic-input"
             rows={7}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Paste your abstract, literature review, grant proposal, or manuscript section here..."
+            placeholder="Paste your abstract, literature review, grant proposal, or manuscript section here, or click Import File..."
             className="w-full p-4 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 bg-slate-50/70 dark:bg-[#0c0e12] border border-slate-200 dark:border-[#262c3b] rounded-xl focus:bg-white dark:focus:bg-[#10131a] focus:outline-none focus:ring-2 focus:ring-[#38858a]/20 focus:border-[#38858a] dark:focus:border-[#4fa3a8] transition-all font-normal leading-relaxed text-sm sm:text-base resize-y shadow-inner"
           />
 
           {/* Action buttons footer */}
           <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-[#222734]">
             <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {wordCount} words &bull; {text.length} characters
+              {wordCount} words &bull; {sentenceCount} sentences &bull; {text.length} characters
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#222835] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                title="Import from a .txt or .md file"
+              >
+                <Upload size={14} />
+                Import File
+              </button>
+
               <button
                 type="button"
                 onClick={handlePaste}
@@ -418,6 +665,16 @@ export default function AcademicRefiner({ onSelectView }) {
 
               <button
                 type="button"
+                onClick={handleDownload}
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#242b38] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#282f3d] shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Download text file (.txt)"
+              >
+                <Download size={14} />
+                Download .txt
+              </button>
+
+              <button
+                type="button"
                 onClick={handleCopy}
                 className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#38858a] hover:bg-[#2c6e73] text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
               >
@@ -427,7 +684,7 @@ export default function AcademicRefiner({ onSelectView }) {
             </div>
           </div>
 
-          {/* Diagnostics badges */}
+          {/* Diagnostics badges & Stats Dashboard */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3 bg-slate-50/80 dark:bg-[#0c0e12] rounded-xl border border-slate-200/70 dark:border-[#222734]">
               <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -451,20 +708,22 @@ export default function AcademicRefiner({ onSelectView }) {
 
             <div className="p-3 bg-slate-50/80 dark:bg-[#0c0e12] rounded-xl border border-slate-200/70 dark:border-[#222734]">
               <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Sentence Rhythm
+                Word & Sentence Stats
               </div>
-              <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 flex items-center gap-1.5">
-                <Activity size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
-                Burstiness: {result.refinedMetrics?.burstiness || 48.0}
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                <span>{wordCount}w, {sentenceCount}s</span>
+                <span className="text-slate-400 mx-1">&rarr;</span>
+                <span className="text-[#38858a] dark:text-[#4fa3a8]">{refinedWordCount}w, {refinedSentenceCount}s</span>
               </div>
             </div>
 
             <div className="p-3 bg-slate-50/80 dark:bg-[#0c0e12] rounded-xl border border-slate-200/70 dark:border-[#222734]">
               <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Word Count Delta
+                Sentence Rhythm
               </div>
-              <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
-                {wordCount} &rarr; {refinedWordCount} ({refinedWordCount - wordCount >= 0 ? `+${refinedWordCount - wordCount}` : refinedWordCount - wordCount})
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 flex items-center gap-1.5">
+                <Activity size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
+                Burstiness: {result.refinedMetrics?.burstiness || 48.0}
               </div>
             </div>
           </div>
@@ -505,8 +764,9 @@ export default function AcademicRefiner({ onSelectView }) {
           {viewMode === 'side-by-side' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-slate-50/70 dark:bg-[#0c0e12] rounded-xl border border-slate-200 dark:border-[#222734]">
-                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                  Original Text
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+                  <span>Original Draft</span>
+                  <span className="text-slate-400 font-normal">{wordCount} words &bull; {sentenceCount} sentences</span>
                 </div>
                 <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-normal">
                   {result.originalText}
@@ -516,7 +776,9 @@ export default function AcademicRefiner({ onSelectView }) {
               <div className="p-4 bg-[#f0f7f8] dark:bg-[#121c21] rounded-xl border border-[#c0e0e3] dark:border-[#204045]">
                 <div className="text-xs font-bold uppercase tracking-wider text-[#1c4b4f] dark:text-[#a0dfe4] mb-2 flex items-center justify-between">
                   <span>Refined Output ({result.mode})</span>
-                  <span className="text-[#23585c] dark:text-[#74b6ba] text-[11px] font-semibold">Ready for Review</span>
+                  <span className="text-[#23585c] dark:text-[#74b6ba] text-[11px] font-semibold">
+                    {refinedWordCount} words &bull; {refinedSentenceCount} sentences
+                  </span>
                 </div>
                 <div className="text-sm text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap font-normal">
                   {result.refinedText}
@@ -548,6 +810,16 @@ export default function AcademicRefiner({ onSelectView }) {
               >
                 {copied ? <Check size={14} /> : <Copy size={14} />}
                 {copied ? 'Copied to Clipboard!' : 'Copy Refined Text'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownload}
+                className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#242b38] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#282f3d] shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                title="Download text file (.txt)"
+              >
+                <Download size={14} />
+                Download .txt
               </button>
 
               <button

@@ -500,4 +500,40 @@ export function getWordAlternatives(word) {
   return wordAlternatives[key] || null;
 }
 
+export const CONTRACTIONS = [
+  { from: /\bwon['’]t\b/gi, to: 'will not' },
+  { from: /\bcan['’]t\b/gi, to: 'cannot' },
+  { from: /\bshan['’]t\b/gi, to: 'shall not' },
+  { from: /\blet['’]s\b/gi, to: 'let us' },
+  { from: /\bain['’]t\b/gi, to: 'is not' },
+  { from: /\bdon['’]t\b/gi, to: 'do not' },
+  { from: /\bdoesn['’]t\b/gi, to: 'does not' },
+  { from: /\bdidn['’]t\b/gi, to: 'did not' },
+  { from: /\bisn['’]t\b/gi, to: 'is not' },
+  { from: /\baren['’]t\b/gi, to: 'are not' },
+  { from: /\bwasn['’]t\b/gi, to: 'was not' },
+  { from: /\bweren['’]t\b/gi, to: 'were not' },
+  { from: /\bhaven['’]t\b/gi, to: 'have not' },
+  { from: /\bhasn['’]t\b/gi, to: 'has not' },
+  { from: /\bhadn['’]t\b/gi, to: 'had not' },
+  { from: /\bwouldn['’]t\b/gi, to: 'would not' },
+  { from: /\bshouldn['’]t\b/gi, to: 'should not' },
+  { from: /\bcouldn['’]t\b/gi, to: 'could not' },
+  { from: /\b(they|we|you)['’]re\b/gi, to: '$1 are' },
+  { from: /\b(i|they|we|you)['’]ve\b/gi, to: '$1 have' },
+  { from: /\b(i|he|she|it|they|we|you)['’]ll\b/gi, to: '$1 will' },
+  { from: /\b(i|he|she|it|they|we|you)['’]d\b/gi, to: '$1 would' },
+  { from: /\bi['’]m\b/gi, to: 'I am' },
+  { from: /\bit['’]s\b/gi, to: 'it is' },
+  { from: /\bthat['’]s\b/gi, to: 'that is' },
+  { from: /\bthere['’]s\b/gi, to: 'there is' },
+];
+
+export function expandContractions(text) {
+  let result = text;
+  result = applyMappingList(result, CONTRACTIONS);
+  result = capitalizeFirstLetter(result);
+  return result;
+}
+
 export const EXAMPLE_TEXT = `I am writing this email to tell you that I cannot come to the meeting because I have some important work to do. Their is alot of stuff I gotta finish before tommorrow. I should of started earlier but I was real busy with other things. In order to make sure everything is done on time, I will need to work late. I hope you understand and I will definately try to attend the next one. It would be a good idea to reschedule if their are other people who can not make it. Thanks for your understanding, I recieve your message and will respond as soon as possible.`;

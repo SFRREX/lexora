@@ -8,6 +8,10 @@ import {
   refineWithRules,
   extractCitations,
   extractStatistics,
+  expandContractions,
+  addAcademicTransitions,
+  convertToAcademicPassive,
+  replaceWithFormalSynonyms,
 } from './server/academicRefinerService.js';
 import {
   calculateEvaluationMetrics,
@@ -194,6 +198,41 @@ assert.ok(refined.refinedText.includes('[1, 2]'), 'Must preserve [1, 2] citation
 assert.ok(refined.refinedText.includes('(Smith et al., 2023)'), 'Must preserve (Smith et al., 2023)');
 assert.ok(refined.refinedText.includes('42.5%'), 'Must preserve empirical statistics');
 console.log('   ✓ Academic unslop and citation protection passed.');
+
+// 7. Test Scholarly Transformation Methods (Contraction Expansion, Transitions, Passive Voice, Synonyms)
+console.log('7. Testing Scholarly Transformation Methods...');
+const informalText = "Don't assume we can't test it. We conducted the experiment and we didn't find errors. It's good to fix this.";
+
+// 7a. Contraction Expansion
+const expanded = expandContractions(informalText);
+assert.ok(expanded.text.includes('Do not'), 'Should expand capitalized Don\'t -> Do not');
+assert.ok(expanded.text.includes('cannot'), 'Should expand can\'t -> cannot');
+assert.ok(expanded.text.includes('did not'), 'Should expand didn\'t -> did not');
+assert.ok(expanded.text.includes('It is'), 'Should expand It\'s -> It is');
+assert.equal(expanded.count, 4, 'Should count 4 contractions');
+console.log('   ✓ Contraction expansion passed.');
+
+// 7b. Academic Passive Voice
+const passive = convertToAcademicPassive(informalText);
+assert.ok(passive.text.includes('The experiment was conducted'), 'Should convert "We conducted the experiment" to passive');
+console.log('   ✓ Academic passive voice transformation passed.');
+
+// 7c. Academic Synonyms
+const synonyms = replaceWithFormalSynonyms("This is a good result and will fix the issue.");
+assert.ok(synonyms.text.includes('favorable'), 'Should replace "good" with "favorable"');
+assert.ok(synonyms.text.includes('resolve'), 'Should replace "fix" with "resolve"');
+console.log('   ✓ Academic synonym replacement passed.');
+
+// 7d. Full Pipeline with Toggles
+const pipelineResult = refineWithRules(informalText, 'academic', 'balanced', {
+  expandContractions: true,
+  passiveVoice: true,
+  formalSynonyms: true,
+  addTransitions: true,
+});
+assert.ok(!pipelineResult.refinedText.includes("don't"), 'Pipeline should eliminate contractions');
+assert.ok(pipelineResult.contractionCount >= 3, 'Pipeline should track contraction count');
+console.log('   ✓ Full scholarly transformation pipeline passed.');
 
 console.log('\n========================================');
 console.log('ALL LEXORA SUITE TESTS PASSED SUCCESSFULLY!');

@@ -44,6 +44,250 @@ export const UNSLOP_CATALOG = [
 ];
 
 /**
+ * Contraction map matching informal to formal academic expansions with casing preservation
+ */
+export const CONTRACTION_MAP = [
+  { pattern: /\bwon['’]t\b/gi, replacement: 'will not' },
+  { pattern: /\bcan['’]t\b/gi, replacement: 'cannot' },
+  { pattern: /\bshan['’]t\b/gi, replacement: 'shall not' },
+  { pattern: /\blet['’]s\b/gi, replacement: 'let us' },
+  { pattern: /\bain['’]t\b/gi, replacement: 'is not' },
+
+  { pattern: /\bdon['’]t\b/gi, replacement: 'do not' },
+  { pattern: /\bdoesn['’]t\b/gi, replacement: 'does not' },
+  { pattern: /\bdidn['’]t\b/gi, replacement: 'did not' },
+  { pattern: /\bisn['’]t\b/gi, replacement: 'is not' },
+  { pattern: /\baren['’]t\b/gi, replacement: 'are not' },
+  { pattern: /\bwasn['’]t\b/gi, replacement: 'was not' },
+  { pattern: /\bweren['’]t\b/gi, replacement: 'were not' },
+  { pattern: /\bhaven['’]t\b/gi, replacement: 'have not' },
+  { pattern: /\bhasn['’]t\b/gi, replacement: 'has not' },
+  { pattern: /\bhadn['’]t\b/gi, replacement: 'had not' },
+  { pattern: /\bwouldn['’]t\b/gi, replacement: 'would not' },
+  { pattern: /\bshouldn['’]t\b/gi, replacement: 'should not' },
+  { pattern: /\bcouldn['’]t\b/gi, replacement: 'could not' },
+  { pattern: /\bmustn['’]t\b/gi, replacement: 'must not' },
+
+  { pattern: /\b(they|we|you)['’]re\b/gi, replacement: '$1 are' },
+  { pattern: /\b(i|they|we|you)['’]ve\b/gi, replacement: '$1 have' },
+  { pattern: /\b(i|he|she|it|they|we|you)['’]ll\b/gi, replacement: '$1 will' },
+  { pattern: /\b(i|he|she|it|they|we|you)['’]d\b/gi, replacement: '$1 would' },
+  { pattern: /\bi['’]m\b/gi, replacement: 'I am' },
+
+  { pattern: /\bit['’]s\b/gi, replacement: 'it is' },
+  { pattern: /\bthat['’]s\b/gi, replacement: 'that is' },
+  { pattern: /\bthere['’]s\b/gi, replacement: 'there is' },
+  { pattern: /\bhere['’]s\b/gi, replacement: 'here is' },
+  { pattern: /\bwhat['’]s\b/gi, replacement: 'what is' },
+  { pattern: /\bwho['’]s\b/gi, replacement: 'who is' },
+];
+
+/**
+ * Expands informal contractions to publication-grade formal English while preserving capitalization
+ */
+export function expandContractions(text) {
+  if (!text) return { text: '', count: 0, replacements: [] };
+  let expanded = text;
+  let count = 0;
+  const replacements = [];
+
+  CONTRACTION_MAP.forEach(({ pattern, replacement }) => {
+    expanded = expanded.replace(pattern, (match, p1) => {
+      count++;
+      let rep = typeof replacement === 'string' && replacement.includes('$1') && p1
+        ? replacement.replace('$1', p1)
+        : replacement;
+      if (match[0] === match[0].toUpperCase()) {
+        rep = rep.charAt(0).toUpperCase() + rep.slice(1);
+      }
+      replacements.push({ from: match, to: rep });
+      return rep;
+    });
+  });
+
+  return { text: expanded, count, replacements };
+}
+
+/**
+ * Scholarly transitions for discourse cohesion in academic manuscripts
+ */
+export const ACADEMIC_TRANSITIONS = [
+  'Moreover,',
+  'Additionally,',
+  'Furthermore,',
+  'Consequently,',
+  'Therefore,',
+  'Hence,',
+  'Accordingly,',
+  'Nonetheless,',
+  'Nevertheless,',
+];
+
+/**
+ * Injects scholarly transitions between sentences to enhance discourse cohesion
+ */
+export function addAcademicTransitions(text, rate = 0.35) {
+  if (!text || !text.trim()) return { text: '', count: 0, transitionsAdded: [] };
+
+  const rawSentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+  if (rawSentences.length <= 1) {
+    return { text, count: 0, transitionsAdded: [] };
+  }
+
+  const existingTransitionPattern = /^(?:however|moreover|furthermore|additionally|consequently|therefore|hence|accordingly|nonetheless|nevertheless|thus|in addition|in contrast|first|second|finally|although|because|while|despite)\b/i;
+
+  let count = 0;
+  const transitionsAdded = [];
+  let tIndex = 0;
+
+  const modifiedSentences = rawSentences.map((sent, index) => {
+    const trimmed = sent.trim();
+    if (!trimmed) return sent;
+
+    // Do not add transitions to the opening sentence of paragraph/text
+    if (index === 0) return sent;
+
+    // Do not add if already starts with transition or conjunction
+    if (existingTransitionPattern.test(trimmed)) {
+      return sent;
+    }
+
+    // Intersperse transitions smoothly into second and subsequent sentences
+    const shouldAdd = (index % 2 === 1) || (Math.random() < rate);
+    if (!shouldAdd) return sent;
+
+    const transition = ACADEMIC_TRANSITIONS[tIndex % ACADEMIC_TRANSITIONS.length];
+    tIndex++;
+    count++;
+    transitionsAdded.push(transition);
+
+    // Lowercase first letter of the sentence unless it's "I", an acronym, or citation/number
+    let nextChar = trimmed.charAt(0);
+    let restOfSentence = trimmed.slice(1);
+    const firstWordMatch = trimmed.match(/^([A-Za-z]+)/);
+    const firstWord = firstWordMatch ? firstWordMatch[1] : '';
+
+    if (firstWord !== 'I' && !/^[A-Z]{2,}$/.test(firstWord)) {
+      nextChar = nextChar.toLowerCase();
+    }
+
+    const newSentence = `${transition} ${nextChar}${restOfSentence}`;
+    const leadingWhitespace = sent.match(/^\s*/)?.[0] || '';
+    return `${leadingWhitespace}${newSentence}`;
+  });
+
+  return {
+    text: modifiedSentences.join(' '),
+    count,
+    transitionsAdded,
+  };
+}
+
+/**
+ * Transforms active personal formulations ("We conducted...", "The researchers analyzed...") into scholarly passive voice
+ */
+export function convertToAcademicPassive(text) {
+  if (!text) return { text: '', count: 0, conversions: [] };
+  let converted = text;
+  let count = 0;
+  const conversions = [];
+
+  const passivePatterns = [
+    {
+      pattern: /\b(?:we|the authors?|the researchers?|the investigators?)\s+conducted\s+(the\s+)?(study|experiment|trial|investigation|evaluation|analysis|survey)\b/gi,
+      replacement: (_, p1, noun) => `the ${noun} was conducted`,
+      label: 'conducted experiment/study -> was conducted',
+    },
+    {
+      pattern: /\b(?:we|the authors?|the researchers?|the investigators?)\s+(?:analyzed|evaluated|investigated|examined|assessed|measured)\s+(the\s+)?([a-zA-Z\s-]+?)(?=[.,;]|\b(?:in|on|with|using|to|across)\b)/gi,
+      replacement: (_, p1, noun) => `the ${noun.trim()} was evaluated`,
+      label: 'active evaluation -> was evaluated',
+    },
+    {
+      pattern: /\b(?:we|the authors?|the researchers?|the investigators?)\s+(?:observed|found|discovered|noted|demonstrated)\s+that\b/gi,
+      replacement: 'it was observed that',
+      label: 'we observed that -> it was observed that',
+    },
+    {
+      pattern: /\b(?:we|the authors?|the researchers?)\s+hypothesize\s+that\b/gi,
+      replacement: 'it is hypothesized that',
+      label: 'we hypothesize that -> it is hypothesized that',
+    },
+    {
+      pattern: /\b(?:we|the authors?|the researchers?)\s+propose\s+(a\s+|an\s+|the\s+)?([a-zA-Z\s-]+?)(?=[.,;]|\b(?:in|for|to)\b)/gi,
+      replacement: (_, article, noun) => `a ${noun.trim()} is proposed`,
+      label: 'we propose -> is proposed',
+    },
+  ];
+
+  passivePatterns.forEach(({ pattern, replacement, label }) => {
+    converted = converted.replace(pattern, (...args) => {
+      count++;
+      conversions.push(label);
+      const rep = typeof replacement === 'function' ? replacement(...args) : replacement;
+      const match = args[0];
+      if (match[0] === match[0].toUpperCase()) {
+        return rep.charAt(0).toUpperCase() + rep.slice(1);
+      }
+      return rep;
+    });
+  });
+
+  return { text: converted, count, conversions };
+}
+
+/**
+ * Elevates basic / informal vocabulary to publication-grade scholarly alternatives
+ */
+export const ACADEMIC_SYNONYMS = [
+  { pattern: /\bgood\b/gi, replacement: 'favorable' },
+  { pattern: /\bbad\b/gi, replacement: 'adverse' },
+  { pattern: /\bbig\b/gi, replacement: 'substantial' },
+  { pattern: /\bsmall\b/gi, replacement: 'marginal' },
+  { pattern: /\bget\b/gi, replacement: 'obtain' },
+  { pattern: /\bgive(?:s|d)?\b/gi, replacement: 'provide' },
+  { pattern: /\bfix(?:es|ed)?\b/gi, replacement: 'resolve' },
+  { pattern: /\bhelp(?:s|ed|ing)?\b/gi, replacement: 'facilitate' },
+  { pattern: /\bneed(?:s|ed)?\b/gi, replacement: 'require' },
+  { pattern: /\blook at\b/gi, replacement: 'examine' },
+  { pattern: /\bshows?\b/gi, replacement: 'demonstrates' },
+  { pattern: /\bshowed\b/gi, replacement: 'demonstrated' },
+  { pattern: /\bshowing\b/gi, replacement: 'demonstrating' },
+  { pattern: /\bstart(?:s|ed|ing)?\b/gi, replacement: 'initiate' },
+  { pattern: /\btry(?:ing)?\b/gi, replacement: 'attempt' },
+  { pattern: /\btried\b/gi, replacement: 'attempted' },
+  { pattern: /\ba lot of\b/gi, replacement: 'numerous' },
+  { pattern: /\blots of\b/gi, replacement: 'substantial' },
+  { pattern: /\bmake sure\b/gi, replacement: 'ensure' },
+  { pattern: /\bfind out\b/gi, replacement: 'determine' },
+  { pattern: /\btalk(?:s|ed|ing)? about\b/gi, replacement: 'address' },
+  { pattern: /\bput forward\b/gi, replacement: 'propose' },
+  { pattern: /\bcarry out\b/gi, replacement: 'execute' },
+  { pattern: /\bdeal with\b/gi, replacement: 'mitigate' },
+];
+
+export function replaceWithFormalSynonyms(text) {
+  if (!text) return { text: '', count: 0, replacements: [] };
+  let replaced = text;
+  let count = 0;
+  const replacements = [];
+
+  ACADEMIC_SYNONYMS.forEach(({ pattern, replacement }) => {
+    replaced = replaced.replace(pattern, (match) => {
+      count++;
+      let rep = replacement;
+      if (match[0] === match[0].toUpperCase()) {
+        rep = rep.charAt(0).toUpperCase() + rep.slice(1);
+      }
+      replacements.push({ from: match, to: rep });
+      return rep;
+    });
+  });
+
+  return { text: replaced, count, replacements };
+}
+
+/**
  * Extracts citations matching common academic formats:
  * - [1], [1, 2], [1-3]
  * - (Smith, 2020), (Smith & Jones, 2021), (Smith et al., 2022)
@@ -140,33 +384,84 @@ export function ensureCitationIntegrity(refinedText, originalCitations) {
 }
 
 /**
- * Deterministic rule-based refinement pass
+ * Deterministic rule-based refinement pass supporting method options
  */
-export function refineWithRules(text, mode = 'academic', level = 'balanced') {
+export function refineWithRules(text, mode = 'academic', level = 'balanced', options = {}) {
+  let actualMode = typeof mode === 'string' ? mode : (mode?.mode || 'academic');
+  let actualLevel = typeof level === 'string' ? level : (mode?.level || 'balanced');
+  const opts = typeof mode === 'object' && mode !== null ? mode : (typeof level === 'object' ? level : options);
+
+  const {
+    expandContractions: shouldExpandContractions = true,
+    addTransitions: shouldAddTransitions = false,
+    passiveVoice: shouldPassiveVoice = false,
+    formalSynonyms: shouldFormalSynonyms = true,
+  } = opts || {};
+
   let refined = text;
   const detectedSlop = [];
 
-  // 1. Unslop pass
+  // 1. Contraction expansion (if enabled)
+  let contractionCount = 0;
+  if (shouldExpandContractions) {
+    const contractionRes = expandContractions(refined);
+    refined = contractionRes.text;
+    contractionCount = contractionRes.count;
+  }
+
+  // 2. Unslop pass
   UNSLOP_CATALOG.forEach(({ pattern, replacement, note }) => {
     if (pattern.test(refined)) {
       detectedSlop.push({ pattern: pattern.source, replacement, note });
-      if (level === 'balanced' || mode === 'academic' || mode === 'concise') {
+      if (actualLevel === 'balanced' || actualMode === 'academic' || actualMode === 'concise') {
         refined = refined.replace(pattern, replacement);
       }
     }
   });
 
-  // 2. Clean up multiple spaces or dangling punctuation from deletions
+  // 3. Passive voice transformation (if enabled)
+  let passiveCount = 0;
+  if (shouldPassiveVoice) {
+    const passiveRes = convertToAcademicPassive(refined);
+    refined = passiveRes.text;
+    passiveCount = passiveRes.count;
+  }
+
+  // 4. Formal synonyms replacement (if enabled)
+  let synonymCount = 0;
+  if (shouldFormalSynonyms) {
+    const synRes = replaceWithFormalSynonyms(refined);
+    refined = synRes.text;
+    synonymCount = synRes.count;
+  }
+
+  // 5. Academic transitions injection (if enabled)
+  let transitionCount = 0;
+  if (shouldAddTransitions) {
+    const transRes = addAcademicTransitions(refined);
+    refined = transRes.text;
+    transitionCount = transRes.count;
+  }
+
+  // 6. Clean up multiple spaces or dangling punctuation from deletions
   refined = refined.replace(/\s{2,}/g, ' ');
   refined = refined.replace(/\s+([,.;:?!])/g, '$1');
   refined = refined.trim();
 
-  // 3. Capitalize sentence starts if modified
+  // 7. Capitalize sentence starts if modified
   refined = refined.replace(/(^\s*|\.\s+)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
+
+  // 8. Citation protection
+  const originalCitations = extractCitations(text);
+  refined = ensureCitationIntegrity(refined, originalCitations);
 
   return {
     refinedText: refined,
     detectedSlop,
+    contractionCount,
+    passiveCount,
+    synonymCount,
+    transitionCount,
     source: 'deterministic-rules',
   };
 }
@@ -178,6 +473,10 @@ export async function refineAcademicText(text, options = {}) {
   const {
     mode = 'academic', // 'natural' | 'academic' | 'grammar' | 'concise'
     level = 'balanced', // 'conservative' | 'balanced'
+    expandContractions: shouldExpandContractions = true,
+    addTransitions: shouldAddTransitions = false,
+    passiveVoice: shouldPassiveVoice = false,
+    formalSynonyms: shouldFormalSynonyms = true,
   } = options;
 
   const originalCitations = extractCitations(text);
@@ -185,13 +484,38 @@ export async function refineAcademicText(text, options = {}) {
   const originalMetrics = calculateTextMetrics(text);
 
   if (!isGeminiConfigured()) {
-    const local = refineWithRules(text, mode, level);
+    const local = refineWithRules(text, mode, level, options);
     const refinedMetrics = calculateTextMetrics(local.refinedText);
+    const editorialHighlights = [
+      `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
+      '100% of all citations and numerical data preserved verbatim',
+      'Standardized sentence clarity and syntax flow',
+    ];
+
+    if (local.contractionCount > 0) {
+      editorialHighlights.push(`Expanded ${local.contractionCount} informal contractions`);
+    }
+    if (local.passiveCount > 0) {
+      editorialHighlights.push(`Converted ${local.passiveCount} active phrases to objective academic passive voice`);
+    }
+    if (local.synonymCount > 0) {
+      editorialHighlights.push(`Upgraded ${local.synonymCount} terms to scholarly synonyms`);
+    }
+    if (local.transitionCount > 0) {
+      editorialHighlights.push(`Integrated ${local.transitionCount} academic transitions`);
+    }
+
     return {
       originalText: text,
       refinedText: local.refinedText,
       mode,
       level,
+      options: {
+        expandContractions: shouldExpandContractions,
+        addTransitions: shouldAddTransitions,
+        passiveVoice: shouldPassiveVoice,
+        formalSynonyms: shouldFormalSynonyms,
+      },
       source: 'local-rules',
       preservedCitations: originalCitations,
       missingCitations: [],
@@ -202,11 +526,7 @@ export async function refineAcademicText(text, options = {}) {
       detectedSlop: local.detectedSlop,
       originalMetrics,
       refinedMetrics,
-      editorialHighlights: [
-        `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
-        '100% of all citations and numerical data preserved verbatim',
-        'Standardized sentence clarity and syntax flow',
-      ],
+      editorialHighlights,
       disclaimer:
         'Lexora Academic Refiner is designed strictly for clarity and academic rigor. It does not attempt to conceal authorship or evade detection systems.',
     };
@@ -214,6 +534,21 @@ export async function refineAcademicText(text, options = {}) {
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const models = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+
+  const methodInstructions = [
+    shouldExpandContractions
+      ? '- FORMAL CONTRACTION EXPANSION (MANDATORY): Expand all contractions into complete formal forms (e.g., "don\'t" -> "do not", "can\'t" -> "cannot", "it\'s" -> "it is", "won\'t" -> "will not", "they\'re" -> "they are"). Do not leave conversational contractions.'
+      : '',
+    shouldAddTransitions
+      ? '- ACADEMIC TRANSITIONS: Smoothly integrate scholarly transitional discourse markers (e.g., "Moreover,", "Consequently,", "Furthermore,", "Therefore,", "Hence,", "Accordingly,") where appropriate between sentences to strengthen logical flow.'
+      : '',
+    shouldPassiveVoice
+      ? '- SCHOLARLY PASSIVE VOICE: Convert active personal formulations (e.g., "we conducted the tests", "the researchers analyzed the cohort", "we observed that") into standard objective academic passive constructions (e.g., "the tests were conducted", "the cohort was analyzed", "it was observed that").'
+      : '',
+    shouldFormalSynonyms
+      ? '- SOPHISTICATED SCHOLARLY VOCABULARY: Substitute basic or conversational verbs, adjectives, and nouns with precise, formal academic vocabulary (e.g., "help" -> "facilitate", "big" -> "substantial", "fix" -> "resolve", "need" -> "require", "show" -> "demonstrate").'
+      : '',
+  ].filter(Boolean).join('\n');
 
   const systemInstructions = `
 You are the Lexora Academic Refiner, a premier scientific editor for high-impact journals (e.g., Nature, Science, Cell, IEEE Transactions, PNAS).
@@ -225,26 +560,26 @@ CORE EDITING PRINCIPLES:
    - Replace throat-clearing openings with direct, substantive subject-verb statements.
 2. SCHOLARLY PRECISION & ACTIVE VERBS:
    - Use direct, authoritative analytical verbs: "demonstrates", "indicates", "measures", "reveals", "quantifies", "challenges", "isolates", "synthesizes".
-   - Avoid excessive passive voice where human, computational, or experimental agency is clear.
 3. NATURAL SENTENCE CADENCE & BURSTINESS:
    - Vary sentence lengths dynamically: balance complex compound observations with short, impactful summary statements.
-   - Remove mechanical signposts ("Furthermore", "Moreover", "Additionally") when logical progression is self-evident.
 4. STRICT CITATION & NUMERICAL IMMUNITY (ZERO HALLUCINATION):
    - You MUST preserve every citation marker (e.g., [1], [1, 2], [3-5], (Smith et al., 2023), DOIs) exactly as written in its contextual position. NEVER modify, renumber, omit, or invent citations.
    - You MUST preserve all quantitative data, sample sizes, percentages, p-values, confidence intervals, and chemical/biological symbols verbatim.
-5. GOAL: ${mode.toUpperCase()}
+5. TRANSFORMATION METHOD DIRECTIVES:
+${methodInstructions || '- Standard publication-grade editorial rigor.'}
+6. GOAL: ${mode.toUpperCase()}
    - Academic Writing: Objective, high lexical density, precise domain terminology.
    - Natural Writing: Fluid sentence flow, human cadence, engaging clarity.
    - Grammar & Clarity: Rigorous syntactic correctness, parallelism, and zero ambiguity.
    - Concise Writing: Strip wordy prepositions and deadwood; maximize signal-to-noise ratio.
-6. INTENSITY: ${level.toUpperCase()}
+7. INTENSITY: ${level.toUpperCase()}
    - Conservative: Minimal edits. Fix syntax, awkward phrasing, and punctuation while preserving original structure.
    - Balanced: Elevate vocabulary, eliminate stock AI tropes, improve rhythmic cadence, while preserving exact meaning.
 
 CALIBRATED EDITORIAL EXEMPLARS:
-[Example 1 - AI Fluff Removal]
-Draft: "In recent years, the realm of artificial intelligence has witnessed a profound transformation with the rise of autonomous multi-agent architectures. These cutting-edge frameworks delve into complex environments to facilitate seamless coordination and play a pivotal role in unlocking new capabilities [1, 2]."
-Refined: "Recent advancements in artificial intelligence have accelerated the deployment of autonomous multi-agent architectures. These frameworks analyze complex environments to coordinate decentralized decisions [1, 2]."
+[Example 1 - AI Fluff Removal & Contraction Expansion]
+Draft: "In recent years, the realm of artificial intelligence hasn't witnessed a slowdown. These cutting-edge frameworks delve into complex environments and play a pivotal role in unlocking new capabilities [1, 2]."
+Refined: "Recent advancements in artificial intelligence have not experienced a slowdown. These frameworks analyze complex environments to coordinate decentralized decisions [1, 2]."
 
 [Example 2 - Empirical Oncology Study]
 Draft: "It is worth noting that at median follow-up of 21.4 months, the cohort had a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002). This groundbreaking discovery sheds light on future clinical oncology pathways."
@@ -276,6 +611,11 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
       // Clean any accidental markdown code wrappers if model produced them
       rawRefined = rawRefined.replace(/^```[a-zA-Z]*\n?([\s\S]*?)\n?```$/g, '$1').trim();
 
+      // Contraction safety guarantee if enabled
+      if (shouldExpandContractions) {
+        rawRefined = expandContractions(rawRefined).text;
+      }
+
       // Ensure 100% citation integrity (re-anchor if model omitted any)
       const refinedText = ensureCitationIntegrity(rawRefined, originalCitations);
 
@@ -294,8 +634,8 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
           ? 100
           : Math.round(((originalStats.length - missingStats.length) / originalStats.length) * 100);
 
-      // Calculate unslop replacements from rule catalog for diagnostic reporting
-      const local = refineWithRules(text, mode, level);
+      // Calculate unslop replacements and method counts from rule catalog for diagnostic reporting
+      const local = refineWithRules(text, mode, level, options);
       const refinedMetrics = calculateTextMetrics(refinedText);
 
       const editorialHighlights = [
@@ -303,12 +643,27 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
         `${citationPreservationRate}% of all citations (${originalCitations.length}) preserved verbatim`,
         `Sentence rhythm optimized (burstiness: ${refinedMetrics.burstiness})`,
       ];
+      if (local.contractionCount > 0) {
+        editorialHighlights.push(`Expanded ${local.contractionCount} informal contractions`);
+      }
+      if (shouldPassiveVoice) {
+        editorialHighlights.push('Applied scholarly passive voice formatting');
+      }
+      if (shouldAddTransitions) {
+        editorialHighlights.push('Synthesized academic discourse transitions');
+      }
 
       return {
         originalText: text,
         refinedText,
         mode,
         level,
+        options: {
+          expandContractions: shouldExpandContractions,
+          addTransitions: shouldAddTransitions,
+          passiveVoice: shouldPassiveVoice,
+          formalSynonyms: shouldFormalSynonyms,
+        },
         source: `gemini (${model})`,
         preservedCitations: originalCitations,
         missingCitations,
@@ -332,13 +687,19 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
 
   // Graceful fallback to deterministic engine if all models fail
   console.warn('All Gemini models failed for academic refiner, falling back to deterministic rules.', lastError?.message);
-  const local = refineWithRules(text, mode, level);
+  const local = refineWithRules(text, mode, level, options);
   const refinedMetrics = calculateTextMetrics(local.refinedText);
   return {
     originalText: text,
     refinedText: local.refinedText,
     mode,
     level,
+    options: {
+      expandContractions: shouldExpandContractions,
+      addTransitions: shouldAddTransitions,
+      passiveVoice: shouldPassiveVoice,
+      formalSynonyms: shouldFormalSynonyms,
+    },
     source: 'local-rules-fallback',
     preservedCitations: originalCitations,
     missingCitations: [],

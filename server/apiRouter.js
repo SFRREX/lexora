@@ -118,13 +118,20 @@ export async function handleApiRequest(req, res) {
   ) {
     try {
       const body = await getJsonBody(req);
-      const { text, mode, level } = body;
+      const { text, mode, level, expandContractions, addTransitions, passiveVoice, formalSynonyms } = body;
       if (!text || !text.trim()) {
         sendJson(res, 400, { error: 'Text is required for academic refinement.' });
         return true;
       }
 
-      const result = await refineAcademicText(text, { mode, level });
+      const result = await refineAcademicText(text, {
+        mode,
+        level,
+        expandContractions,
+        addTransitions,
+        passiveVoice,
+        formalSynonyms,
+      });
       sendJson(res, 200, result);
     } catch (err) {
       sendJson(res, 500, { error: err.message || 'Refinement failed.' });

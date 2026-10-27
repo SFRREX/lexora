@@ -38,15 +38,32 @@ export async function runAiDetection(text, providers = ['gemini', 'stylometrics'
   return await response.json();
 }
 
-export async function runAcademicRefinement(text, { mode = 'academic', level = 'balanced' } = {}) {
+export async function runAcademicRefinement(text, options = {}) {
   if (!text || !text.trim()) {
     throw new Error('Please enter text for academic refinement.');
   }
 
+  const {
+    mode = 'academic',
+    level = 'balanced',
+    expandContractions = true,
+    addTransitions = false,
+    passiveVoice = false,
+    formalSynonyms = true,
+  } = options;
+
   const response = await fetch('/api/refine-academic', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, mode, level }),
+    body: JSON.stringify({
+      text,
+      mode,
+      level,
+      expandContractions,
+      addTransitions,
+      passiveVoice,
+      formalSynonyms,
+    }),
   });
 
   if (!response.ok) {
