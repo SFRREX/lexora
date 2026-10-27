@@ -25,6 +25,7 @@ import {
   Square,
 } from 'lucide-react';
 import { runAcademicRefinement } from '../services/suiteServices.js';
+import { extractTextFromDocument } from '../utils/documentExtractor.js';
 
 /**
  * Computes exact word-by-word sequence diff using Longest Common Subsequence (LCS)
@@ -179,6 +180,7 @@ export default function AcademicRefiner({ onSelectView }) {
   const [passiveVoice, setPassiveVoice] = useState(false);
   const [formalSynonyms, setFormalSynonyms] = useState(true);
 
+  const [isFileLoading, setIsFileLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   async function handlePaste() {
@@ -195,20 +197,24 @@ export default function AcademicRefiner({ onSelectView }) {
     }
   }
 
-  function handleFileUpload(e) {
+  async function handleFileUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
+    setIsFileLoading(true);
+    setError(null);
+    try {
+      const content = await extractTextFromDocument(file);
       if (typeof content === 'string') {
         setText(content);
         setResult(null);
         setError(null);
       }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+    } catch (err) {
+      setError(err.message || 'Failed to extract readable text from document.');
+    } finally {
+      setIsFileLoading(false);
+      e.target.value = '';
+    }
   }
 
   function handleDownload() {
@@ -517,7 +523,7 @@ export default function AcademicRefiner({ onSelectView }) {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".txt,.md"
+              accept=".txt,.md,.pdf"
               className="hidden"
               onChange={handleFileUpload}
             />
@@ -528,7 +534,7 @@ export default function AcademicRefiner({ onSelectView }) {
             rows={7}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Paste your abstract, literature review, grant proposal, or manuscript section here, or click Import File..."
+            placeholder="Paste your abstract, literature review, grant proposal, or manuscript section here, or click Import Document..."
             className="w-full p-4 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 bg-slate-50/70 dark:bg-[#0c0e12] border border-slate-200 dark:border-[#262c3b] rounded-xl focus:bg-white dark:focus:bg-[#10131a] focus:outline-none focus:ring-2 focus:ring-[#38858a]/20 focus:border-[#38858a] dark:focus:border-[#4fa3a8] transition-all font-normal leading-relaxed text-sm sm:text-base resize-y shadow-inner"
           />
 
@@ -542,12 +548,21 @@ export default function AcademicRefiner({ onSelectView }) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
+                disabled={isLoading || isFileLoading}
                 className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#222835] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
-                title="Import from a .txt or .md file"
+                title="Import from a .pdf, .txt, or .md document"
               >
-                <Upload size={14} />
-                Import File
+                {isFileLoading ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-slate-400 border-t-slate-800 dark:border-t-slate-200 rounded-full animate-spin" />
+                    Extracting...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={14} />
+                    Import (PDF, TXT, MD)
+                  </>
+                )}
               </button>
 
               <button

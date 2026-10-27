@@ -7,12 +7,18 @@ import { detectorManager } from './server/detectors/detectorManager.js';
 import {
   refineWithRules,
   extractCitations,
+  maskCitationsWithPlaceholders,
+  unmaskCitationsFromPlaceholders,
   extractStatistics,
   expandContractions,
   addAcademicTransitions,
   convertToAcademicPassive,
   replaceWithFormalSynonyms,
 } from './server/academicRefinerService.js';
+import {
+  classifySentenceFourTier,
+  computeFourTierDistribution,
+} from './server/detectors/baseDetector.js';
 import {
   calculateEvaluationMetrics,
   calculateRocAuc,
@@ -233,6 +239,68 @@ const pipelineResult = refineWithRules(informalText, 'academic', 'balanced', {
 assert.ok(!pipelineResult.refinedText.includes("don't"), 'Pipeline should eliminate contractions');
 assert.ok(pipelineResult.contractionCount >= 3, 'Pipeline should track contraction count');
 console.log('   ✓ Full scholarly transformation pipeline passed.');
+
+// 8. Test Citation Placeholder Isolation & Restoration
+console.log('8. Testing Citation Placeholder Isolation & Verbatim Restoration...');
+const academicDraftWithCitations =
+  'Sampling methods delve into motion planning (Karaman & Frazzoli, 2011, pp. 83–86) and decentralized agents [1, 2]. As demonstrated by (Smith et al., 2023), it is worth noting that DOI 10.1038/s41586-020-2649-2 is pivotal.';
+
+const { text: maskedCitations, mapping: citMap } = maskCitationsWithPlaceholders(academicDraftWithCitations);
+assert.ok(maskedCitations.includes('[[REF_1]]'), 'Should replace first citation with [[REF_1]]');
+assert.ok(maskedCitations.includes('[[REF_2]]'), 'Should replace bracket citation with placeholder');
+assert.ok(!maskedCitations.includes('Karaman & Frazzoli'), 'Author names should be masked inside placeholders');
+
+const unmaskedCitations = unmaskCitationsFromPlaceholders(maskedCitations, citMap);
+assert.equal(unmaskedCitations, academicDraftWithCitations, 'Unmasking should restore exact original citations verbatim');
+
+const refinedWithCitationIsolation = refineWithRules(academicDraftWithCitations, 'academic', 'balanced');
+assert.ok(refinedWithCitationIsolation.refinedText.includes('(Karaman & Frazzoli, 2011, pp. 83–86)'), 'Refiner must preserve APA citation with page numbers');
+assert.ok(refinedWithCitationIsolation.refinedText.includes('[1, 2]'), 'Refiner must preserve bracket citation');
+assert.ok(refinedWithCitationIsolation.refinedText.includes('10.1038/s41586-020-2649-2'), 'Refiner must preserve DOI citation');
+assert.ok(!refinedWithCitationIsolation.refinedText.includes('delve into'), 'Refiner should remove slop outside citations');
+assert.equal(refinedWithCitationIsolation.isolatedCitationsCount, 4, 'Should count 4 isolated citations');
+console.log('   ✓ Citation placeholder isolation and verbatim restoration passed.');
+
+// 9. Test Four-Tier Granular Classification Framework
+console.log('9. Testing Four-Tier Granular Provenance Classification...');
+const humanSentence = classifySentenceFourTier(0.12, 'human');
+assert.equal(humanSentence.tier, 'human-written', 'Low score should be classified as human-written');
+assert.equal(humanSentence.tierLabel, 'Human-written');
+
+const humanRefinedSentence = classifySentenceFourTier(0.38, 'mixed');
+assert.equal(humanRefinedSentence.tier, 'ai-refined-human', '0.38 score should be classified as human-written & ai-refined');
+
+const aiRefinedSentence = classifySentenceFourTier(0.62, 'mixed');
+assert.equal(aiRefinedSentence.tier, 'ai-refined-ai', '0.62 score should be classified as ai-generated & ai-refined');
+
+const aiSentence = classifySentenceFourTier(0.91, 'ai');
+assert.equal(aiSentence.tier, 'ai-generated', '0.91 score should be classified as ai-generated');
+
+const mockSentences = [
+  { tier: 'human-written' },
+  { tier: 'human-written' },
+  { tier: 'ai-refined-human' },
+  { tier: 'ai-refined-ai' },
+  { tier: 'ai-generated' },
+];
+const distribution = computeFourTierDistribution(mockSentences);
+assert.equal(distribution.humanWritten, 40, '2/5 should be 40% humanWritten');
+assert.equal(distribution.humanWrittenAiRefined, 20, '1/5 should be 20% humanWrittenAiRefined');
+assert.equal(distribution.aiGeneratedAiRefined, 20, '1/5 should be 20% aiGeneratedAiRefined');
+assert.equal(distribution.aiGenerated, 20, '1/5 should be 20% aiGenerated');
+console.log('   ✓ Four-tier classification and distribution calculation passed.');
+
+// 10. Test Local Stylometrics 4-Tier Distribution Integration
+console.log('10. Testing Local Stylometrics 4-Tier Distribution Output...');
+const stylometricsResult = await stylometrics.detect(
+  'Sampling methods in motion planning coordinate decentralized agents. These techniques provide provable completeness and asymptotic optimality. In addition, experimental validation demonstrates significant reductions in trajectory planning overhead.'
+);
+assert.ok(stylometricsResult.fourTierDistribution, 'Stylometrics must include fourTierDistribution');
+assert.equal(typeof stylometricsResult.fourTierDistribution.humanWritten, 'number', 'humanWritten percentage must be numeric');
+assert.ok(Array.isArray(stylometricsResult.sentences), 'Must have sentences array');
+assert.ok(stylometricsResult.sentences[0].tier, 'Sentences must include provenance tier');
+assert.ok(stylometricsResult.sentences[0].tierLabel, 'Sentences must include provenance tierLabel');
+console.log('   ✓ Local Stylometrics 4-tier distribution integration passed.');
 
 console.log('\n========================================');
 console.log('ALL LEXORA SUITE TESTS PASSED SUCCESSFULLY!');

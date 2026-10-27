@@ -290,16 +290,48 @@ export function replaceWithFormalSynonyms(text) {
 /**
  * Extracts citations matching common academic formats:
  * - [1], [1, 2], [1-3]
- * - (Smith, 2020), (Smith & Jones, 2021), (Smith et al., 2022)
+ * - (Smith, 2020), (Smith & Jones, 2021), (Smith et al., 2022), (Karaman & Frazzoli, 2011, pp. 83–86)
+ * - Semicolon compound citations: (Smith, 2020; Johnson, 2021)
  * - doi:10.xxx
  */
 export function extractCitations(text) {
   if (!text) return [];
   const bracketMatches = text.match(/\[\d+(?:[-, ]+\d+)*\]/g) || [];
   const authorYearMatches =
-    text.match(/\([A-Z][a-zA-Z\s.&]+,\s*(?:19|20)\d{2}[a-z]?(?:;\s*[A-Z][a-zA-Z\s.&]+,\s*(?:19|20)\d{2}[a-z]?)*\)/g) || [];
+    text.match(/\(\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?(?:;\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?)*\s*\)/g) || [];
   const doiMatches = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/g) || [];
   return [...new Set([...bracketMatches, ...authorYearMatches, ...doiMatches])];
+}
+
+/**
+ * Isolates citations by replacing each with a placeholder token [[REF_1]], [[REF_2]], etc.
+ * Guarantees author names, years, pages, and DOIs are immune to synonym replacement, passive voice conversion, or phrasing edits.
+ */
+export function maskCitationsWithPlaceholders(text) {
+  if (!text) return { text: '', mapping: {} };
+  const citations = extractCitations(text);
+  if (citations.length === 0) return { text, mapping: {} };
+
+  const mapping = {};
+  let masked = text;
+  citations.forEach((cit, idx) => {
+    const placeholder = `[[REF_${idx + 1}]]`;
+    mapping[placeholder] = cit;
+    masked = masked.split(cit).join(placeholder);
+  });
+  return { text: masked, mapping };
+}
+
+/**
+ * Restores original citations from placeholder tokens.
+ */
+export function unmaskCitationsFromPlaceholders(text, mapping) {
+  if (!text || !mapping || Object.keys(mapping).length === 0) return text;
+  let restored = text;
+  for (const [placeholder, originalCitation] of Object.entries(mapping)) {
+    restored = restored.split(placeholder).join(originalCitation);
+  }
+  return restored;
 }
 
 /**
@@ -398,7 +430,11 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
     formalSynonyms: shouldFormalSynonyms = true,
   } = opts || {};
 
-  let refined = text;
+  // 0. Isolate citations with placeholders to protect author names, years, and page numbers from alteration
+  const originalCitations = extractCitations(text);
+  const { text: maskedText, mapping: citationMapping } = maskCitationsWithPlaceholders(text);
+
+  let refined = maskedText;
   const detectedSlop = [];
 
   // 1. Contraction expansion (if enabled)
@@ -451,8 +487,10 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
   // 7. Capitalize sentence starts if modified
   refined = refined.replace(/(^\s*|\.\s+)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
 
-  // 8. Citation protection
-  const originalCitations = extractCitations(text);
+  // 8. Restore isolated citations from placeholders
+  refined = unmaskCitationsFromPlaceholders(refined, citationMapping);
+
+  // 9. Citation protection safety guarantee
   refined = ensureCitationIntegrity(refined, originalCitations);
 
   return {
@@ -462,6 +500,7 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
     passiveCount,
     synonymCount,
     transitionCount,
+    isolatedCitationsCount: Object.keys(citationMapping).length,
     source: 'deterministic-rules',
   };
 }
@@ -482,13 +521,14 @@ export async function refineAcademicText(text, options = {}) {
   const originalCitations = extractCitations(text);
   const originalStats = extractStatistics(text);
   const originalMetrics = calculateTextMetrics(text);
+  const { text: maskedDraft, mapping: citationMapping } = maskCitationsWithPlaceholders(text);
 
   if (!isGeminiConfigured()) {
     const local = refineWithRules(text, mode, level, options);
     const refinedMetrics = calculateTextMetrics(local.refinedText);
     const editorialHighlights = [
       `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
-      '100% of all citations and numerical data preserved verbatim',
+      `${originalCitations.length > 0 ? 'Protected ' + originalCitations.length + ' citations via placeholder isolation' : '100% data integrity verified'}`,
       'Standardized sentence clarity and syntax flow',
     ];
 
@@ -563,7 +603,7 @@ CORE EDITING PRINCIPLES:
 3. NATURAL SENTENCE CADENCE & BURSTINESS:
    - Vary sentence lengths dynamically: balance complex compound observations with short, impactful summary statements.
 4. STRICT CITATION & NUMERICAL IMMUNITY (ZERO HALLUCINATION):
-   - You MUST preserve every citation marker (e.g., [1], [1, 2], [3-5], (Smith et al., 2023), DOIs) exactly as written in its contextual position. NEVER modify, renumber, omit, or invent citations.
+   - Citation placeholders like [[REF_1]], [[REF_2]] isolate academic citations verbatim. You MUST retain all [[REF_x]] placeholders exactly where they belong in the sentences. NEVER remove, translate, or alter them.
    - You MUST preserve all quantitative data, sample sizes, percentages, p-values, confidence intervals, and chemical/biological symbols verbatim.
 5. TRANSFORMATION METHOD DIRECTIVES:
 ${methodInstructions || '- Standard publication-grade editorial rigor.'}
@@ -578,14 +618,13 @@ ${methodInstructions || '- Standard publication-grade editorial rigor.'}
 
 CALIBRATED EDITORIAL EXEMPLARS:
 [Example 1 - AI Fluff Removal & Contraction Expansion]
-Draft: "In recent years, the realm of artificial intelligence hasn't witnessed a slowdown. These cutting-edge frameworks delve into complex environments and play a pivotal role in unlocking new capabilities [1, 2]."
-Refined: "Recent advancements in artificial intelligence have not experienced a slowdown. These frameworks analyze complex environments to coordinate decentralized decisions [1, 2]."
+Draft: "In recent years, the realm of artificial intelligence hasn't witnessed a slowdown. These cutting-edge frameworks delve into complex environments and play a pivotal role in unlocking new capabilities [[REF_1]]."
+Refined: "Recent advancements in artificial intelligence have not experienced a slowdown. These frameworks analyze complex environments to coordinate decentralized decisions [[REF_1]]."
 
 [Example 2 - Empirical Oncology Study]
 Draft: "It is worth noting that at median follow-up of 21.4 months, the cohort had a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002). This groundbreaking discovery sheds light on future clinical oncology pathways."
 Refined: "At a median follow-up of 21.4 months, the cohort demonstrated a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002). These findings establish a baseline for subsequent clinical trials in oncology."
 
-MANDATORY PRESERVED CITATIONS: ${JSON.stringify(originalCitations)}
 MANDATORY PRESERVED DATA/STATS: ${JSON.stringify(originalStats)}
 
 Return ONLY the refined text directly. Do not include markdown code block quotes, conversational greetings, intros, or summaries.
@@ -598,7 +637,7 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
       const response = await ai.models.generateContent({
         model,
         contents: [
-          { role: 'user', parts: [{ text: `Original Draft for Refinement:\n\n${text}` }] },
+          { role: 'user', parts: [{ text: `Original Draft for Refinement:\n\n${maskedDraft}` }] },
         ],
         config: {
           systemInstruction: systemInstructions,
@@ -606,10 +645,13 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
         },
       });
 
-      let rawRefined = response.text ? response.text.trim() : text;
+      let rawRefined = response.text ? response.text.trim() : maskedDraft;
 
       // Clean any accidental markdown code wrappers if model produced them
       rawRefined = rawRefined.replace(/^```[a-zA-Z]*\n?([\s\S]*?)\n?```$/g, '$1').trim();
+
+      // Restore citations from placeholders
+      rawRefined = unmaskCitationsFromPlaceholders(rawRefined, citationMapping);
 
       // Contraction safety guarantee if enabled
       if (shouldExpandContractions) {

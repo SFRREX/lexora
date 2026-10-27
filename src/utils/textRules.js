@@ -536,4 +536,46 @@ export function expandContractions(text) {
   return result;
 }
 
+/**
+ * Extracts citations matching common academic formats
+ */
+export function extractCitations(text) {
+  if (!text) return [];
+  const bracketMatches = text.match(/\[\d+(?:[-, ]+\d+)*\]/g) || [];
+  const authorYearMatches =
+    text.match(/\(\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?(?:;\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?)*\s*\)/g) || [];
+  const doiMatches = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/g) || [];
+  return [...new Set([...bracketMatches, ...authorYearMatches, ...doiMatches])];
+}
+
+/**
+ * Masks citations with unique index placeholders
+ */
+export function maskCitationsWithPlaceholders(text) {
+  if (!text) return { text: '', mapping: {} };
+  const citations = extractCitations(text);
+  if (citations.length === 0) return { text, mapping: {} };
+
+  const mapping = {};
+  let masked = text;
+  citations.forEach((cit, idx) => {
+    const placeholder = `[[REF_${idx + 1}]]`;
+    mapping[placeholder] = cit;
+    masked = masked.split(cit).join(placeholder);
+  });
+  return { text: masked, mapping };
+}
+
+/**
+ * Restores original citations from placeholder tokens
+ */
+export function unmaskCitationsFromPlaceholders(text, mapping) {
+  if (!text || !mapping || Object.keys(mapping).length === 0) return text;
+  let restored = text;
+  for (const [placeholder, originalCitation] of Object.entries(mapping)) {
+    restored = restored.split(placeholder).join(originalCitation);
+  }
+  return restored;
+}
+
 export const EXAMPLE_TEXT = `I am writing this email to tell you that I cannot come to the meeting because I have some important work to do. Their is alot of stuff I gotta finish before tommorrow. I should of started earlier but I was real busy with other things. In order to make sure everything is done on time, I will need to work late. I hope you understand and I will definately try to attend the next one. It would be a good idea to reschedule if their are other people who can not make it. Thanks for your understanding, I recieve your message and will respond as soon as possible.`;

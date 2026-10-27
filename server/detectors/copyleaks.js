@@ -1,4 +1,4 @@
-import { BaseDetector } from './baseDetector.js';
+import { BaseDetector, classifySentenceFourTier, computeFourTierDistribution } from './baseDetector.js';
 
 export class CopyleaksAdapter extends BaseDetector {
   constructor() {
@@ -61,6 +61,8 @@ export class CopyleaksAdapter extends BaseDetector {
     if (aiProb >= 0.7) classification = 'ai';
     else if (aiProb <= 0.3) classification = 'human';
 
+    const sentences = this._splitFallbackSentences(originalText, classification, aiProb);
+    const fourTierDistribution = computeFourTierDistribution(sentences);
     const words = originalText.trim().split(/\s+/).filter(Boolean);
 
     return {
@@ -71,7 +73,8 @@ export class CopyleaksAdapter extends BaseDetector {
       confidence: aiProb > 0.85 || aiProb < 0.15 ? 'high' : 'medium',
       burstiness: null,
       perplexity: null,
-      sentences: this._splitFallbackSentences(originalText, classification, aiProb),
+      sentences,
+      fourTierDistribution,
       paragraphs: [],
       scanTimestamp: new Date().toISOString(),
       modelVersion: 'copyleaks-writer-detector-v2',
@@ -83,12 +86,16 @@ export class CopyleaksAdapter extends BaseDetector {
 
   _splitFallbackSentences(text, overallClass, score) {
     const raw = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+    const roundedScore = Math.round(score * 100) / 100;
+    const tierInfo = classifySentenceFourTier(roundedScore, overallClass);
     return raw.map((s, idx) => ({
       id: `s-${idx}`,
       text: s.trim(),
       label: overallClass,
-      score: Math.round(score * 100) / 100,
+      score: roundedScore,
       perplexity: null,
+      tier: tierInfo.tier,
+      tierLabel: tierInfo.tierLabel,
     })).filter((s) => s.text.length > 0);
   }
 

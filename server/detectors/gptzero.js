@@ -1,4 +1,4 @@
-import { BaseDetector } from './baseDetector.js';
+import { BaseDetector, classifySentenceFourTier, computeFourTierDistribution } from './baseDetector.js';
 
 export class GPTZeroAdapter extends BaseDetector {
   constructor() {
@@ -59,15 +59,23 @@ export class GPTZeroAdapter extends BaseDetector {
       const prob = typeof s.generated_prob === 'number' ? s.generated_prob : 0;
       const isAI = s.highlight_sentence_for_ai || prob > 0.65;
       const isMixed = !isAI && prob >= 0.35;
+      const label = isAI ? 'ai' : isMixed ? 'mixed' : 'human';
+      const score = Math.round(prob * 100) / 100;
+      const tierInfo = classifySentenceFourTier(score, label);
       
       return {
         id: `s-${idx}`,
         text,
-        label: isAI ? 'ai' : isMixed ? 'mixed' : 'human',
-        score: Math.round(prob * 100) / 100,
+        label,
+        score,
         perplexity: typeof s.perplexity === 'number' ? Math.round(s.perplexity * 10) / 10 : null,
+        tier: tierInfo.tier,
+        tierLabel: tierInfo.tierLabel,
       };
     });
+
+    const evaluatedSentences = sentences.length > 0 ? sentences : this._splitFallbackSentences(originalText, classification);
+    const fourTierDistribution = computeFourTierDistribution(evaluatedSentences);
 
     // Paragraph-level breakdown
     const rawParagraphs = doc.paragraphs || [];
@@ -85,7 +93,8 @@ export class GPTZeroAdapter extends BaseDetector {
       confidence: doc.confidence_category || (probabilityScore > 0.8 || probabilityScore < 0.2 ? 'high' : 'medium'),
       burstiness: typeof doc.overall_burstiness === 'number' ? Math.round(doc.overall_burstiness * 10) / 10 : null,
       perplexity: typeof doc.average_generated_prob === 'number' ? Math.round(doc.average_generated_prob * 100) / 100 : null,
-      sentences: sentences.length > 0 ? sentences : this._splitFallbackSentences(originalText, classification),
+      sentences: evaluatedSentences,
+      fourTierDistribution,
       paragraphs,
       scanTimestamp: new Date().toISOString(),
       modelVersion: doc.version || 'v2-predict',
@@ -100,12 +109,16 @@ export class GPTZeroAdapter extends BaseDetector {
 
   _splitFallbackSentences(text, overallClass) {
     const raw = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+    const score = overallClass === 'ai' ? 0.9 : overallClass === 'human' ? 0.1 : 0.5;
+    const tierInfo = classifySentenceFourTier(score, overallClass);
     return raw.map((s, idx) => ({
       id: `s-${idx}`,
       text: s.trim(),
       label: overallClass,
-      score: overallClass === 'ai' ? 0.9 : overallClass === 'human' ? 0.1 : 0.5,
+      score,
       perplexity: null,
+      tier: tierInfo.tier,
+      tierLabel: tierInfo.tierLabel,
     })).filter((s) => s.text.length > 0);
   }
 

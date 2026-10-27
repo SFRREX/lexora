@@ -1,4 +1,4 @@
-import { BaseDetector } from './baseDetector.js';
+import { BaseDetector, classifySentenceFourTier, computeFourTierDistribution } from './baseDetector.js';
 
 // Classic generative AI cliché n-grams
 const AI_MARKERS = [
@@ -109,6 +109,7 @@ export class LocalStylometricsAdapter extends BaseDetector {
 
       sentenceAiScore = Math.min(0.98, Math.max(0.05, sentenceAiScore));
       const label = sentenceAiScore >= 0.65 ? 'ai' : sentenceAiScore >= 0.35 ? 'mixed' : 'human';
+      const tierInfo = classifySentenceFourTier(sentenceAiScore, label);
 
       return {
         id: `s-${idx}`,
@@ -116,8 +117,13 @@ export class LocalStylometricsAdapter extends BaseDetector {
         label,
         score: Math.round(sentenceAiScore * 100) / 100,
         perplexity: Math.round((1 - sentenceAiScore) * 80 + 15),
+        tier: tierInfo.tier,
+        tierLabel: tierInfo.tierLabel,
       };
     });
+
+    // Compute 4-tier granular provenance distribution
+    const fourTierDistribution = computeFourTierDistribution(sentenceEvaluations);
 
     // Compute document-level probability
     // Lower burstiness + high AI tropes density + uniform TTR -> higher AI probability
@@ -154,6 +160,7 @@ export class LocalStylometricsAdapter extends BaseDetector {
       burstiness,
       perplexity: Math.round((1 - overallProbability) * 65 + 20),
       sentences: sentenceEvaluations,
+      fourTierDistribution,
       paragraphs: [],
       scanTimestamp: new Date().toISOString(),
       modelVersion: 'stylometrics-statistical-v1 (Free/Local)',

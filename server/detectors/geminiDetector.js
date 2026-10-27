@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from '@google/genai';
-import { BaseDetector } from './baseDetector.js';
+import { BaseDetector, classifySentenceFourTier, computeFourTierDistribution } from './baseDetector.js';
 
 export class GeminiDetectorAdapter extends BaseDetector {
   constructor() {
@@ -33,16 +33,24 @@ export class GeminiDetectorAdapter extends BaseDetector {
         : 0.5;
 
     const sentences = Array.isArray(raw.sentences)
-      ? raw.sentences.map((s, idx) => ({
-          id: `s-${idx}`,
-          text: s.text || '',
-          label: (s.classification || 'mixed').toLowerCase(),
-          score: typeof s.score === 'number' ? Math.round(s.score * 100) / 100 : probabilityScore,
-          perplexity: typeof s.perplexity === 'number' ? Math.round(s.perplexity * 10) / 10 : null,
-          reason: s.reason || '',
-        }))
+      ? raw.sentences.map((s, idx) => {
+          const score = typeof s.score === 'number' ? Math.round(s.score * 100) / 100 : probabilityScore;
+          const label = (s.classification || 'mixed').toLowerCase();
+          const tierInfo = classifySentenceFourTier(score, label);
+          return {
+            id: `s-${idx}`,
+            text: s.text || '',
+            label,
+            score,
+            perplexity: typeof s.perplexity === 'number' ? Math.round(s.perplexity * 10) / 10 : null,
+            reason: s.reason || '',
+            tier: tierInfo.tier,
+            tierLabel: tierInfo.tierLabel,
+          };
+        })
       : this._splitFallbackSentences(originalText, classification, probabilityScore);
 
+    const fourTierDistribution = computeFourTierDistribution(sentences);
     const words = originalText.trim().split(/\s+/).filter(Boolean);
 
     return {
@@ -54,6 +62,7 @@ export class GeminiDetectorAdapter extends BaseDetector {
       burstiness: typeof raw.burstiness_score === 'number' ? Math.round(raw.burstiness_score * 10) / 10 : 38.2,
       perplexity: typeof raw.perplexity_score === 'number' ? Math.round(raw.perplexity_score * 10) / 10 : 42.1,
       sentences,
+      fourTierDistribution,
       paragraphs: [],
       scanTimestamp: new Date().toISOString(),
       modelVersion: `${raw._activeModel || 'gemini-3.5-flash'} (Forensic Stylometrics)`,
@@ -67,13 +76,18 @@ export class GeminiDetectorAdapter extends BaseDetector {
 
   _splitFallbackSentences(text, overallClass, score) {
     const raw = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
-    return raw.map((s, idx) => ({
-      id: `s-${idx}`,
-      text: s.trim(),
-      label: overallClass,
-      score,
-      perplexity: null,
-    })).filter((s) => s.text.length > 0);
+    return raw.map((s, idx) => {
+      const tierInfo = classifySentenceFourTier(score, overallClass);
+      return {
+        id: `s-${idx}`,
+        text: s.trim(),
+        label: overallClass,
+        score,
+        perplexity: null,
+        tier: tierInfo.tier,
+        tierLabel: tierInfo.tierLabel,
+      };
+    }).filter((s) => s.text.length > 0);
   }
 
   async detect(text, _options = {}) {

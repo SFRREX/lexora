@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -12,19 +12,25 @@ import {
   Copy,
   Check,
   ArrowRight,
+  Upload,
+  Download,
+  Activity,
 } from 'lucide-react';
 import { runAiDetection, fetchDetectorStatuses } from '../services/suiteServices.js';
 import { INITIAL_RESEARCH_DATASET } from '../utils/researchDataset.js';
+import { extractTextFromDocument } from '../utils/documentExtractor.js';
 
 export default function AIChecker({ onSelectView }) {
   const [text, setText] = useState('');
   const [selectedProviders, setSelectedProviders] = useState(['gemini', 'stylometrics']);
   const [providers, setProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFileLoading, setIsFileLoading] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
   const [activeSentence, setActiveSentence] = useState(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Load available provider statuses on mount
   useEffect(() => {
@@ -85,6 +91,87 @@ export default function AIChecker({ onSelectView }) {
       const el = document.getElementById('ai-checker-input');
       if (el) el.focus();
     }
+  }
+
+  async function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsFileLoading(true);
+    setError(null);
+    try {
+      const content = await extractTextFromDocument(file);
+      if (typeof content === 'string') {
+        setText(content);
+        setScanResult(null);
+        setError(null);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to extract text from document.');
+    } finally {
+      setIsFileLoading(false);
+      e.target.value = '';
+    }
+  }
+
+  function handleDownloadReport() {
+    if (!primaryResult) return;
+    const dist = primaryResult.fourTierDistribution || {};
+    const lines = [
+      '=================================================================',
+      '                   LEXORA AI CONTENT DETECTION REPORT            ',
+      '=================================================================',
+      `Scan Timestamp:     ${new Date(primaryResult.scanTimestamp || Date.now()).toLocaleString()}`,
+      `Detection Provider: ${primaryResult.providerName}`,
+      `Model Version:      ${primaryResult.modelVersion}`,
+      `Word Count:         ${primaryResult.wordCount || wordCount}`,
+      `Character Count:    ${primaryResult.characterCount || charCount}`,
+      '',
+      '-----------------------------------------------------------------',
+      'EXECUTIVE SUMMARY',
+      '-----------------------------------------------------------------',
+      `Overall Classification:   ${primaryResult.classification.toUpperCase()}`,
+      `Reported AI Probability:  ${primaryResult.probabilityScore !== null ? Math.round(primaryResult.probabilityScore * 100) + '%' : 'N/A'}`,
+      `Confidence Level:         ${primaryResult.confidence.toUpperCase()}`,
+      `Sentence Burstiness:      ${primaryResult.burstiness ?? 'N/A'}`,
+      `Perplexity Rating:        ${primaryResult.perplexity ?? 'N/A'}`,
+      '',
+      '-----------------------------------------------------------------',
+      'FOUR-TIER PROVENANCE DISTRIBUTION',
+      '-----------------------------------------------------------------',
+      `1. Human-written:               ${dist.humanWritten ?? 0}% (${dist.counts?.humanWritten ?? 0} sentences)`,
+      `2. Human-written & AI-refined:  ${dist.humanWrittenAiRefined ?? 0}% (${dist.counts?.humanWrittenAiRefined ?? 0} sentences)`,
+      `3. AI-generated & AI-refined:   ${dist.aiGeneratedAiRefined ?? 0}% (${dist.counts?.aiGeneratedAiRefined ?? 0} sentences)`,
+      `4. AI-generated:                ${dist.aiGenerated ?? 0}% (${dist.counts?.aiGenerated ?? 0} sentences)`,
+      '',
+      '-----------------------------------------------------------------',
+      'SENTENCE-BY-SENTENCE FORENSIC EVALUATION',
+      '-----------------------------------------------------------------',
+    ];
+
+    (primaryResult.sentences || []).forEach((s, idx) => {
+      lines.push(`[Sentence ${idx + 1}] Tier: ${s.tierLabel || s.label} | AI Score: ${Math.round((s.score || 0) * 100)}% | Perplexity: ${s.perplexity ?? 'N/A'}`);
+      lines.push(`"${s.text}"`);
+      if (s.reason) {
+        lines.push(`Linguistic Note: ${s.reason}`);
+      }
+      lines.push('');
+    });
+
+    lines.push('=================================================================');
+    lines.push('Lexora text detection reports evaluate statistical perplexity and');
+    lines.push('burstiness cadence. They should be considered analytical guidance.');
+    lines.push('=================================================================');
+
+    const content = lines.join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lexora-ai-detection-report-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   function handleCopySummary() {
@@ -313,7 +400,35 @@ Timestamp: ${primaryResult.scanTimestamp}`;
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.md,.pdf"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isFileLoading}
+                className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#222835] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                title="Import from a .pdf, .txt, or .md document"
+              >
+                {isFileLoading ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-slate-400 border-t-slate-800 dark:border-t-slate-200 rounded-full animate-spin" />
+                    Extracting...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={14} />
+                    Import (PDF, TXT, MD)
+                  </>
+                )}
+              </button>
+
               <button
                 type="button"
                 onClick={handlePaste}
@@ -456,25 +571,133 @@ Timestamp: ${primaryResult.scanTimestamp}`;
               </div>
             </div>
 
+            {/* Four-Tier Provenance Distribution Section */}
+            {primaryResult.fourTierDistribution && (
+              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-[#222734]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Activity size={16} className="text-[#38858a] dark:text-[#4fa3a8]" />
+                      Four-Tier Provenance Classification
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Granular categorization distinguishing pure human authorship, human-with-AI polish, and autonomous generation.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Visual Distribution Segmented Bar */}
+                <div className="w-full h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-[#1a1e27] flex mb-4 border border-slate-200 dark:border-[#222734]">
+                  {primaryResult.fourTierDistribution.humanWritten > 0 && (
+                    <div
+                      style={{ width: `${primaryResult.fourTierDistribution.humanWritten}%` }}
+                      className="bg-emerald-500 transition-all duration-500"
+                      title={`Human-written: ${primaryResult.fourTierDistribution.humanWritten}%`}
+                    />
+                  )}
+                  {primaryResult.fourTierDistribution.humanWrittenAiRefined > 0 && (
+                    <div
+                      style={{ width: `${primaryResult.fourTierDistribution.humanWrittenAiRefined}%` }}
+                      className="bg-sky-500 transition-all duration-500"
+                      title={`Human-written & AI-refined: ${primaryResult.fourTierDistribution.humanWrittenAiRefined}%`}
+                    />
+                  )}
+                  {primaryResult.fourTierDistribution.aiGeneratedAiRefined > 0 && (
+                    <div
+                      style={{ width: `${primaryResult.fourTierDistribution.aiGeneratedAiRefined}%` }}
+                      className="bg-amber-500 transition-all duration-500"
+                      title={`AI-generated & AI-refined: ${primaryResult.fourTierDistribution.aiGeneratedAiRefined}%`}
+                    />
+                  )}
+                  {primaryResult.fourTierDistribution.aiGenerated > 0 && (
+                    <div
+                      style={{ width: `${primaryResult.fourTierDistribution.aiGenerated}%` }}
+                      className="bg-rose-500 transition-all duration-500"
+                      title={`AI-generated: ${primaryResult.fourTierDistribution.aiGenerated}%`}
+                    />
+                  )}
+                </div>
+
+                {/* 4 Cards Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40">
+                    <div className="flex items-center gap-1.5 font-semibold text-emerald-800 dark:text-emerald-300">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      Human-written
+                    </div>
+                    <div className="text-xl font-bold text-emerald-900 dark:text-emerald-100 mt-1">
+                      {primaryResult.fourTierDistribution.humanWritten}%
+                    </div>
+                    <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400 mt-0.5">
+                      {primaryResult.fourTierDistribution.counts?.humanWritten || 0} sentences
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-900/40">
+                    <div className="flex items-center gap-1.5 font-semibold text-sky-800 dark:text-sky-300">
+                      <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                      Human & AI-Refined
+                    </div>
+                    <div className="text-xl font-bold text-sky-900 dark:text-sky-100 mt-1">
+                      {primaryResult.fourTierDistribution.humanWrittenAiRefined}%
+                    </div>
+                    <div className="text-[11px] text-sky-700/80 dark:text-sky-400 mt-0.5">
+                      {primaryResult.fourTierDistribution.counts?.humanWrittenAiRefined || 0} sentences
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/40">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                      AI & AI-Refined
+                    </div>
+                    <div className="text-xl font-bold text-amber-900 dark:text-amber-100 mt-1">
+                      {primaryResult.fourTierDistribution.aiGeneratedAiRefined}%
+                    </div>
+                    <div className="text-[11px] text-amber-700/80 dark:text-amber-400 mt-0.5">
+                      {primaryResult.fourTierDistribution.counts?.aiGeneratedAiRefined || 0} sentences
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/70 dark:border-rose-900/40">
+                    <div className="flex items-center gap-1.5 font-semibold text-rose-800 dark:text-rose-300">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                      AI-generated
+                    </div>
+                    <div className="text-xl font-bold text-rose-900 dark:text-rose-100 mt-1">
+                      {primaryResult.fourTierDistribution.aiGenerated}%
+                    </div>
+                    <div className="text-[11px] text-rose-700/80 dark:text-rose-400 mt-0.5">
+                      {primaryResult.fourTierDistribution.counts?.aiGenerated || 0} sentences
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Sentence-level analysis view */}
             <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <Layers size={16} className="text-[#38858a] dark:text-[#4fa3a8]" />
                   Sentence-Level Evaluation & Perplexity
                 </h3>
-                <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
                   <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-[#b0d8db] dark:bg-[#224448] border border-[#38858a] dark:border-[#4fa3a8]" />
+                    <span className="w-2.5 h-2.5 rounded-sm bg-emerald-200 dark:bg-emerald-900/80 border border-emerald-400" />
                     Human
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-amber-200 dark:bg-amber-800 border border-amber-300 dark:border-amber-600" />
-                    Mixed
+                    <span className="w-2.5 h-2.5 rounded-sm bg-sky-200 dark:bg-sky-900/80 border border-sky-400" />
+                    Human & AI-Refined
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-red-200 dark:bg-red-800 border border-red-300 dark:border-red-600" />
-                    Likely AI
+                    <span className="w-2.5 h-2.5 rounded-sm bg-amber-200 dark:bg-amber-800 border border-amber-400" />
+                    AI & AI-Refined
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-rose-200 dark:bg-rose-900/80 border border-rose-400" />
+                    AI-generated
                   </span>
                 </div>
               </div>
@@ -482,6 +705,7 @@ Timestamp: ${primaryResult.scanTimestamp}`;
               <div className="p-4 bg-slate-50/70 dark:bg-[#0c0e12] border border-slate-200/70 dark:border-[#222734] rounded-xl leading-relaxed text-sm sm:text-base text-slate-900 dark:text-slate-100">
                 {primaryResult.sentences?.map((s) => {
                   const isSelected = activeSentence?.id === s.id;
+                  const tier = s.tier || (s.label === 'ai' ? 'ai-generated' : s.label === 'mixed' ? 'ai-refined-ai' : 'human-written');
                   return (
                     <span
                       key={s.id}
@@ -498,13 +722,15 @@ Timestamp: ${primaryResult.scanTimestamp}`;
                       className={`cursor-pointer transition-all px-1.5 py-0.5 rounded mr-1 inline-block my-0.5 outline-hidden ${
                         isSelected ? 'ring-2 ring-slate-900 dark:ring-[#4fa3a8] ring-offset-1 dark:ring-offset-[#14171f] font-medium' : ''
                       } ${
-                        s.label === 'ai'
-                          ? 'bg-red-100 dark:bg-red-950/80 hover:bg-red-200 dark:hover:bg-red-900/80 text-slate-900 dark:text-red-200 border-b-2 border-red-400 dark:border-red-600'
-                          : s.label === 'mixed'
+                        tier === 'ai-generated'
+                          ? 'bg-rose-100 dark:bg-rose-950/80 hover:bg-rose-200 dark:hover:bg-rose-900/80 text-slate-900 dark:text-rose-200 border-b-2 border-rose-400 dark:border-rose-600'
+                          : tier === 'ai-refined-ai'
                           ? 'bg-amber-100 dark:bg-amber-950/80 hover:bg-amber-200 dark:hover:bg-amber-900/80 text-slate-900 dark:text-amber-200 border-b-2 border-amber-400 dark:border-amber-600'
-                          : 'bg-[#eef6f7] dark:bg-[#122026] hover:bg-[#e1f0f2] dark:hover:bg-[#182c35] text-slate-900 dark:text-[#a0dfe4] border-b-2 border-[#5baeb4]/50'
+                          : tier === 'ai-refined-human'
+                          ? 'bg-sky-100 dark:bg-sky-950/80 hover:bg-sky-200 dark:hover:bg-sky-900/80 text-slate-900 dark:text-sky-200 border-b-2 border-sky-400 dark:border-sky-600'
+                          : 'bg-emerald-50 dark:bg-[#12241d] hover:bg-emerald-100 dark:hover:bg-[#163027] text-slate-900 dark:text-emerald-200 border-b-2 border-emerald-400/60'
                       }`}
-                      aria-label={`Sentence: ${s.label} (${Math.round((s.score || 0) * 100)}% AI)`}
+                      aria-label={`Sentence: ${s.tierLabel || s.label} (${Math.round((s.score || 0) * 100)}% AI)`}
                     >
                       {s.text}{' '}
                     </span>
@@ -517,11 +743,11 @@ Timestamp: ${primaryResult.scanTimestamp}`;
                 <div className="mt-3 p-4 bg-[#14171f] dark:bg-[#0a0c10] text-white rounded-xl text-xs space-y-2 shadow-md animate-fade-in border border-[#252c3a]">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#252c3a] pb-2">
                     <span className="font-semibold text-slate-300">Inspecting Selected Sentence</span>
-                    <div className="flex items-center gap-3">
-                      <span>
-                        Classification:{' '}
-                        <strong className="uppercase text-[#a0dfe4]">
-                          {activeSentence.label}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="flex items-center gap-1.5">
+                        Tier:{' '}
+                        <strong className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#1a2333] text-[#7dd3fc] border border-[#2b3952]">
+                          {activeSentence.tierLabel || activeSentence.label}
                         </strong>
                       </span>
                       {activeSentence.score !== undefined && (
@@ -547,20 +773,32 @@ Timestamp: ${primaryResult.scanTimestamp}`;
                 </div>
               ) : (
                 <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 italic text-center py-1">
-                  💡 Tip: Click or tap any colored sentence above to inspect its forensic perplexity and token reasoning.
+                  💡 Tip: Click or tap any colored sentence above to inspect its forensic perplexity, tier classification, and token reasoning.
                 </div>
               )}
 
-              {/* Action bar for results: Copy Report + Optional Academic Refine */}
+              {/* Action bar for results: Copy Report + Download Report + Optional Academic Refine */}
               <div className="mt-5 pt-4 border-t border-slate-100 dark:border-[#222734] flex flex-wrap items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={handleCopySummary}
-                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#252c3a] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  {copiedSummary ? <Check size={13} className="text-[#38858a] dark:text-[#4fa3a8]" /> : <Copy size={13} />}
-                  {copiedSummary ? 'Copied Report!' : 'Copy Summary Report'}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopySummary}
+                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#252c3a] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {copiedSummary ? <Check size={13} className="text-[#38858a] dark:text-[#4fa3a8]" /> : <Copy size={13} />}
+                    {copiedSummary ? 'Copied Report!' : 'Copy Summary Report'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDownloadReport}
+                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#252c3a] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] transition-colors flex items-center gap-1.5 cursor-pointer"
+                    title="Download complete sentence-level forensic evaluation report as .txt"
+                  >
+                    <Download size={13} />
+                    Download Analysis Report (.txt)
+                  </button>
+                </div>
 
                 {(primaryResult.classification === 'ai' || primaryResult.classification === 'mixed') && onSelectView && (
                   <button
