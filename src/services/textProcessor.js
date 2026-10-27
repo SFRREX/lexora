@@ -15,6 +15,7 @@ import {
   casualTone,
   shortenText,
   getWordAlternatives,
+  extractRuleBasedGrammarSpans,
 } from '../utils/textRules.js';
 
 const TOOLS = {
@@ -126,4 +127,52 @@ export async function fetchWordAlternatives(word, context = '') {
   // 2. Fall back to local thesaurus
   const local = getWordAlternatives(word);
   return local ? { alternatives: local, source: 'demo' } : null;
+}
+
+/**
+ * Perform granular span-level proofreading and grammar analysis.
+ * Uses Gemini API when available for minimal-span corrections;
+ * falls back to high-speed deterministic local rule analysis if offline.
+ */
+export async function checkGrammarSpans(text) {
+  if (!text || !text.trim()) {
+    return { corrections: [], count: 0, source: 'none' };
+  }
+
+  // 1. Attempt server / Gemini endpoint
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const response = await fetch('/api/grammar-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && Array.isArray(data.corrections)) {
+        return {
+          corrections: data.corrections,
+          count: data.corrections.length,
+          model: data.model || null,
+          source: data.source || 'gemini',
+        };
+      }
+    }
+  } catch (err) {
+    console.info('Grammar check endpoint unreachable, using client rule analysis:', err.message);
+  }
+
+  // 2. Client-side deterministic rule fallback
+  const corrections = extractRuleBasedGrammarSpans(text);
+  return {
+    corrections,
+    count: corrections.length,
+    source: 'local',
+  };
 }

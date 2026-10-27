@@ -116,11 +116,17 @@ export default function AIChecker({ onSelectView }) {
   function handleDownloadReport() {
     if (!primaryResult) return;
     const dist = primaryResult.fourTierDistribution || {};
+    const reportDate = new Date(primaryResult.scanTimestamp || 0);
+    const formattedTimestamp = primaryResult.scanTimestamp ? reportDate.toLocaleString() : 'N/A';
+    const fileTimestamp = primaryResult.scanTimestamp
+      ? reportDate.toISOString().slice(0, 19).replace(/[:T]/g, '-')
+      : 'scan';
+
     const lines = [
       '=================================================================',
       '                   LEXORA AI CONTENT DETECTION REPORT            ',
       '=================================================================',
-      `Scan Timestamp:     ${new Date(primaryResult.scanTimestamp || Date.now()).toLocaleString()}`,
+      `Scan Timestamp:     ${formattedTimestamp}`,
       `Detection Provider: ${primaryResult.providerName}`,
       `Model Version:      ${primaryResult.modelVersion}`,
       `Word Count:         ${primaryResult.wordCount || wordCount}`,
@@ -167,7 +173,7 @@ export default function AIChecker({ onSelectView }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `lexora-ai-detection-report-${Date.now()}.txt`;
+    a.download = `lexora-ai-detection-report-${fileTimestamp}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

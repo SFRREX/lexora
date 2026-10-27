@@ -543,7 +543,7 @@ export function extractCitations(text) {
   if (!text) return [];
   const bracketMatches = text.match(/\[\d+(?:[-, ]+\d+)*\]/g) || [];
   const authorYearMatches =
-    text.match(/\(\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?(?:;\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?)*\s*\)/g) || [];
+    text.match(/\(\s*[A-Za-z&,\-.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?(?:;\s*[A-Za-z&,\-.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?)*\s*\)/g) || [];
   const doiMatches = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/g) || [];
   return [...new Set([...bracketMatches, ...authorYearMatches, ...doiMatches])];
 }
@@ -576,6 +576,93 @@ export function unmaskCitationsFromPlaceholders(text, mapping) {
     restored = restored.split(placeholder).join(originalCitation);
   }
   return restored;
+}
+
+/**
+ * Extract granular, non-overlapping rule-based grammar and spelling correction spans
+ * from source text for instant zero-latency feedback and offline fallback.
+ */
+export function extractRuleBasedGrammarSpans(text) {
+  if (!text || typeof text !== 'string') return [];
+  const rawSpans = [];
+
+  // 1. Spelling checks
+  for (const [wrong, right] of Object.entries(spellingMap)) {
+    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      const original = m[0];
+      const replacement =
+        original[0] === original[0].toUpperCase()
+          ? right.charAt(0).toUpperCase() + right.slice(1)
+          : right;
+      rawSpans.push({
+        original,
+        replacement,
+        explanation: `Spelling correction for "${original}"`,
+        type: 'spelling',
+        startIndex: m.index,
+        endIndex: m.index + original.length,
+      });
+    }
+  }
+
+  // 2. Grammar rules
+  for (const rule of grammarRules) {
+    const regex = new RegExp(
+      rule.pattern.source,
+      rule.pattern.flags.includes('g') ? rule.pattern.flags : rule.pattern.flags + 'g'
+    );
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      const original = m[0];
+      let replacement = '';
+      if (typeof rule.replacement === 'function') {
+        replacement = rule.replacement(original, m[1], m[2]);
+      } else {
+        replacement = original.replace(rule.pattern, rule.replacement);
+      }
+      if (replacement && replacement !== original) {
+        rawSpans.push({
+          original,
+          replacement,
+          explanation: `Grammar rule: "${original}" → "${replacement}"`,
+          type: 'grammar',
+          startIndex: m.index,
+          endIndex: m.index + original.length,
+        });
+      }
+    }
+  }
+
+  // 3. Repeated word detector
+  const repRegex = new RegExp(repeatedWordRule.pattern.source, 'gi');
+  let rm;
+  while ((rm = repRegex.exec(text)) !== null) {
+    const original = rm[0];
+    const replacement = rm[1];
+    rawSpans.push({
+      original,
+      replacement,
+      explanation: 'Repeated word removal',
+      type: 'grammar',
+      startIndex: rm.index,
+      endIndex: rm.index + original.length,
+    });
+  }
+
+  // Sort by start index and eliminate overlapping spans
+  rawSpans.sort((a, b) => a.startIndex - b.startIndex);
+  const nonOverlapping = [];
+  let lastEnd = -1;
+  for (const span of rawSpans) {
+    if (span.startIndex >= lastEnd) {
+      nonOverlapping.push(span);
+      lastEnd = span.endIndex;
+    }
+  }
+
+  return nonOverlapping;
 }
 
 export const EXAMPLE_TEXT = `I am writing this email to tell you that I cannot come to the meeting because I have some important work to do. Their is alot of stuff I gotta finish before tommorrow. I should of started earlier but I was real busy with other things. In order to make sure everything is done on time, I will need to work late. I hope you understand and I will definately try to attend the next one. It would be a good idea to reschedule if their are other people who can not make it. Thanks for your understanding, I recieve your message and will respond as soon as possible.`;

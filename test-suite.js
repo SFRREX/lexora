@@ -24,6 +24,17 @@ import {
   calculateRocAuc,
   calculateInterDetectorAgreement,
 } from './src/utils/researchMetrics.js';
+import {
+  cachePut,
+  cacheGet,
+  clearCache,
+  getCacheStats,
+  enqueue,
+  setBackoffUntil,
+  resetBackoff,
+  sanitizeAndLocateCorrections,
+} from './server/geminiService.js';
+import { extractRuleBasedGrammarSpans } from './src/utils/textRules.js';
 
 console.log('--- Running Lexora AI Intelligence Suite Tests ---\n');
 
@@ -229,7 +240,12 @@ assert.ok(synonyms.text.includes('favorable'), 'Should replace "good" with "favo
 assert.ok(synonyms.text.includes('resolve'), 'Should replace "fix" with "resolve"');
 console.log('   ✓ Academic synonym replacement passed.');
 
-// 7d. Full Pipeline with Toggles
+// 7d. Academic Transitions
+const withTransitions = addAcademicTransitions("The study began with sample gathering. We observed significant variations across groups.");
+assert.ok(withTransitions.text && withTransitions.text.length > 0, 'Transitions method should return augmented text');
+console.log('   ✓ Academic transition insertion passed.');
+
+// 7e. Full Pipeline with Toggles
 const pipelineResult = refineWithRules(informalText, 'academic', 'balanced', {
   expandContractions: true,
   passiveVoice: true,
@@ -301,6 +317,87 @@ assert.ok(Array.isArray(stylometricsResult.sentences), 'Must have sentences arra
 assert.ok(stylometricsResult.sentences[0].tier, 'Sentences must include provenance tier');
 assert.ok(stylometricsResult.sentences[0].tierLabel, 'Sentences must include provenance tierLabel');
 console.log('   ✓ Local Stylometrics 4-tier distribution integration passed.');
+
+// 11. Test LRU Sliding-Window Cache & Eviction (Resilient Architecture)
+console.log('11. Testing LRU Sliding-Window Cache & Capacity Eviction...');
+clearCache();
+assert.equal(getCacheStats().size, 0, 'Cache should start empty after clearCache');
+
+for (let i = 0; i < 205; i++) {
+  cachePut(`key_${i}`, { data: `value_${i}` });
+}
+
+const cacheStats = getCacheStats();
+assert.equal(cacheStats.size, 200, 'Cache size must be strictly capped at 200 entries');
+assert.equal(cacheGet('key_0'), null, 'Oldest item key_0 must be evicted');
+assert.equal(cacheGet('key_4'), null, 'key_4 should be evicted as part of the first 5 evictions');
+assert.deepEqual(cacheGet('key_204'), { data: 'value_204' }, 'Latest item must be present');
+console.log('   ✓ LRU sliding-window cache and 200-item eviction passed.');
+
+// 12. Test Rate-Limit 429 Queue & Serialization
+console.log('12. Testing Rate-Limit Queue & Backoff Serialization...');
+resetBackoff();
+const queueResult = await enqueue(async () => 'success_payload');
+assert.equal(queueResult, 'success_payload', 'Enqueue should execute and resolve task');
+
+setBackoffUntil(Date.now() + 30);
+const startWait = Date.now();
+const backoffTask = await enqueue(async () => {
+  return Date.now() - startWait;
+});
+assert.ok(backoffTask >= 20, 'Enqueue must wait for backoff window before executing');
+resetBackoff();
+console.log('   ✓ 429 queue and backoff serialization passed.');
+
+// 13. Test Span-Level Grammar Correction Validation & Non-Overlapping Spans
+console.log('13. Testing Span-Level Grammar Correction Validation & Overlap Elimination...');
+const sourceDoc = 'I has a alot of misteaks and I was was there.';
+const rawCandidates = [
+  { original: 'I has', replacement: 'I have', type: 'grammar', explanation: 'Subject-verb agreement' },
+  { original: 'has a', replacement: 'has an', type: 'grammar', explanation: 'Overlapping candidate' },
+  { original: 'ghost substring', replacement: 'replacement', type: 'spelling', explanation: 'Not in text' },
+  { original: 'alot', replacement: 'a lot', type: 'spelling', explanation: 'Spelling fix' },
+  { original: 'was was', replacement: 'was', type: 'grammar', explanation: 'Repeated word' },
+];
+
+const sanitizedSpans = sanitizeAndLocateCorrections(rawCandidates, sourceDoc);
+assert.equal(sanitizedSpans.length, 3, 'Must retain exactly 3 valid, non-overlapping spans');
+assert.equal(sanitizedSpans[0].original, 'I has');
+assert.equal(sanitizedSpans[0].replacement, 'I have');
+assert.equal(sourceDoc.slice(sanitizedSpans[0].startIndex, sanitizedSpans[0].endIndex), 'I has');
+
+assert.equal(sanitizedSpans[1].original, 'alot');
+assert.equal(sanitizedSpans[1].replacement, 'a lot');
+assert.equal(sourceDoc.slice(sanitizedSpans[1].startIndex, sanitizedSpans[1].endIndex), 'alot');
+
+assert.equal(sanitizedSpans[2].original, 'was was');
+assert.equal(sanitizedSpans[2].replacement, 'was');
+assert.equal(sourceDoc.slice(sanitizedSpans[2].startIndex, sanitizedSpans[2].endIndex), 'was was');
+
+// Confirm no overlap between consecutive spans
+for (let i = 1; i < sanitizedSpans.length; i++) {
+  assert.ok(
+    sanitizedSpans[i].startIndex >= sanitizedSpans[i - 1].endIndex,
+    'Consecutive spans must not overlap'
+  );
+}
+console.log('   ✓ Span-level grammar correction validation and overlap elimination passed.');
+
+// 14. Test Rule-Based Granular Span Extraction
+console.log('14. Testing Rule-Based Granular Span Extraction...');
+const testDoc = 'Their is alot of misteaks in this writting.';
+const extractedSpans = extractRuleBasedGrammarSpans(testDoc);
+assert.ok(extractedSpans.length >= 3, 'Should extract at least 3 errors (their is, alot, misteaks, writting)');
+
+for (const span of extractedSpans) {
+  assert.equal(
+    testDoc.slice(span.startIndex, span.endIndex),
+    span.original,
+    `Span slice must exactly match original string: ${span.original}`
+  );
+  assert.ok(span.startIndex < span.endIndex, 'Start index must be strictly less than end index');
+}
+console.log('   ✓ Rule-based granular span extraction passed.');
 
 console.log('\n========================================');
 console.log('ALL LEXORA SUITE TESTS PASSED SUCCESSFULLY!');

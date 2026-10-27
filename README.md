@@ -127,8 +127,22 @@ sequenceDiagram
 
 ### Key Architectural Tenets
 1. **Zero Client-Side Secrets:** All external API requests are proxied through Vite server middleware (`server/vitePluginGemini.js`). API keys are never bundled into client JS.
-2. **Deterministic Offline Fallbacks:** Fast local dictionary and regex rules (`src/utils/textRules.js`, `server/detectors/localStylometrics.js`) guarantee core functionality even in air-gapped environments.
-3. **Pure React 19 + JSX:** Optimized for performance and simplicity with zero TypeScript build overhead.
+2. **Resilient Rate-Limit & Caching Architecture:**
+   * **Sliding-Window LRU Response Cache:** Memory-bounded LRU cache (capped at 200 items) eliminates duplicate API consumption and accelerates repetitive queries to sub-millisecond response times.
+   * **In-Flight Request Deduplication:** Coalesces identical concurrent network queries into a single in-flight promise.
+   * **Graceful 429 Rate-Limit Queue & Backoff:** Catches HTTP 429 quota exhaustion, serializes subsequent requests via an execution queue, and enforces automatic 20-second backoff so free-tier API keys degrade smoothly without failing user requests.
+3. **Granular Span-Level Proofreading:**
+   * Delivers minimal-span editorial corrections categorized into *Grammar*, *Spelling*, *Punctuation*, and *Style*.
+   * Provides interactive chip overlays allowing users to review changes in context, filter by error type, and accept corrections individually or in batch.
+4. **Four-Tier Granular Provenance Detection:**
+   * Detects provenance across four distinct categories: `human-written`, `human-written & ai-refined`, `ai-generated & ai-refined`, and `ai-generated`.
+   * Generates downloadable audit reports with forensic sentence-level perplexity, burstiness, and distribution statistics.
+5. **Multi-Format Document Extraction:**
+   * Direct in-browser upload and parsing for PDF documents (`pdfjs-dist`), raw text (`.txt`), and Markdown files (`.md`).
+6. **Optimized Bundle Splitting:**
+   * Asynchronous route-level code-splitting (`React.lazy` + `Suspense`) maintains initial bundles below 470 kB with zero Vite chunk size warnings.
+7. **Deterministic Offline Fallbacks:** Fast local dictionary and regex rules (`src/utils/textRules.js`, `server/detectors/localStylometrics.js`) guarantee core functionality even in air-gapped environments.
+8. **Pure React 19 + JSX:** Optimized for performance and simplicity with zero TypeScript build overhead.
 
 ---
 
@@ -271,7 +285,11 @@ npm run build
 * **Adapter Normalization:** Validates response formatting for GPTZero, Copyleaks, Local Stylometrics, and Gemini Neural Detector.
 * **Inter-Detector Agreement:** Verifies Cohen's Kappa calculation and agreement categorization.
 * **Statistical Metrics:** Confirms accuracy of Precision, Recall, Specificity, F1, and ROC-AUC formulas.
-* **Citation Preservation:** Rigorously verifies preservation of bracketed citations, DOIs, and statistical notations during academic refinement.
+* **Citation Preservation & Unslop:** Rigorously verifies preservation of bracketed citations, DOIs, and statistical notations during academic refinement.
+* **Four-Tier Provenance Classification:** Verifies granular sentence provenance distribution across 4 discrete tiers.
+* **LRU Caching & Eviction:** Validates sliding-window cache hit/miss behavior and strict 200-item eviction.
+* **429 Rate-Limit Queue:** Verifies serialized promise queuing and backoff delays upon quota limits.
+* **Span-Level Grammar Corrections:** Verifies substring index localization and non-overlapping span filtering.
 * **Grammar & Tone Rules:** Unit tests offline transformations across grammar, simplification, and tone registers.
 
 ---

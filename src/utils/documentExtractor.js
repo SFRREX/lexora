@@ -42,10 +42,10 @@ export async function extractTextFromPdf(arrayBuffer) {
   // Fallback: extract plain ASCII/UTF-8 text strings from PDF stream
   const decoder = new TextDecoder('utf-8', { fatal: false });
   const raw = decoder.decode(arrayBuffer);
-  const textMatches = raw.match(/\(([^()]{2,})\)|\[([^\[\]]{2,})\]/g);
+  const textMatches = raw.match(/\(([^()]{2,})\)|\[([^[\s\]]{2,})\]/g);
   if (textMatches && textMatches.length > 0) {
     const extracted = textMatches
-      .map((m) => m.replace(/^[(\[]|[)\]]$/g, ''))
+      .map((m) => m.replace(/^[([]|[)\]]$/g, ''))
       .filter((s) => /^[a-zA-Z0-9\s.,;:!?'"()-]+$/.test(s) && s.length > 2)
       .join(' ')
       .replace(/\s{2,}/g, ' ')

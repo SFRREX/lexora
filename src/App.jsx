@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from './components/Navbar.jsx';
 import Hero from './components/Hero.jsx';
 import WritingEditor from './components/WritingEditor.jsx';
@@ -10,9 +10,21 @@ import UseCases from './components/UseCases.jsx';
 import FAQ from './components/FAQ.jsx';
 import FinalCTA from './components/FinalCTA.jsx';
 import Footer from './components/Footer.jsx';
-import AIChecker from './components/AIChecker.jsx';
-import AcademicRefiner from './components/AcademicRefiner.jsx';
-import DetectorResearchLab from './components/DetectorResearchLab.jsx';
+
+// Dynamic code splitting for complex standalone modules
+const AIChecker = lazy(() => import('./components/AIChecker.jsx'));
+const AcademicRefiner = lazy(() => import('./components/AcademicRefiner.jsx'));
+const DetectorResearchLab = lazy(() => import('./components/DetectorResearchLab.jsx'));
+
+function ViewLoadingSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 animate-pulse">
+      <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-xl w-64 mb-3" />
+      <div className="h-4 bg-slate-200/80 dark:bg-slate-800/80 rounded w-96 mb-8" />
+      <div className="h-96 bg-white dark:bg-[#14171f] rounded-3xl border border-slate-200 dark:border-[#222734] p-8 shadow-xs" />
+    </div>
+  );
+}
 
 export default function App() {
   const [currentView, setCurrentView] = useState('studio'); // 'studio' | 'checker' | 'academic' | 'lab'
@@ -83,11 +95,23 @@ export default function App() {
           </>
         )}
 
-        {currentView === 'checker' && <AIChecker onSelectView={handleSelectView} />}
+        {currentView === 'checker' && (
+          <Suspense fallback={<ViewLoadingSkeleton />}>
+            <AIChecker onSelectView={handleSelectView} />
+          </Suspense>
+        )}
 
-        {currentView === 'academic' && <AcademicRefiner onSelectView={handleSelectView} />}
+        {currentView === 'academic' && (
+          <Suspense fallback={<ViewLoadingSkeleton />}>
+            <AcademicRefiner onSelectView={handleSelectView} />
+          </Suspense>
+        )}
 
-        {currentView === 'lab' && <DetectorResearchLab onSelectView={handleSelectView} />}
+        {currentView === 'lab' && (
+          <Suspense fallback={<ViewLoadingSkeleton />}>
+            <DetectorResearchLab onSelectView={handleSelectView} />
+          </Suspense>
+        )}
       </main>
       <Footer onSelectView={handleSelectView} />
     </div>

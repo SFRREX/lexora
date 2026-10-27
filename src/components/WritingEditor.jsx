@@ -1,8 +1,20 @@
 import { useState, useCallback } from 'react';
-import { Wand2, Trash2, FileText, Loader2, ClipboardPaste, Sparkles, Clock, AlignLeft } from 'lucide-react';
+import {
+  Wand2,
+  Trash2,
+  FileText,
+  Loader2,
+  ClipboardPaste,
+  Sparkles,
+  Clock,
+  AlignLeft,
+  Check,
+  CheckCheck,
+  Layers,
+} from 'lucide-react';
 import ToolSelector from './ToolSelector.jsx';
 import ResultPanel from './ResultPanel.jsx';
-import { TOOL_LIST, processText } from '../services/textProcessor.js';
+import { TOOL_LIST, processText, checkGrammarSpans } from '../services/textProcessor.js';
 import { EXAMPLE_TEXT } from '../utils/textRules.js';
 
 function countWords(text) {
@@ -29,6 +41,8 @@ export default function WritingEditor({ onSelectView }) {
   const [model, setModel] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [corrections, setCorrections] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   const inputWords = countWords(inputText);
   const inputChars = inputText.length;
@@ -42,6 +56,7 @@ export default function WritingEditor({ onSelectView }) {
     setResult('');
     setSource('');
     setModel('');
+    setCorrections([]);
 
     if (!inputText.trim()) {
       setError('Please enter some text before processing.');
@@ -50,10 +65,29 @@ export default function WritingEditor({ onSelectView }) {
 
     setLoading(true);
     try {
-      const { result: processed, source: src, model: mdl } = await processText(inputText, selectedTool);
-      setResult(processed);
-      setSource(src);
-      setModel(mdl || '');
+      if (selectedTool === 'grammar') {
+        const [processRes, spanRes] = await Promise.allSettled([
+          processText(inputText, selectedTool),
+          checkGrammarSpans(inputText),
+        ]);
+
+        if (processRes.status === 'fulfilled') {
+          setResult(processRes.value.result);
+          setSource(processRes.value.source);
+          setModel(processRes.value.model || '');
+        } else {
+          throw processRes.reason;
+        }
+
+        if (spanRes.status === 'fulfilled' && spanRes.value?.corrections) {
+          setCorrections(spanRes.value.corrections);
+        }
+      } else {
+        const { result: processed, source: src, model: mdl } = await processText(inputText, selectedTool);
+        setResult(processed);
+        setSource(src);
+        setModel(mdl || '');
+      }
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -66,6 +100,7 @@ export default function WritingEditor({ onSelectView }) {
     setResult('');
     setSource('');
     setError('');
+    setCorrections([]);
   }
 
   function handleLoadExample() {
@@ -73,6 +108,26 @@ export default function WritingEditor({ onSelectView }) {
     setResult('');
     setSource('');
     setError('');
+    setCorrections([]);
+  }
+
+  function handleApplyCorrection(corr) {
+    if (!corr || !inputText.includes(corr.original)) return;
+    const newText = inputText.replace(corr.original, corr.replacement);
+    setInputText(newText);
+    setCorrections((prev) => prev.filter((c) => c !== corr));
+  }
+
+  function handleApplyAllCorrections() {
+    if (corrections.length === 0) return;
+    let newText = inputText;
+    for (const corr of corrections) {
+      if (newText.includes(corr.original)) {
+        newText = newText.replace(corr.original, corr.replacement);
+      }
+    }
+    setInputText(newText);
+    setCorrections([]);
   }
 
   async function handlePaste() {
@@ -276,6 +331,119 @@ export default function WritingEditor({ onSelectView }) {
               )}
             </div>
           </div>
+
+          {/* Granular proofreading suggestions panel */}
+          {corrections.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-slate-200/90 dark:border-[#222734]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#38858a]/15 dark:bg-[#38858a]/25 text-[#23585c] dark:text-[#74b6ba] text-xs font-bold">
+                      {corrections.length}
+                    </span>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                      <Layers size={16} className="text-[#38858a] dark:text-[#4fa3a8]" />
+                      Granular Proofreading Suggestions
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Minimal-span editorial recommendations. Apply individually or accept all at once.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex bg-slate-100 dark:bg-[#1a1e27] p-1 rounded-xl text-xs">
+                    {['all', 'grammar', 'spelling', 'punctuation', 'style'].map((cat) => {
+                      const count =
+                        cat === 'all'
+                          ? corrections.length
+                          : corrections.filter((c) => c.type === cat).length;
+                      if (cat !== 'all' && count === 0) return null;
+                      return (
+                        <button
+                          key={cat}
+                          onClick={() => setCategoryFilter(cat)}
+                          className={`px-2.5 py-1 rounded-lg font-medium capitalize transition-all cursor-pointer ${
+                            categoryFilter === cat
+                              ? 'bg-white dark:bg-[#282f3d] text-slate-900 dark:text-white shadow-xs'
+                              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {cat} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={handleApplyAllCorrections}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
+                    aria-label="Apply all corrections"
+                  >
+                    <CheckCheck size={14} />
+                    Apply All
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+                {corrections
+                  .filter((c) => categoryFilter === 'all' || c.type === categoryFilter)
+                  .map((c, i) => {
+                    const badgeStyles =
+                      {
+                        grammar:
+                          'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800',
+                        spelling:
+                          'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
+                        punctuation:
+                          'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+                        style:
+                          'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800',
+                      }[c.type] || 'bg-slate-50 text-slate-700 border-slate-200';
+
+                    return (
+                      <div
+                        key={i}
+                        className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#222734] bg-slate-50/70 dark:bg-[#10131a] flex flex-col justify-between text-xs transition-colors hover:border-[#38858a]/40"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${badgeStyles}`}
+                          >
+                            {c.type}
+                          </span>
+                          <button
+                            onClick={() => handleApplyCorrection(c)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-semibold transition-colors cursor-pointer"
+                            aria-label={`Apply correction: replace ${c.original} with ${c.replacement}`}
+                          >
+                            <Check size={12} />
+                            Apply
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2 font-mono text-xs mb-1.5 flex-wrap">
+                          <span className="line-through text-red-500/90 dark:text-red-400/90 bg-red-50 dark:bg-red-950/40 px-1.5 py-0.5 rounded">
+                            {c.original}
+                          </span>
+                          <span className="text-slate-400">→</span>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
+                            {c.replacement}
+                          </span>
+                        </div>
+
+                        {c.explanation && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                            {c.explanation}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>

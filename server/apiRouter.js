@@ -1,6 +1,14 @@
-import { processWithGemini, getAlternativesWithGemini, isGeminiConfigured } from './geminiService.js';
+import {
+  processWithGemini,
+  getAlternativesWithGemini,
+  checkGrammarSpansWithGemini,
+  isGeminiConfigured,
+} from './geminiService.js';
 import { detectorManager } from './detectors/detectorManager.js';
 import { refineAcademicText } from './academicRefinerService.js';
+import { extractRuleBasedGrammarSpans } from '../src/utils/textRules.js';
+
+const MAX_PAYLOAD_CHARS = 100000;
 
 /**
  * Safely parse JSON body from either a pre-parsed request (e.g. Vercel serverless)
@@ -35,7 +43,7 @@ export async function getJsonBody(req) {
 }
 
 /**
- * Helper to respond with JSON.
+ * Helper to respond with JSON and defensive security headers.
  */
 function sendJson(res, statusCode, data) {
   res.statusCode = statusCode;
@@ -43,7 +51,17 @@ function sendJson(res, statusCode, data) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
   res.end(JSON.stringify(data));
+}
+
+/**
+ * Strips sensitive tokens (like Google API keys) from error descriptions.
+ */
+function sanitizeErrorMessage(err) {
+  if (!err || !err.message) return 'Internal processing error.';
+  return err.message.replace(/AIza[0-9A-Za-z-_]{35}/g, '[REDACTED_API_KEY]');
 }
 
 /**
@@ -60,6 +78,8 @@ export async function handleApiRequest(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
     res.end();
     return true;
   }
@@ -97,6 +117,10 @@ export async function handleApiRequest(req, res) {
         sendJson(res, 400, { error: 'Text is required for AI detection.' });
         return true;
       }
+      if (text.length > MAX_PAYLOAD_CHARS) {
+        sendJson(res, 413, { error: 'Payload exceeds maximum allowed length of 100,000 characters.' });
+        return true;
+      }
 
       const targetProviders =
         Array.isArray(providers) && providers.length > 0
@@ -106,7 +130,7 @@ export async function handleApiRequest(req, res) {
       const scanResponse = await detectorManager.runDetection(text, targetProviders);
       sendJson(res, 200, scanResponse);
     } catch (err) {
-      sendJson(res, 500, { error: err.message || 'Detection failed.' });
+      sendJson(res, 500, { error: sanitizeErrorMessage(err) });
     }
     return true;
   }
@@ -123,6 +147,10 @@ export async function handleApiRequest(req, res) {
         sendJson(res, 400, { error: 'Text is required for academic refinement.' });
         return true;
       }
+      if (text.length > MAX_PAYLOAD_CHARS) {
+        sendJson(res, 413, { error: 'Payload exceeds maximum allowed length of 100,000 characters.' });
+        return true;
+      }
 
       const result = await refineAcademicText(text, {
         mode,
@@ -134,7 +162,7 @@ export async function handleApiRequest(req, res) {
       });
       sendJson(res, 200, result);
     } catch (err) {
-      sendJson(res, 500, { error: err.message || 'Refinement failed.' });
+      sendJson(res, 500, { error: sanitizeErrorMessage(err) });
     }
     return true;
   }
@@ -159,6 +187,10 @@ export async function handleApiRequest(req, res) {
         sendJson(res, 400, { error: 'Text is required.' });
         return true;
       }
+      if (text.length > MAX_PAYLOAD_CHARS) {
+        sendJson(res, 413, { error: 'Payload exceeds maximum allowed length of 100,000 characters.' });
+        return true;
+      }
 
       const processed = await processWithGemini(text, tool);
       const result = typeof processed === 'string' ? processed : processed.text;
@@ -169,7 +201,7 @@ export async function handleApiRequest(req, res) {
 
       sendJson(res, 200, { result, model, source: 'gemini' });
     } catch (err) {
-      sendJson(res, 500, { error: err.message || 'Gemini processing failed.' });
+      sendJson(res, 500, { error: sanitizeErrorMessage(err) });
     }
     return true;
   }
@@ -194,11 +226,55 @@ export async function handleApiRequest(req, res) {
         sendJson(res, 400, { error: 'Word is required.' });
         return true;
       }
+      if (word.length > 100 || (context && context.length > MAX_PAYLOAD_CHARS)) {
+        sendJson(res, 413, { error: 'Payload exceeds maximum allowed length.' });
+        return true;
+      }
 
       const alternatives = await getAlternativesWithGemini(word, context);
       sendJson(res, 200, { alternatives, source: 'gemini' });
     } catch (err) {
-      sendJson(res, 500, { error: err.message || 'Gemini alternatives failed.' });
+      sendJson(res, 500, { error: sanitizeErrorMessage(err) });
+    }
+    return true;
+  }
+
+  // 7. POST /api/grammar-check or /grammar-check
+  if (
+    (pathname === '/api/grammar-check' || pathname === '/grammar-check') &&
+    req.method === 'POST'
+  ) {
+    try {
+      const body = await getJsonBody(req);
+      const { text } = body;
+      if (!text || !text.trim()) {
+        sendJson(res, 400, { error: 'Text is required for grammar check.' });
+        return true;
+      }
+      if (text.length > MAX_PAYLOAD_CHARS) {
+        sendJson(res, 413, { error: 'Payload exceeds maximum allowed length of 100,000 characters.' });
+        return true;
+      }
+
+      if (isGeminiConfigured()) {
+        try {
+          const result = await checkGrammarSpansWithGemini(text);
+          sendJson(res, 200, result);
+          return true;
+        } catch (geminiErr) {
+          console.warn('[GrammarCheck] Gemini span check failed, falling back to local rule engine:', geminiErr.message);
+        }
+      }
+
+      // Local rule engine fallback
+      const corrections = extractRuleBasedGrammarSpans(text);
+      sendJson(res, 200, {
+        corrections,
+        count: corrections.length,
+        source: 'local',
+      });
+    } catch (err) {
+      sendJson(res, 500, { error: sanitizeErrorMessage(err) });
     }
     return true;
   }

@@ -298,7 +298,7 @@ export function extractCitations(text) {
   if (!text) return [];
   const bracketMatches = text.match(/\[\d+(?:[-, ]+\d+)*\]/g) || [];
   const authorYearMatches =
-    text.match(/\(\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?(?:;\s*[A-Za-z&\-,\.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?)*\s*\)/g) || [];
+    text.match(/\(\s*[A-Za-z&,\-.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?(?:;\s*[A-Za-z&,\-.\s]+(?:et al\.\s*)?,?\s*(?:19|20)\d{2}[a-z]?(?:,\s*(?:pp?\.?\s*\d+(?:[–-]\d+)?))?)*\s*\)/g) || [];
   const doiMatches = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/g) || [];
   return [...new Set([...bracketMatches, ...authorYearMatches, ...doiMatches])];
 }
