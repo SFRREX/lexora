@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="public/logo-dark.png">
     <source media="(prefers-color-scheme: light)" srcset="public/logo-light.png">
-    <img src="public/logo-dark.png" alt="Lexora AI Intelligence Suite" width="240" />
+    <img src="public/logo-dark.png" alt="Lexora AI Intelligence Suite Logo" width="240" />
   </picture>
 </p>
 
@@ -10,45 +10,47 @@
 
 <p align="center">
   <strong>The Art of Better Words.</strong><br>
-  A production-grade AI writing platform, multi-model neural text detector, academic unslop refiner, and empirical detector research laboratory.
+  A research-grounded, production-grade linguistic intelligence suite combining editorial writing tools, multi-model AI text detection, scholarly academic unslop refinement, and empirical detector benchmarking.
 </p>
 
 <p align="center">
-  <a href="https://github.com/SFRREX/lexora/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-38858a.svg?style=flat-square" alt="MIT License" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-38858a.svg?style=flat-square" alt="MIT License" /></a>
   <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19.3-2563eb.svg?style=flat-square" alt="React 19" /></a>
   <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-8.3-646cff.svg?style=flat-square" alt="Vite 8" /></a>
   <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-v4.3-38858a.svg?style=flat-square" alt="Tailwind CSS v4" /></a>
-  <a href="https://oxc.rs/"><img src="https://img.shields.io/badge/Linter-Oxlint_Passed-22c55e.svg?style=flat-square" alt="Oxlint" /></a>
-  <a href="#-verification--automated-testing"><img src="https://img.shields.io/badge/Tests-100%25_Passing-10b981.svg?style=flat-square" alt="Tests" /></a>
-  <a href="#-design-system--accessibility"><img src="https://img.shields.io/badge/Accessibility-WCAG_2.2_AA-0284c7.svg?style=flat-square" alt="WCAG 2.2 AA" /></a>
+  <a href="https://oxc.rs/"><img src="https://img.shields.io/badge/Linter-Oxlint_0_Errors-22c55e.svg?style=flat-square" alt="Oxlint" /></a>
+  <a href="#-verification--automated-testing"><img src="https://img.shields.io/badge/Tests-55%20Passing-10b981.svg?style=flat-square" alt="Vitest 55 Passing" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node-%3E%3D18.0.0-339933.svg?style=flat-square" alt="Node Version" /></a>
 </p>
 
 <p align="center">
-  <a href="#-about-lexora">About</a> •
-  <a href="#-four-core-intelligence-modules">Core Modules</a> •
-  <a href="#-architecture--data-flow">Architecture</a> •
+  <a href="#-overview">Overview</a> •
+  <a href="#-core-modules">Core Modules</a> •
+  <a href="#-architecture--engineering-highlights">Architecture</a> •
   <a href="#-quickstart">Quickstart</a> •
   <a href="#-environment-configuration">Configuration</a> •
   <a href="#-verification--automated-testing">Testing</a> •
-  <a href="#-github-repository-profile-settings">GitHub Details</a> •
-  <a href="#-license--academic-attribution">License</a>
+  <a href="#-repository-structure">Structure</a> •
+  <a href="#-deployment">Deployment</a> •
+  <a href="#-responsible-ai--methodological-disclosures">Ethical Disclosures</a> •
+  <a href="#-license">License</a>
 </p>
 
 ---
 
-## 📖 About Lexora
+## 📖 Overview
 
-**Lexora** is a research-grounded, production-minded AI writing and linguistic analysis suite. Rather than acting as a black-box text generator or an adversarial detector-bypass tool, Lexora provides transparent, verifiable, and ethical linguistic tools tailored for students, researchers, developers, and educators.
+**Lexora** is an open-source, ethical linguistic analysis and writing platform designed for researchers, authors, students, and engineers.
 
-### Why Lexora?
-* **Zero-Cost Accessibility:** Ships with a high-fidelity **Free Gemini Neural Detector** and a **100% Offline Local Stylometrics Engine**—no paid subscriptions or API paywalls required.
-* **Transparent AI Detection:** Displays sentence-level perplexity heatmaps and cross-checks multi-provider agreement indices (Cohen's Kappa) rather than producing misleading binary scores.
-* **Scholarly Integrity:** The Academic Refiner removes formulaic generative AI filler while enforcing strict, regex-backed protection for all citations (APA, MLA, IEEE, DOIs) and mathematical formulas.
-* **Empirical Research Lab:** Features an interactive benchmarking environment to evaluate classifier metrics (Precision, Recall, ROC-AUC) against peer-reviewed linguistic research.
+Most consumer writing tools either act as opaque generative text spinners or promote adversarial "AI humanizer" bypasses. Lexora takes a transparent, verifiable approach:
+* **Decoupled & Non-Adversarial:** The editing and detection pipelines are strictly isolated to eliminate adversarial exploitation loops.
+* **Deterministic Offline Resilience:** Every capability—from grammar correction to stylometric analysis—is backed by deterministic local rules that function seamlessly without cloud API keys or network access.
+* **Citation & Empirical Safeguards:** Academic transformations utilize isolated placeholder masking to guarantee 100% preservation of bracketed references, DOIs, and statistical notations.
+* **Empirical Transparency:** Rather than producing misleading binary scores, the AI Checker surfaces sentence-level perplexity heatmaps and cross-detector agreement metrics (Cohen's Kappa).
 
 ---
 
-## 🌟 Four Core Intelligence Modules
+## 🌟 Core Modules
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -60,168 +62,108 @@
 │   transformations │   Neural Detector │   unslop engine   │   metrics       │
 │ • Contextual Word │ • Local offline   │ • 100% citation & │ • Labeled test  │
 │   Enhancer        │   stylometrics    │   DOI safeguard   │   corpus        │
-│ • Live visual diff│ • Sentence-level  │ • Decoupled,      │ • Robustness    │
-│   markings        │   perplexity map  │   non-adversarial │   benchmarks    │
+│ • Backward slice  │ • Perplexity &    │ • Decoupled,      │ • Robustness    │
+│   diff engine     │   burstiness maps │   non-adversarial │   benchmarks    │
 └───────────────────┴───────────────────┴───────────────────┴─────────────────┘
 ```
 
 ### 1. ✍️ Writing Studio (`#studio`)
-* **7 Production Writing Tools:**
+* **7 Focused Transformations:**
   * **Grammar & Spelling:** Corrects orthographic, grammatical, and typographical issues.
-  * **Sentence Rephrase:** Reworks sentence structure for improved rhythm and flow.
-  * **Fluency:** Refines non-native phrasing into natural, idiomatic expression.
-  * **Shorten:** Eliminates wordiness and deadwood while retaining full semantic intent.
-  * **Simplify:** Translates convoluted prose into clear, straightforward vocabulary.
-  * **Professional Tone:** Polishes casual language into workplace-ready communication.
-  * **Casual Tone:** Relaxes formal syntax into approachable, conversational dialogue.
-* **Contextual Word Enhancer:** Instant synonym lookups categorized into *Professional*, *Casual*, *Stronger*, and *Simpler* registers.
-* **Live Visual Diff Engine:** Highlights added words in slate-teal and struck-through deletions with character-level accuracy.
+  * **Sentence Rephrase:** Reconstructs awkward syntax for natural sentence flow.
+  * **Fluency:** Standardizes idioms and phrasing for non-native English writing.
+  * **Shorten:** Eliminates wordiness and deadwood while preserving core semantics.
+  * **Simplify:** Translates convoluted vocabulary into accessible phrasing.
+  * **Professional Tone:** Polishes casual drafts for business and workplace communications.
+  * **Casual Tone:** Relaxes rigid prose into conversational language.
+* **Contextual Word Enhancer:** High-precision synonym thesaurus grouped across *Professional*, *Casual*, *Stronger*, and *Simpler* registers.
+* **Backward Slice Diff Engine:** Computes character- and token-level visual diffs applied backwards by index, preventing substring span shifting and replacement collisions.
 
 ### 2. 🛡️ AI Text Checker (`#ai-checker`)
 * **Dual Free Default Detectors:**
-  * **Lexora Neural AI Detector (Free):** Leverages Google Gemini (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.8-flash`) for deep linguistic perplexity evaluation, sentence cadence analysis, and generative trope detection at zero cost.
-  * **Lexora Local Stylometrics Engine (Free & Offline):** Pure JavaScript statistical NLP analyzer that evaluates sentence length variance (burstiness index), type-token lexical diversity (TTR), and n-gram uniformity with zero API keys required.
-* **Sentence-Level Perplexity Heatmap:** Visual sentence cards color-coded by classification (*Human*, *Mixed*, *AI*) with detailed per-sentence hover analytics.
-* **Multi-Provider Cross-Verification:** Supports commercial providers ([GPTZero](https://docs.gptzero.me/), [Copyleaks](https://docs.copyleaks.com/)) and calculates inter-detector agreement (Cohen's Kappa).
-* **Scientific Disclosures:** Documents statistical limitations, minimum recommended sample size (&ge; 250 words), and non-native English false-positive caveats.
+  * **Lexora Neural AI Detector (Free):** Evaluates linguistic cadence and perplexity via Google Gemini (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.8-flash`) with multi-model fallback.
+  * **Lexora Local Stylometrics Engine (Free & Offline):** Pure JavaScript statistical NLP analyzer that evaluates sentence length variance (burstiness index), type-token lexical diversity (TTR), and character n-gram distribution without API keys.
+* **Sentence-Level Perplexity Heatmap:** Color-coded sentence breakdown (*Human*, *Mixed*, *AI*) with per-sentence metrics on hover.
+* **Multi-Provider Cross-Verification:** Optional integrations for commercial providers ([GPTZero](https://docs.gptzero.me/), [Copyleaks](https://docs.copyleaks.com/)) with automated Cohen's Kappa inter-detector agreement calculation.
+* **Four-Tier Provenance Classification:** Classifies text into `human-written`, `human-written & ai-refined`, `ai-generated & ai-refined`, and `ai-generated`.
 
 ### 3. 🎓 Academic Refiner (`#academic-refiner`)
-* **Nature-Standard Unslop Engine:** Systematically removes formulaic AI tropes (*"delve into"*, *"intricate tapestry"*, *"pivotal role"*, *"testament to"*, *"underscores the importance"*, *"sheds light on"*, *"groundbreaking"*).
-* **Guaranteed Citation Protection:** Automated regex safeguards ensure 100% preservation of bracketed citations `[1, 2]`, author-year citations `(Smith et al., 2023)`, DOIs, empirical values, and statistical notations ($p < 0.05$, $R^2$).
-* **Goal-Oriented Modes:** Custom refinement for *Academic Writing*, *Natural Writing*, *Grammar & Clarity*, or *Concise Writing* across *Conservative* and *Balanced* intensities.
-* **Strict Non-Adversarial Architecture:** Explicitly decoupled from detector scores to prevent iterative adversarial exploitation.
+* **Nature-Standard Unslop Engine:** Purges formulaic LLM stock tropes (*"delve into"*, *"intricate tapestry"*, *"plays a pivotal role"*, *"testament to"*, *"underscores the importance"*, *"sheds light on"*, *"groundbreaking"*).
+* **Guaranteed Citation Protection:** Tokenizes references into protected placeholders `[[REF_1]]` prior to processing, ensuring 100% preservation of bracketed citations `[1, 2]`, author-year formats `(Smith et al., 2023)`, DOIs, and empirical statistics ($p < 0.05$, $R^2$).
+* **Scholarly Discourse Methods:** Automated contraction expansion, objective passive voice transformation, and academic discourse transition synthesis.
 
 ### 4. 🔬 Detector Research Lab (`#detector-lab`)
-* **Curated Evaluation Dataset:** Built-in benchmark corpus across human manuscripts, modern LLM generations, and mixed collaborative texts with provenance tracking.
-* **Statistical Metrics Engine:** Calculates Precision (PPV), Recall (Sensitivity), Specificity (TNR), F1 Score, False Positive Rate (FPR), False Negative Rate (FNR), and ROC-AUC.
-* **Threshold Calibration ($\tau$):** Real-time interactive decision threshold slider to observe trade-offs between false positives and false negatives.
-* **Controlled Editing Robustness Tests:** Quantifies statistical score shifts before and after legitimate scholarly revision.
-* **Peer-Reviewed Bibliography:** Summarizes findings from NAACL 2025, Cambridge University Press (*Data & Policy 2025*), Springer (*Acta Neurochirurgica 2025*), and OpenAI's classifier discontinuation notice.
+* **Empirical Ground-Truth Dataset:** Pre-loaded with curated research samples across human academic manuscripts, raw LLM outputs, and collaboratively revised texts.
+* **Statistical Metrics Engine:** Computes Precision (PPV), Recall (Sensitivity), Specificity (TNR), F1 Score, False Positive Rate (FPR), False Negative Rate (FNR), and ROC-AUC.
+* **Dynamic Decision Threshold Calibration ($\tau$):** Real-time interactive decision threshold slider to evaluate trade-offs between false positives and false negatives.
+* **Peer-Reviewed Reference Base:** Grounded in research from NAACL 2025, Cambridge University Press (*Data & Policy 2025*), Springer (*Acta Neurochirurgica 2025*), and OpenAI's classifier methodology.
 
 ---
 
-## 🏗️ Architecture & Data Flow
+## 🏗️ Architecture & Engineering Highlights
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as User / Scholar
-    participant UI as React 19 Frontend
-    participant Proxy as Vite Server Middleware (server/)
-    participant Local as Local NLP Engine (textRules.js)
+    participant UI as React 19 Client (src/)
+    participant Proxy as Node / Vite Middleware (server/apiRouter.js)
+    participant Cache as Sliding LRU Cache & Queue
     participant Gemini as Google Gemini AI API
+    participant Local as Deterministic NLP Engine
 
-    User->>UI: Enter text & select tool
-    alt Offline / Local Rules Active
-        UI->>Local: Run deterministic regex & dictionary models
-        Local-->>UI: Immediate response (Grammar / Stylometrics)
+    User->>UI: Enter text & trigger analysis
+    alt Offline Mode / Deterministic Fallback
+        UI->>Local: Run pure JavaScript regex & stylometrics
+        Local-->>UI: Instant response (0ms latency, air-gapped)
     else Cloud Intelligence Requested
-        UI->>Proxy: POST /api/gemini/generate (Payload)
-        Note over Proxy: API keys secured server-side
-        Proxy->>Gemini: Stream/Execute Request
-        Gemini-->>Proxy: Structured JSON Response
-        Proxy-->>UI: Normalized response
+        UI->>Proxy: POST /api/* (JSON payload, capped at 2MB)
+        Note over Proxy: Server-side API key injection & credential redaction
+        Proxy->>Cache: Check LRU Cache & In-Flight Map
+        alt Cache Hit
+            Cache-->>Proxy: Cached response (<1ms)
+        else Cache Miss
+            Proxy->>Gemini: Execute request (with 429 backoff queue)
+            Gemini-->>Proxy: Structured response
+            Proxy->>Cache: Store in LRU cache (capped at 200 items)
+        end
+        Proxy-->>UI: Sanitized JSON response
     end
-    UI-->>User: Visual diffs, sentence heatmaps & metrics
+    UI-->>User: Render visual diffs, sentence heatmaps & metrics
 ```
 
-### Key Architectural Tenets
-1. **Zero Client-Side Secrets:** All external API requests are proxied through Vite server middleware (`server/vitePluginGemini.js`). API keys are never bundled into client JS.
-2. **Resilient Rate-Limit & Caching Architecture:**
-   * **Sliding-Window LRU Response Cache:** Memory-bounded LRU cache (capped at 200 items) eliminates duplicate API consumption and accelerates repetitive queries to sub-millisecond response times.
-   * **In-Flight Request Deduplication:** Coalesces identical concurrent network queries into a single in-flight promise.
-   * **Graceful 429 Rate-Limit Queue & Backoff:** Catches HTTP 429 quota exhaustion, serializes subsequent requests via an execution queue, and enforces automatic 20-second backoff so free-tier API keys degrade smoothly without failing user requests.
-3. **Granular Span-Level Proofreading:**
-   * Delivers minimal-span editorial corrections categorized into *Grammar*, *Spelling*, *Punctuation*, and *Style*.
-   * Provides interactive chip overlays allowing users to review changes in context, filter by error type, and accept corrections individually or in batch.
-4. **Four-Tier Granular Provenance Detection:**
-   * Detects provenance across four distinct categories: `human-written`, `human-written & ai-refined`, `ai-generated & ai-refined`, and `ai-generated`.
-   * Generates downloadable audit reports with forensic sentence-level perplexity, burstiness, and distribution statistics.
-5. **Multi-Format Document Extraction:**
-   * Direct in-browser upload and parsing for PDF documents (`pdfjs-dist`), raw text (`.txt`), and Markdown files (`.md`).
-6. **Optimized Bundle Splitting:**
-   * Asynchronous route-level code-splitting (`React.lazy` + `Suspense`) maintains initial bundles below 470 kB with zero Vite chunk size warnings.
-7. **Deterministic Offline Fallbacks:** Fast local dictionary and regex rules (`src/utils/textRules.js`, `server/detectors/localStylometrics.js`) guarantee core functionality even in air-gapped environments.
-8. **Pure React 19 + JSX:** Optimized for performance and simplicity with zero TypeScript build overhead.
+### Key Technical Pillars
+1. **Zero Client-Side Secrets:** Upstream credentials (`GEMINI_API_KEY`, `GPTZERO_API_KEY`, `COPYLEAKS_API_KEY`) reside exclusively in server-side environment variables. No credentials are prefixed with `VITE_` or exposed in client bundles.
+2. **Payload Protection & Error Sanitization:** The server proxy enforces a strict 2MB maximum body ceiling with immediate stream termination (`HTTP 413`) to prevent memory exhaustion DoS attacks. Outbound error messages are sanitized to redact API keys and query strings.
+3. **Resilient Rate-Limit & Caching Architecture:**
+   * **Sliding-Window LRU Cache:** In-memory 200-item LRU cache eliminates redundant upstream requests.
+   * **In-Flight Request Deduplication:** Merges identical concurrent queries into a single shared promise.
+   * **Graceful 429 Backoff Queue:** Catches HTTP 429 quota exhaustion, serializes subsequent requests via an execution queue, and enforces automatic 20-second backoff.
+4. **Optimized Route-Level Code Splitting:** Heavy PDF processing (`pdfjs-dist`) and secondary views are dynamically loaded with `React.lazy` and `Suspense`, keeping the initial bundle under 470 kB (141 kB gzip).
+5. **Strict JavaScript + JSX Constraint:** Pure modern React 19 architecture with zero TypeScript compile-time overhead or build friction.
 
 ---
 
-## 🎨 Design System & Accessibility
+## 🛠️ Technology Stack
 
-Lexora features a bespoke design system calibrated directly to its brand mark:
-
-| Role | Token / Hex | Description |
+| Layer | Technology | Details |
 | :--- | :--- | :--- |
-| **Dark Base Canvas** | `#0f1115` | Deep Obsidian Slate canvas (from official logo background) |
-| **Dark Card Surfaces** | `#14171f`, `#151820` | Elevated architectural card surfaces |
-| **Light Base Canvas** | `#f8fafc` | Clean, crisp slate paper surface |
-| **Architectural Borders**| `#222734`, `#282f3d` | High-contrast divider lines |
-| **Primary Accent** | `#38858a` (hover `#2c6e73`)| Nordic Slate-Teal (matching the faceted pen nib) |
-| **Highlight & Focus** | `#4fa3a8` | Glacial Cyan focus rings and interactive states |
-| **Typography** | `Inter` & `Outfit` | Clean sans-serif pairings with -0.025em letter tracking |
-
-### Accessibility Highlights
-* **WCAG 2.2 AA Compliance:** Contrast ratios exceed 4.5:1 for normal text and 3:1 for large text.
-* **Focus Visible:** Distinctive `focus-visible:ring-2 focus-visible:ring-[#4fa3a8]` rings on all interactive elements.
-* **Motion Accessibility:** Automatically respects `prefers-reduced-motion: reduce` via media query overrides.
-* **Anti-FOUT Theme Sync:** Inline synchronous `<script>` in `<head>` ensures zero Flash of Unstyled Theme during initial page load.
-
----
-
-## 📂 Project Directory Structure
-
-```text
-lexora/
-├── public/                       # Static public assets
-│   ├── logo-light.png            # Official light-theme brand logo
-│   ├── logo-dark.png             # Official dark-theme brand logo
-│   ├── icon-light.png            # Light-theme emblem (300x300)
-│   ├── icon-dark.png             # Dark-theme emblem (300x300)
-│   ├── favicon-light.png         # Browser favicon (light mode)
-│   └── favicon-dark.png          # Browser favicon (dark mode)
-├── server/                       # Server-side proxy & detection adapters
-│   ├── academicRefinerService.js # Nature-standard unslop & citation engine
-│   ├── geminiService.js          # Google Gemini integration & multi-model fallback
-│   ├── vitePluginGemini.js       # Vite development proxy middleware
-│   └── detectors/                # Modular detector adapters
-│       ├── gptzero.js            # GPTZero API integration
-│       ├── copyleaks.js          # Copyleaks API integration
-│       └── localStylometrics.js  # Offline statistical NLP analyzer
-├── src/                          # React 19 Frontend application
-│   ├── components/               # Modular UI components
-│   │   ├── Navbar.jsx            # Sticky navigation & adaptive theme switch
-│   │   ├── Hero.jsx              # Landing hero & quick-start input
-│   │   ├── WritingEditor.jsx     # Main studio editor with 7 AI tools
-│   │   ├── WordEnhancer.jsx      # Contextual synonym finder
-│   │   ├── AIChecker.jsx         # Multi-model AI detection suite
-│   │   ├── AcademicRefiner.jsx   # Scholarly unslop & citation safeguard
-│   │   ├── DetectorResearchLab.jsx # Empirical classifier benchmark suite
-│   │   ├── ResultPanel.jsx       # Visual diff & output rendering
-│   │   ├── ToolSelector.jsx      # Segmented tool switching pill
-│   │   └── FinalCTA.jsx          # Conversion callout with brand emblem
-│   ├── utils/                    # Frontend utilities & dataset specs
-│   │   ├── textRules.js          # Offline regex grammar & tone engine
-│   │   ├── researchDataset.js    # Curated benchmark documents & literature
-│   │   └── researchMetrics.js    # Classification statistics (ROC-AUC, F1, Kappa)
-│   ├── App.jsx                   # Primary app router & state coordinator
-│   ├── index.css                 # Tailwind CSS v4 design tokens & base rules
-│   └── main.jsx                  # Application DOM entry point
-├── test-suite.js                 # Automated suite verification tests
-├── test-rules.js                 # Unit tests for text rules & regex transformations
-├── index.html                    # Root HTML template with theme bootstrapping
-├── vite.config.js                # Vite 8 build & server plugin configuration
-├── package.json                  # Dependencies, scripts, and package metadata
-├── LICENSE                       # Open-source MIT License
-└── README.md                     # Project documentation & GitHub guide
-```
+| **Frontend Framework** | [React 19.3](https://react.dev/) | Functional components, hooks, concurrent rendering |
+| **Build Tooling** | [Vite 8.3](https://vite.dev/) | Lightning-fast HMR and Rollup-based production bundling |
+| **Styling & Design** | [Tailwind CSS v4.3](https://tailwindcss.com/) | CSS-first configuration, bespoke dark/light design system |
+| **Icons & Motion** | [Lucide React](https://lucide.dev/) / [Framer Motion](https://www.framer.com/motion/) | Scalable accessible iconography and micro-animations |
+| **Linter** | [Oxlint](https://oxc.rs/) | Rust-based high-performance JavaScript linter (0 errors, 0 warnings) |
+| **Testing Harness** | [Vitest](https://vitest.dev/) / [Testing Library](https://testing-library.com/) | Unit, component, and regression testing with v8 coverage |
+| **Document Parsing** | [PDF.js](https://mozilla.github.io/pdf.js/) (`pdfjs-dist`) | Lazy-loaded client-side PDF document text extraction |
+| **Cloud Intelligence** | [Google Gemini API](https://ai.google.dev/) | `@google/genai` multi-model fallback (`3.5-flash`, `3.5-flash-lite`, `3.8-flash`) |
 
 ---
 
 ## 🚀 Quickstart
 
 ### Prerequisites
-* **Node.js:** v18.0.0 or higher (v20+ recommended)
-* **npm:** v9.0.0 or higher
+* **Node.js:** `v18.0.0` or higher (`v20.x` recommended LTS)
+* **npm:** `v9.0.0` or higher
 
 ### Installation
 
@@ -230,22 +172,22 @@ lexora/
 git clone https://github.com/SFRREX/lexora.git
 cd lexora
 
-# 2. Install dependencies
-npm install
+# 2. Install dependencies (clean reproducible install)
+npm ci
 ```
 
 ### Environment Configuration
 
-Create your `.env` file by copying `.env.example`:
+Copy the sanitized environment template:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` in your editor:
+Open `.env` to configure your keys:
 
 ```env
-# Google Gemini API Key (100% Free at https://aistudio.google.com/)
+# Google Gemini API Key (Free at https://aistudio.google.com/)
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # Optional Commercial Detectors (Leave blank to use Free Default Detectors)
@@ -254,9 +196,11 @@ COPYLEAKS_EMAIL=
 COPYLEAKS_API_KEY=
 ```
 
-> **Note:** Lexora functions **100% out of the box** even without any API keys by automatically utilizing its built-in Local Rules Engine and Local Stylometrics NLP analyzer.
+> **Offline Note:** Lexora is fully functional **out of the box** without any API keys. When keys are unconfigured, it automatically utilizes its built-in Local Rules Engine and Local Stylometrics NLP analyzer.
 
-### Development Server
+### Local Development
+
+Start the development server with local API proxy middleware:
 
 ```bash
 npm run dev
@@ -268,10 +212,10 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 🧪 Verification & Automated Testing
 
-Lexora features a comprehensive, dual-tiered test harness covering component behavior, adapter normalization, offline statistical routines, and build integrity:
+Lexora features a comprehensive test harness covering component behavior, adapter normalization, offline statistical routines, and build integrity:
 
 ```bash
-# Run full Vitest unit & component test suite (54 tests across 6 files)
+# Run full Vitest unit & component test suite (55 tests across 6 files)
 npm test
 
 # Run Vitest in interactive watch mode
@@ -293,46 +237,135 @@ npm run build
 npm run check
 ```
 
-### Test Coverage Highlights
-* **Adapter Normalization:** Validates response formatting for GPTZero, Copyleaks, Local Stylometrics, and Gemini Neural Detector.
-* **Inter-Detector Agreement:** Verifies Cohen's Kappa calculation and agreement categorization.
-* **Statistical Metrics:** Confirms accuracy of Precision, Recall, Specificity, F1, and ROC-AUC formulas.
-* **Citation Preservation & Unslop:** Rigorously verifies preservation of bracketed citations, DOIs, and statistical notations during academic refinement.
-* **Four-Tier Provenance Classification:** Verifies granular sentence provenance distribution across 4 discrete tiers.
-* **LRU Caching & Eviction:** Validates sliding-window cache hit/miss behavior and strict 200-item eviction.
-* **429 Rate-Limit Queue:** Verifies serialized promise queuing and backoff delays upon quota limits.
-* **Span-Level Grammar Corrections:** Verifies substring index localization and non-overlapping span filtering.
-* **Grammar & Tone Rules:** Unit tests offline transformations across grammar, simplification, and tone registers.
+### Verified Test Suite Breakdown
+* **`src/test/academicRefiner.test.js` (9 tests):** Citation isolation, contraction expansion, passive voice restructuring, formal synonym replacement, and text metrics calculation.
+* **`src/test/detectors.test.js` (9 tests):** Adapter normalization for GPTZero, Copyleaks, Local Stylometrics, and Gemini Neural Detector.
+* **`src/test/researchMetrics.test.js` (3 tests):** Classification statistics (Precision, Recall, F1, FPR, FNR, ROC-AUC) and Cohen's Kappa agreement matrix.
+* **`src/test/textRules.test.js` (16 tests):** Deterministic grammar correction, sentence shortening, tone adjustment, and repeated-word span extraction.
+* **`src/test/theme.test.js` (5 tests):** Light/dark/system theme coordination, local storage synchronization, and OS preference listeners.
+* **`src/test/components.test.jsx` (13 tests):** Component rendering and user interaction tests across `WritingEditor`, `WordEnhancer`, `ResultPanel`, `BeforeAfter`, `FinalCTA`, `Navbar`, and `Footer`.
 
 ---
 
-## 🌐 GitHub Repository Profile Settings
+## 📂 Repository Structure
 
-For maintainers publishing or updating this project on GitHub, use the following configuration in the repository **About** section (top right of your GitHub repository page):
-
-| Field | Recommended Value |
-| :--- | :--- |
-| **Repository Name** | `lexora` |
-| **Description** | `⚡ The Art of Better Words. Production-grade AI writing suite, neural text detection, academic unslop, and empirical detector research lab built with React 19, Vite 8, and Tailwind CSS v4.` |
-| **Website** | `https://github.com/SFRREX/lexora` *(or your deployed production URL)* |
-| **Include in Home** | ✅ Releases, ✅ Packages, ✅ Environments |
-| **Topics / Tags** | `ai-writing`, `ai-detection`, `react19`, `vite`, `tailwindcss-v4`, `nlp`, `academic-writing`, `gemini-api`, `stylometrics`, `perplexity`, `burstiness`, `research-benchmarking`, `unslop`, `grammar-correction` |
+```text
+lexora/
+├── .github/                      # GitHub automation & configuration
+│   ├── dependabot.yml            # Automated weekly dependency updates
+│   └── workflows/
+│       └── ci.yml                # CI quality gate (lint, test, build, audit)
+├── api/                          # Serverless entry points (Vercel / Edge)
+│   ├── detectors/scan.js         # Multi-provider scan endpoint
+│   ├── detectors/status.js       # Provider configuration check
+│   ├── process-text.js           # Writing Studio text processing
+│   ├── refine-academic.js        # Academic Refiner unslop pipeline
+│   └── word-alternatives.js      # Contextual thesaurus lookup
+├── public/                       # Static public assets
+│   ├── logo-light.png            # Official light-theme logo
+│   ├── logo-dark.png             # Official dark-theme logo
+│   ├── favicon-light.png         # Browser favicon (light mode)
+│   └── favicon-dark.png          # Browser favicon (dark mode)
+├── server/                       # Node.js service logic & dev proxy
+│   ├── academicRefinerService.js # Scholarly unslop & citation engine
+│   ├── apiRouter.js              # Unified request router & payload limiter
+│   ├── geminiService.js          # Multi-model Gemini client & LRU cache
+│   ├── vitePluginGemini.js       # Vite development middleware proxy
+│   └── detectors/                # Modular detector adapters
+│       ├── baseDetector.js       # Base detector interface
+│       ├── copyleaks.js          # Copyleaks API adapter
+│       ├── detectorManager.js    # Multi-detector orchestrator & Kappa matrix
+│       ├── geminiDetector.js     # Free Gemini neural detector adapter
+│       ├── gptzero.js            # GPTZero API adapter
+│       └── localStylometrics.js  # Offline statistical NLP analyzer
+├── src/                          # React 19 Frontend application
+│   ├── components/               # Modular UI components
+│   │   ├── AIChecker.jsx         # Multi-model AI detection suite
+│   │   ├── AcademicRefiner.jsx   # Scholarly unslop & citation safeguard
+│   │   ├── BeforeAfter.jsx       # Visual comparison cards
+│   │   ├── DetectorResearchLab.jsx # Empirical classifier benchmark lab
+│   │   ├── FinalCTA.jsx          # Bottom call-to-action banner
+│   │   ├── Footer.jsx            # Accessible footer & legal links
+│   │   ├── Navbar.jsx            # Responsive navigation & theme switcher
+│   │   ├── ResultPanel.jsx       # Diff view & output action controls
+│   │   ├── WordEnhancer.jsx      # Contextual vocabulary thesaurus
+│   │   └── WritingEditor.jsx     # Primary editor with 7 writing tools
+│   ├── services/                 # Client API layer
+│   │   └── textProcessor.js      # API communication & local fallbacks
+│   ├── test/                     # Vitest test suites
+│   │   ├── setup.js              # JSDOM global setup & DOM mocks
+│   │   ├── academicRefiner.test.js
+│   │   ├── components.test.jsx
+│   │   ├── detectors.test.js
+│   │   ├── researchMetrics.test.js
+│   │   ├── textRules.test.js
+│   │   └── theme.test.js
+│   ├── utils/                    # Frontend utilities & dataset specs
+│   │   ├── documentExtractor.js  # Client-side PDF / TXT / MD extractor
+│   │   ├── researchDataset.js    # Curated benchmark documents
+│   │   ├── researchMetrics.js    # Classification statistics (ROC-AUC, F1, Kappa)
+│   │   ├── textRules.js          # Offline regex grammar & tone engine
+│   │   └── theme.js              # Theme coordinator (Light/Dark/System)
+│   ├── App.jsx                   # Root router & view coordinator
+│   ├── index.css                 # Tailwind CSS v4 design tokens
+│   └── main.jsx                  # Application entry point
+├── test-rules.js                 # Integration test suite for textRules
+├── test-suite.js                 # Integration test suite for detector adapters
+├── AGENTS.md                     # Operational guidelines for AI agents
+├── CONTRIBUTING.md               # Contribution standards & workflow
+├── SECURITY.md                   # Vulnerability disclosure & security architecture
+├── LICENSE                       # MIT Open-Source License
+├── vite.config.js                # Vite 8 build & Vitest configuration
+└── package.json                  # Dependencies, scripts, and metadata
+```
 
 ---
 
-## 🔒 Responsible AI & Ethical Disclosure
+## 🌐 Deployment
 
-1. **Probabilistic Limitations:** Statistical and neural AI detectors output probability estimates, not definitive proof of authorship. Scores should inform human editorial review rather than serve as sole arbiters.
-2. **Non-Native Linguistic Bias:** Consistent with published findings in NAACL and Springer, non-native English writing may exhibit lower burstiness. Lexora explicitly surfaces methodological caveats on small samples and provides educational guidance to prevent unfair penalization.
-3. **Privacy First:** User inputs are processed in-memory during active sessions and are never stored, logged, or shared with third parties.
+### Vercel (Serverless Full-Stack)
+The repository includes a root `vercel.json` and serverless entry points in `api/`:
+1. Push your repository to GitHub.
+2. Import the project into your [Vercel Dashboard](https://vercel.com).
+3. Set your environment variables (`GEMINI_API_KEY`, etc.) in the project settings.
+4. Deploy. Vercel automatically routes `/api/*` requests to the serverless functions and serves the static Vite frontend with client-side SPA routing.
+
+### Static Single-Page App (SPA)
+When deploying strictly as a static client (e.g. GitHub Pages, Netlify, Cloudflare Pages):
+1. Execute `npm run build` to generate the production bundle in `dist/`.
+2. Configure SPA fallback rewriting to point all non-asset routes to `index.html`.
+3. In static-only deployments, Lexora operates seamlessly in offline mode using its built-in deterministic rules and local stylometrics analyzer.
 
 ---
 
-## 📄 License & Academic Attribution
+## 🔒 Responsible AI & Methodological Disclosures
 
-This project is open-source software licensed under the [MIT License](LICENSE).
+1. **Probabilistic Nature of AI Detection:** Statistical and neural detectors generate probabilistic estimates, not irrefutable proof of authorship. Output scores should inform editorial review rather than serve as punitive determinants.
+2. **Linguistic & Non-Native Disparities:** Consistent with published findings in NAACL and Springer (*Acta Neurochirurgica*), non-native English writing may exhibit lower burstiness and reduced lexical variation. Lexora explicitly surfaces methodological caveats on small text samples (&lt; 250 words) to avoid false-positive bias.
+3. **Privacy & Data Retention:** User inputs are processed strictly in-memory during active sessions and are never persisted, stored in databases, or utilized for model training.
 
-If you use Lexora in academic research or linguistic benchmarking, please cite:
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please review our guidelines before opening a pull request:
+* Read [CONTRIBUTING.md](CONTRIBUTING.md) for local development setup and coding standards.
+* Consult [AGENTS.md](AGENTS.md) for architectural constraints (React 19 + JavaScript + JSX; strictly no TypeScript migration).
+* Ensure all checks pass cleanly via `npm run check`.
+
+---
+
+## 🛡️ Security
+
+Please report security vulnerabilities responsibly through our [Security Policy](SECURITY.md) via GitHub Private Vulnerability Reporting. Do not report security vulnerabilities through public GitHub issues.
+
+---
+
+## 📄 License & Citation
+
+This project is licensed under the [MIT License](LICENSE).
+
+If you reference Lexora in academic research or linguistic benchmarking, please cite:
 
 ```bibtex
 @software{lexora2026,
@@ -344,5 +377,5 @@ If you use Lexora in academic research or linguistic benchmarking, please cite:
 ```
 
 <p align="center">
-  Built with care by <a href="https://github.com/SFRREX">Razedus Safar</a> • Lexora Intelligence Suite
+  Crafted with care by <a href="https://github.com/SFRREX">Razedus Safar</a> • Lexora Intelligence Suite
 </p>
