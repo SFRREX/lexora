@@ -52,3 +52,8 @@ coverage/
 .cache/
 .parcel-cache/
 .vite/
+
+# Local agent scratch & planning artifacts
+findings.md
+progress.md
+task_plan.md

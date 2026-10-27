@@ -112,18 +112,44 @@ export default function WritingEditor({ onSelectView }) {
   }
 
   function handleApplyCorrection(corr) {
-    if (!corr || !inputText.includes(corr.original)) return;
-    const newText = inputText.replace(corr.original, corr.replacement);
+    if (!corr) return;
+    let newText;
+    if (
+      typeof corr.startIndex === 'number' &&
+      typeof corr.endIndex === 'number' &&
+      inputText.slice(corr.startIndex, corr.endIndex) === corr.original
+    ) {
+      newText = inputText.slice(0, corr.startIndex) + corr.replacement + inputText.slice(corr.endIndex);
+    } else if (inputText.includes(corr.original)) {
+      newText = inputText.replace(corr.original, corr.replacement);
+    } else {
+      return;
+    }
     setInputText(newText);
     setCorrections((prev) => prev.filter((c) => c !== corr));
   }
 
   function handleApplyAllCorrections() {
     if (corrections.length === 0) return;
+    const hasValidIndices = corrections.every(
+      (c) =>
+        typeof c.startIndex === 'number' &&
+        typeof c.endIndex === 'number' &&
+        inputText.slice(c.startIndex, c.endIndex) === c.original
+    );
+
     let newText = inputText;
-    for (const corr of corrections) {
-      if (newText.includes(corr.original)) {
-        newText = newText.replace(corr.original, corr.replacement);
+    if (hasValidIndices) {
+      // Apply backwards so earlier span indices remain intact
+      const sorted = [...corrections].sort((a, b) => b.startIndex - a.startIndex);
+      for (const corr of sorted) {
+        newText = newText.slice(0, corr.startIndex) + corr.replacement + newText.slice(corr.endIndex);
+      }
+    } else {
+      for (const corr of corrections) {
+        if (newText.includes(corr.original)) {
+          newText = newText.replace(corr.original, corr.replacement);
+        }
       }
     }
     setInputText(newText);

@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 
-export default function FinalCTA() {
+export default function FinalCTA({ onSelectView }) {
   return (
     <section className="py-20 sm:py-28 relative transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,7 +31,17 @@ export default function FinalCTA() {
 
           <a
             href="#editor"
-            className="inline-flex items-center gap-2 px-8 py-3.5 min-h-11.5 text-base font-semibold text-white bg-[#2c6e73] hover:bg-[#23585c] dark:bg-[#38858a] dark:hover:bg-[#459da2] rounded-xl shadow-md shadow-[#2c6e73]/25 dark:shadow-[#38858a]/25 transition-all hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4fa3a8]"
+            onClick={(e) => {
+              if (onSelectView) {
+                onSelectView('studio');
+                const targetEl = document.getElementById('editor');
+                if (targetEl) {
+                  e.preventDefault();
+                  targetEl.scrollIntoView({ behavior: 'smooth' });
+                }
+              }
+            }}
+            className="inline-flex items-center gap-2 px-8 py-3.5 min-h-11.5 text-base font-semibold text-white bg-[#2c6e73] hover:bg-[#23585c] dark:bg-[#38858a] dark:hover:bg-[#459da2] rounded-xl shadow-md shadow-[#2c6e73]/25 dark:shadow-[#38858a]/25 transition-all hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4fa3a8] cursor-pointer"
           >
             Start Improving Your Writing
             <ArrowRight size={18} />

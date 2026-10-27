@@ -86,7 +86,8 @@ export default function WordEnhancer() {
 
   function handleApply(suggestion) {
     if (!context.trim() || !word.trim()) return;
-    const regex = new RegExp(`\\b${word.trim()}\\b`, 'gi');
+    const escaped = word.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
     const updated = context.replace(regex, (match) => {
       if (match[0] === match[0].toUpperCase()) {
         return suggestion.charAt(0).toUpperCase() + suggestion.slice(1);

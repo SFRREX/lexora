@@ -732,7 +732,7 @@ export default function DetectorResearchLab({ onSelectView }) {
                     <a
                       href="https://aclanthology.org/2025.findings-naacl.271/"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="text-[#2c6e73] dark:text-[#4fa3a8] hover:text-[#1e4e52] dark:hover:text-[#64b5ba] shrink-0"
                     >
                       <ExternalLink size={14} />
@@ -752,7 +752,7 @@ export default function DetectorResearchLab({ onSelectView }) {
                     <a
                       href="https://www.cambridge.org/core/journals/data-and-policy/article/detection-avoidance-techniques-for-large-language-models/44CAB27B1563714BD60458FA1AB0DB30"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="text-[#2c6e73] dark:text-[#4fa3a8] hover:text-[#1e4e52] dark:hover:text-[#64b5ba] shrink-0"
                     >
                       <ExternalLink size={14} />
@@ -772,7 +772,7 @@ export default function DetectorResearchLab({ onSelectView }) {
                     <a
                       href="https://link.springer.com/article/10.1007/s00701-025-06622-4"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="text-[#2c6e73] dark:text-[#4fa3a8] hover:text-[#1e4e52] dark:hover:text-[#64b5ba] shrink-0"
                     >
                       <ExternalLink size={14} />
@@ -792,7 +792,7 @@ export default function DetectorResearchLab({ onSelectView }) {
                     <a
                       href="https://openai.com/index/new-ai-classifier-for-indicating-ai-written-text/"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="text-[#2c6e73] dark:text-[#4fa3a8] hover:text-[#1e4e52] dark:hover:text-[#64b5ba] shrink-0"
                     >
                       <ExternalLink size={14} />

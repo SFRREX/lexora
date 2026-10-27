@@ -421,6 +421,7 @@ function capitalizeFirstLetter(text) {
 // ── Public API ─────────────────────────────────────────────────
 
 export function fixGrammar(text) {
+  if (!text || typeof text !== 'string') return '';
   let result = text;
   result = fixSpelling(result);
   result = applyRuleList(result, grammarRules);
@@ -431,6 +432,7 @@ export function fixGrammar(text) {
 }
 
 export function improveWriting(text) {
+  if (!text || typeof text !== 'string') return '';
   let result = fixGrammar(text);
   result = applyMappingList(result, simplificationMap);
   result = capitalizeFirstLetter(result);
@@ -438,6 +440,7 @@ export function improveWriting(text) {
 }
 
 export function replaceWords(text) {
+  if (!text || typeof text !== 'string') return '';
   // Swap common weak/overused words for slightly stronger alternatives
   const weakWords = [
     { from: /\bgood\b/gi, to: 'excellent' },
@@ -464,6 +467,7 @@ export function replaceWords(text) {
 }
 
 export function simplifyText(text) {
+  if (!text || typeof text !== 'string') return '';
   let result = text;
   result = applyMappingList(result, simplificationMap);
   result = applyRuleList(result, punctuationRules);
@@ -472,6 +476,7 @@ export function simplifyText(text) {
 }
 
 export function professionalTone(text) {
+  if (!text || typeof text !== 'string') return '';
   let result = fixGrammar(text);
   result = applyMappingList(result, professionalToneMap);
   result = capitalizeFirstLetter(result);
@@ -479,6 +484,7 @@ export function professionalTone(text) {
 }
 
 export function casualTone(text) {
+  if (!text || typeof text !== 'string') return '';
   let result = text;
   result = applyMappingList(result, casualToneMap);
   result = applyRuleList(result, punctuationRules);
@@ -487,6 +493,7 @@ export function casualTone(text) {
 }
 
 export function shortenText(text) {
+  if (!text || typeof text !== 'string') return '';
   let result = text;
   result = applyMappingList(result, shorteningMap);
   // Clean up double-spaces introduced by removal

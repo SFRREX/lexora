@@ -39,6 +39,11 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light dark;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+html.dark {
+  scrollbar-color: #252b38 transparent;
 }
 
 /* ── Respect reduced motion ─────────────────── */

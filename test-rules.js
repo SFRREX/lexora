@@ -12,6 +12,8 @@ import {
 
 console.log('--- Testing textRules.js ---');
 
+let failures = 0;
+
 // Test 1: Grammar & Spelling correction
 const testGrammarInput = 'Their is alot of misteaks. He have a apple. They was happy.';
 const testGrammarOutput = fixGrammar(testGrammarInput);
@@ -20,6 +22,7 @@ console.log('  Input: ', testGrammarInput);
 console.log('  Output:', testGrammarOutput);
 if (!testGrammarOutput.includes('There is') || !testGrammarOutput.includes('a lot') || !testGrammarOutput.includes('He has an apple') || !testGrammarOutput.includes('They were')) {
   console.error('FAIL: Grammar correction expected patterns not matched');
+  failures++;
 } else {
   console.log('PASS: Grammar correction test');
 }
@@ -76,6 +79,7 @@ if (alts && alts.professional.includes('excellent')) {
   console.log('PASS: Word alternatives test');
 } else {
   console.error('FAIL: Word alternatives test');
+  failures++;
 }
 
 // Test 7: Example Text processing
@@ -84,4 +88,9 @@ const exampleResult = fixGrammar(EXAMPLE_TEXT);
 console.log('Result sample (first 100 chars):', exampleResult.slice(0, 100) + '...');
 console.log('PASS: Example text processing');
 
-console.log('\nAll textRules.js unit tests completed!');
+if (failures > 0) {
+  console.error(`\nCompleted with ${failures} failure(s)!`);
+  process.exit(1);
+}
+
+console.log('\nAll textRules.js unit tests completed successfully!');

@@ -268,17 +268,29 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## 🧪 Verification & Automated Testing
 
-Lexora is backed by automated tests for adapters, statistical formulas, and rules:
+Lexora features a comprehensive, dual-tiered test harness covering component behavior, adapter normalization, offline statistical routines, and build integrity:
 
 ```bash
-# Run unit & integration test suites
+# Run full Vitest unit & component test suite (54 tests across 6 files)
 npm test
+
+# Run Vitest in interactive watch mode
+npm run test:watch
+
+# Generate code coverage report via v8 engine
+npm run test:coverage
+
+# Run integration & adapter verification suites
+npm run test:suite
 
 # Run Oxlint high-performance code linter
 npm run lint
 
 # Compile optimized production bundle
 npm run build
+
+# Run complete unified quality gate (lint + tests + integration + build)
+npm run check
 ```
 
 ### Test Coverage Highlights

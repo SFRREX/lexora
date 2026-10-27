@@ -52,7 +52,7 @@ export default function Footer({ onSelectView }) {
 
           {/* Suite Features Navigation */}
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
               Intelligence Suite
             </div>
             <ul className="flex flex-col sm:flex-row sm:flex-wrap gap-x-5 gap-y-1.5">
@@ -61,7 +61,7 @@ export default function Footer({ onSelectView }) {
                   <button
                     type="button"
                     onClick={() => onSelectView && onSelectView(link.view)}
-                    className="text-xs text-slate-400 hover:text-[#4fa3a8] transition-colors cursor-pointer text-left rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-[#4fa3a8]"
+                    className="text-xs text-slate-600 dark:text-slate-400 hover:text-[#286468] dark:hover:text-[#4fa3a8] transition-colors cursor-pointer text-left rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-[#4fa3a8]"
                   >
                     {link.label}
                   </button>
@@ -72,7 +72,7 @@ export default function Footer({ onSelectView }) {
 
           {/* Secondary & Legal Links */}
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
               Resources & Legal
             </div>
             <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
@@ -80,8 +80,10 @@ export default function Footer({ onSelectView }) {
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className={`text-xs hover:text-[#4fa3a8] transition-colors rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-[#4fa3a8] ${
-                      link.placeholder ? 'cursor-default text-slate-600' : 'text-slate-400'
+                    className={`text-xs transition-colors rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-[#4fa3a8] ${
+                      link.placeholder
+                        ? 'cursor-default text-slate-400 dark:text-slate-600'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-[#286468] dark:hover:text-[#4fa3a8]'
                     }`}
                   >
                     {link.label}
@@ -92,9 +94,9 @@ export default function Footer({ onSelectView }) {
           </div>
         </div>
 
-        <div className="border-t border-slate-200 dark:border-[#1e232e] pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+        <div className="border-t border-slate-200 dark:border-[#1e232e] pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 dark:text-slate-400 gap-2">
           <div>© {CURRENT_YEAR} Lexora Intelligence Suite. All rights reserved.</div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-[11px] text-slate-500 dark:text-slate-500">
             Research-backed implementation adhering to NAACL, Cambridge Data & Policy, and Springer benchmarks.
           </div>
         </div>

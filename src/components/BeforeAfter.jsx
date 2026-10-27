@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2, ArrowRightLeft } from 'lucide-react';
 
-export default function BeforeAfter() {
+export default function BeforeAfter({ onSelectView }) {
   return (
     <section className="py-20 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,7 +61,17 @@ export default function BeforeAfter() {
         <div className="text-center">
           <a
             href="#editor"
-            className="inline-flex items-center gap-2 px-7 py-3 min-h-11 text-sm font-semibold text-white bg-[#2c6e73] hover:bg-[#23585c] dark:bg-[#38858a] dark:hover:bg-[#459da2] rounded-xl shadow-md shadow-[#2c6e73]/20 dark:shadow-[#38858a]/20 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4fa3a8]"
+            onClick={(e) => {
+              if (onSelectView) {
+                onSelectView('studio');
+                const targetEl = document.getElementById('editor');
+                if (targetEl) {
+                  e.preventDefault();
+                  targetEl.scrollIntoView({ behavior: 'smooth' });
+                }
+              }
+            }}
+            className="inline-flex items-center gap-2 px-7 py-3 min-h-11 text-sm font-semibold text-white bg-[#2c6e73] hover:bg-[#23585c] dark:bg-[#38858a] dark:hover:bg-[#459da2] rounded-xl shadow-md shadow-[#2c6e73]/20 dark:shadow-[#38858a]/20 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4fa3a8] cursor-pointer"
           >
             Try It Yourself
             <ArrowRight size={16} />

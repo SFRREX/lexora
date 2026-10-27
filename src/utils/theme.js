@@ -78,7 +78,7 @@ export function useTheme() {
 
   useEffect(() => {
     // Apply current on mount
-    applyTheme(theme);
+    applyTheme(getSavedTheme());
 
     // Listen for OS system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -92,11 +92,11 @@ export function useTheme() {
 
     mediaQuery.addEventListener('change', handleSystemChange);
 
-    // Listen for custom theme change events
+    // Listen for cross-component theme change events
     const handleThemeEvent = (e) => {
       if (e.detail) {
-        setThemeState(e.detail.preference);
-        setEffectiveTheme(e.detail.effective);
+        setThemeState((prev) => (prev !== e.detail.preference ? e.detail.preference : prev));
+        setEffectiveTheme((prev) => (prev !== e.detail.effective ? e.detail.effective : prev));
       }
     };
 
@@ -106,11 +106,11 @@ export function useTheme() {
       mediaQuery.removeEventListener('change', handleSystemChange);
       window.removeEventListener('lexora-theme-change', handleThemeEvent);
     };
-  }, [theme]);
+  }, []);
 
   function setTheme(newTheme) {
-    setThemeState(newTheme);
     applyTheme(newTheme);
+    setThemeState(newTheme);
     setEffectiveTheme(getEffectiveTheme(newTheme));
   }
 

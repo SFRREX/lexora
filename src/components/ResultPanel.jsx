@@ -207,8 +207,12 @@ export default function ResultPanel({
 
           {onSelectView && (
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(result);
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(result);
+                } catch {
+                  // Non-fatal if clipboard access is denied
+                }
                 onSelectView('checker');
               }}
               className="inline-flex items-center gap-1.5 px-3 py-2 min-h-10 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded-xl hover:bg-[#eef6f7] dark:hover:bg-[#152329] hover:text-[#23585c] dark:hover:text-[#a0dfe4] hover:border-[#a2d0d3] dark:hover:border-[#224448] transition-colors focus:outline-none focus:ring-2 focus:ring-[#38858a] cursor-pointer"

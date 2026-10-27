@@ -112,10 +112,11 @@ class DetectorManager {
     const uniqueClasses = new Set(classes);
 
     if (uniqueClasses.size === 1) {
+      const countLabel = valid.length === 2 ? 'Both' : `All ${valid.length}`;
       return {
         status: 'agree',
         label: 'Detectors agree',
-        detail: `Both detectors classified this text as "${classes[0].toUpperCase()}".`,
+        detail: `${countLabel} detectors classified this text as "${classes[0].toUpperCase()}".`,
         explanation:
           'Statistical agreement between independent models increases confidence in surface patterns, but does not constitute forensic proof of authorship.',
       };

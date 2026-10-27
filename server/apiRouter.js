@@ -9,6 +9,7 @@ import { refineAcademicText } from './academicRefinerService.js';
 import { extractRuleBasedGrammarSpans } from '../src/utils/textRules.js';
 
 const MAX_PAYLOAD_CHARS = 100000;
+const MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB stream limit
 
 /**
  * Safely parse JSON body from either a pre-parsed request (e.g. Vercel serverless)
@@ -18,6 +19,9 @@ export async function getJsonBody(req) {
   if (req.body !== undefined && req.body !== null) {
     if (typeof req.body === 'object') return req.body;
     if (typeof req.body === 'string' && req.body.trim()) {
+      if (req.body.length > MAX_BODY_BYTES) {
+        throw new Error('Payload exceeds maximum allowed size of 2MB.');
+      }
       try {
         return JSON.parse(req.body);
       } catch {
@@ -28,9 +32,20 @@ export async function getJsonBody(req) {
 
   return new Promise((resolve, reject) => {
     let raw = '';
-    req.on('data', (chunk) => {
+    let bytesReceived = 0;
+
+    const onData = (chunk) => {
+      bytesReceived += chunk.length;
+      if (bytesReceived > MAX_BODY_BYTES) {
+        req.removeListener('data', onData);
+        req.destroy();
+        reject(new Error('Payload exceeds maximum allowed size of 2MB.'));
+        return;
+      }
       raw += chunk;
-    });
+    };
+
+    req.on('data', onData);
     req.on('end', () => {
       try {
         resolve(raw.trim() ? JSON.parse(raw) : {});
@@ -57,11 +72,14 @@ function sendJson(res, statusCode, data) {
 }
 
 /**
- * Strips sensitive tokens (like Google API keys) from error descriptions.
+ * Strips sensitive tokens (like Google API keys, Bearer tokens, credentials) from error descriptions.
  */
 function sanitizeErrorMessage(err) {
   if (!err || !err.message) return 'Internal processing error.';
-  return err.message.replace(/AIza[0-9A-Za-z-_]{35}/g, '[REDACTED_API_KEY]');
+  return err.message
+    .replace(/AIza[0-9A-Za-z-_]{35}/g, '[REDACTED_API_KEY]')
+    .replace(/(?:Bearer\s+)[A-Za-z0-9\-_.]+/gi, 'Bearer [REDACTED_TOKEN]')
+    .replace(/(?:key=)[A-Za-z0-9\-_]+/gi, 'key=[REDACTED]');
 }
 
 /**
