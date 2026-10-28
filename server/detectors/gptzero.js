@@ -45,18 +45,23 @@ export class GPTZeroAdapter extends BaseDetector {
     }
 
     // AI probability (0 to 1)
-    const probabilityScore =
+    const rawDocProb =
       typeof doc.completely_generated_prob === 'number'
-        ? Math.round(doc.completely_generated_prob * 100) / 100
+        ? doc.completely_generated_prob
         : typeof doc.class_probabilities?.ai === 'number'
-        ? Math.round(doc.class_probabilities.ai * 100) / 100
+        ? doc.class_probabilities.ai
+        : null;
+    const probabilityScore =
+      typeof rawDocProb === 'number'
+        ? Math.round((rawDocProb > 1 ? rawDocProb / 100 : rawDocProb) * 100) / 100
         : null;
 
     // Sentence-level breakdown
     const rawSentences = doc.sentences || [];
     const sentences = rawSentences.map((s, idx) => {
       const text = s.sentence || '';
-      const prob = typeof s.generated_prob === 'number' ? s.generated_prob : 0;
+      const rawProb = typeof s.generated_prob === 'number' ? s.generated_prob : 0;
+      const prob = rawProb > 1 ? rawProb / 100 : rawProb;
       const isAI = s.highlight_sentence_for_ai || prob > 0.65;
       const isMixed = !isAI && prob >= 0.35;
       const label = isAI ? 'ai' : isMixed ? 'mixed' : 'human';

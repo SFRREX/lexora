@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Wand2,
   Trash2,
@@ -8,14 +8,14 @@ import {
   Sparkles,
   Clock,
   AlignLeft,
-  Check,
   CheckCheck,
-  Layers,
 } from 'lucide-react';
 import ToolSelector from './ToolSelector.jsx';
 import ResultPanel from './ResultPanel.jsx';
+import InteractiveGrammarCanvas from './InteractiveGrammarCanvas.jsx';
+import GrammarInspector from './GrammarInspector.jsx';
 import { TOOL_LIST, processText, checkGrammarSpans } from '../services/textProcessor.js';
-import { EXAMPLE_TEXT } from '../utils/textRules.js';
+import { calculateHealthScore, EXAMPLE_TEXT } from '../utils/textRules.js';
 
 function countWords(text) {
   if (!text || !text.trim()) return 0;
@@ -34,7 +34,18 @@ function estimateReadingTime(words) {
 }
 
 export default function WritingEditor({ onSelectView }) {
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('lexora_studio_draft');
+      if (saved) {
+        sessionStorage.removeItem('lexora_studio_draft');
+        return saved;
+      }
+    } catch {
+      // ignore
+    }
+    return '';
+  });
   const [selectedTool, setSelectedTool] = useState('grammar');
   const [result, setResult] = useState('');
   const [source, setSource] = useState('');
@@ -43,12 +54,58 @@ export default function WritingEditor({ onSelectView }) {
   const [error, setError] = useState('');
   const [corrections, setCorrections] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [hasFixedGrammar, setHasFixedGrammar] = useState(false);
+  const [replacedFromAI, setReplacedFromAI] = useState(false);
+  const [isAnalyzingSpans, setIsAnalyzingSpans] = useState(false);
+  const [hasScannedSpans, setHasScannedSpans] = useState(false);
+  const scanSeqRef = useRef(0);
 
   const inputWords = countWords(inputText);
   const inputChars = inputText.length;
   const inputSentences = countSentences(inputText);
   const readingTime = estimateReadingTime(inputWords);
   const resultWords = countWords(result);
+  const healthScore = calculateHealthScore(inputText, corrections);
+
+  // Debounced real-time grammar checks while typing in grammar mode
+  useEffect(() => {
+    if (selectedTool !== 'grammar') return;
+    if (!inputText || !inputText.trim()) {
+      const resetTimer = setTimeout(() => {
+        setCorrections([]);
+        setHasScannedSpans(false);
+        setIsAnalyzingSpans(false);
+      }, 0);
+      return () => clearTimeout(resetTimer);
+    }
+
+    const currentSeq = ++scanSeqRef.current;
+
+    const timer = setTimeout(() => {
+      setIsAnalyzingSpans(true);
+      checkGrammarSpans(inputText)
+        .then((res) => {
+          if (currentSeq !== scanSeqRef.current) return;
+          if (res && Array.isArray(res.corrections)) {
+            setCorrections(res.corrections);
+            setHasScannedSpans(true);
+          }
+        })
+        .catch(() => {
+          if (currentSeq !== scanSeqRef.current) return;
+          setHasScannedSpans(true);
+        })
+        .finally(() => {
+          if (currentSeq === scanSeqRef.current) {
+            setIsAnalyzingSpans(false);
+          }
+        });
+    }, 450);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [inputText, selectedTool]);
 
   const handleProcess = useCallback(async () => {
     if (loading) return; // prevent duplicate requests
@@ -56,14 +113,18 @@ export default function WritingEditor({ onSelectView }) {
     setResult('');
     setSource('');
     setModel('');
-    setCorrections([]);
 
     if (!inputText.trim()) {
       setError('Please enter some text before processing.');
       return;
     }
 
+    const currentSeq = ++scanSeqRef.current;
     setLoading(true);
+    if (selectedTool === 'grammar') {
+      setIsAnalyzingSpans(true);
+    }
+
     try {
       if (selectedTool === 'grammar') {
         const [processRes, spanRes] = await Promise.allSettled([
@@ -71,44 +132,76 @@ export default function WritingEditor({ onSelectView }) {
           checkGrammarSpans(inputText),
         ]);
 
+        if (currentSeq !== scanSeqRef.current) return;
+
         if (processRes.status === 'fulfilled') {
           setResult(processRes.value.result);
           setSource(processRes.value.source);
           setModel(processRes.value.model || '');
+
+          if (
+            (!spanRes.value?.corrections || spanRes.value.corrections.length === 0) &&
+            processRes.value.result &&
+            processRes.value.result.trim() !== inputText.trim()
+          ) {
+            setInputText(processRes.value.result);
+            setHasFixedGrammar(true);
+            setHasScannedSpans(true);
+          }
         } else {
           throw processRes.reason;
         }
 
         if (spanRes.status === 'fulfilled' && spanRes.value?.corrections) {
           setCorrections(spanRes.value.corrections);
+          setHasScannedSpans(true);
+          if (spanRes.value.corrections.length === 0) {
+            setHasFixedGrammar(true);
+          }
         }
       } else {
         const { result: processed, source: src, model: mdl } = await processText(inputText, selectedTool);
+        if (currentSeq !== scanSeqRef.current) return;
         setResult(processed);
         setSource(src);
         setModel(mdl || '');
       }
     } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      if (currentSeq === scanSeqRef.current) {
+        setError(err.message || 'Something went wrong. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      if (currentSeq === scanSeqRef.current) {
+        setLoading(false);
+        setIsAnalyzingSpans(false);
+      }
     }
   }, [inputText, selectedTool, loading]);
 
   function handleClear() {
+    scanSeqRef.current++;
     setInputText('');
     setResult('');
     setSource('');
     setError('');
     setCorrections([]);
+    setHasFixedGrammar(false);
+    setReplacedFromAI(false);
+    setHasScannedSpans(false);
+    setIsAnalyzingSpans(false);
   }
 
   function handleLoadExample() {
+    scanSeqRef.current++;
     setInputText(EXAMPLE_TEXT);
     setResult('');
     setSource('');
     setError('');
     setCorrections([]);
+    setHasFixedGrammar(false);
+    setReplacedFromAI(false);
+    setHasScannedSpans(false);
+    setIsAnalyzingSpans(true);
   }
 
   function handleApplyCorrection(corr) {
@@ -126,47 +219,69 @@ export default function WritingEditor({ onSelectView }) {
       return;
     }
     setInputText(newText);
-    setCorrections((prev) => prev.filter((c) => c !== corr));
+    setCorrections((prev) => {
+      const next = prev.filter((c) => c !== corr);
+      if (next.length === 0) {
+        setHasFixedGrammar(true);
+        setHasScannedSpans(true);
+        setIsAnalyzingSpans(false);
+      }
+      return next;
+    });
+  }
+
+  function handleDismissCorrection(corr) {
+    setCorrections((prev) => {
+      const next = prev.filter((c) => c !== corr);
+      if (next.length === 0) {
+        setHasScannedSpans(true);
+        setIsAnalyzingSpans(false);
+      }
+      return next;
+    });
   }
 
   function handleApplyAllCorrections() {
     if (corrections.length === 0) return;
-    const hasValidIndices = corrections.every(
-      (c) =>
-        typeof c.startIndex === 'number' &&
-        typeof c.endIndex === 'number' &&
-        inputText.slice(c.startIndex, c.endIndex) === c.original
-    );
-
+    // Apply backwards so earlier span indices remain intact
+    const sorted = [...corrections].sort((a, b) => (b.startIndex || 0) - (a.startIndex || 0));
     let newText = inputText;
-    if (hasValidIndices) {
-      // Apply backwards so earlier span indices remain intact
-      const sorted = [...corrections].sort((a, b) => b.startIndex - a.startIndex);
-      for (const corr of sorted) {
+
+    for (const corr of sorted) {
+      if (
+        typeof corr.startIndex === 'number' &&
+        typeof corr.endIndex === 'number' &&
+        newText.slice(corr.startIndex, corr.endIndex) === corr.original
+      ) {
         newText = newText.slice(0, corr.startIndex) + corr.replacement + newText.slice(corr.endIndex);
-      }
-    } else {
-      for (const corr of corrections) {
-        if (newText.includes(corr.original)) {
-          newText = newText.replace(corr.original, corr.replacement);
-        }
+      } else if (newText.includes(corr.original)) {
+        newText = newText.replace(corr.original, corr.replacement);
       }
     }
+    scanSeqRef.current++;
     setInputText(newText);
     setCorrections([]);
+    setHasFixedGrammar(true);
+    setHasScannedSpans(true);
+    setIsAnalyzingSpans(false);
   }
 
   async function handlePaste() {
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
+        scanSeqRef.current++;
         setInputText(text);
         setResult('');
         setSource('');
         setError('');
+        setCorrections([]);
+        setHasFixedGrammar(false);
+        setReplacedFromAI(false);
+        setHasScannedSpans(false);
+        setIsAnalyzingSpans(true);
       }
     } catch {
-      // Fallback: focus the input
       const el = document.getElementById('editor-input');
       if (el) el.focus();
     }
@@ -177,6 +292,8 @@ export default function WritingEditor({ onSelectView }) {
       setInputText(result);
       setResult('');
       setSource('');
+      setReplacedFromAI(true);
+      setHasFixedGrammar(false);
     }
   }
 
@@ -197,7 +314,7 @@ export default function WritingEditor({ onSelectView }) {
             Your Personal Writing Assistant
           </h2>
           <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Paste your text, choose an improvement, and make every sentence clearer.
+            Real-time grammar proofreading, interactive suggestions, and intelligent prose refining.
           </p>
         </div>
 
@@ -214,16 +331,67 @@ export default function WritingEditor({ onSelectView }) {
         <div className="bg-white dark:bg-[#14171f] rounded-3xl border border-slate-200/90 dark:border-[#222734] shadow-md shadow-slate-200/40 dark:shadow-none p-4 sm:p-6 lg:p-8 transition-colors">
           {/* Editor grid */}
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Input panel */}
+            {/* Left panel: Interactive Canvas or Textarea */}
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="editor-input" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <AlignLeft size={16} className="text-slate-400 dark:text-slate-500" />
-                  Original text
-                </label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <label
+                    htmlFor="editor-input"
+                    className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2"
+                  >
+                    {selectedTool === 'grammar' ? (
+                      <Sparkles size={16} className="text-[#38858a] dark:text-[#4fa3a8]" />
+                    ) : (
+                      <AlignLeft size={16} className="text-slate-400 dark:text-slate-500" />
+                    )}
+                    {selectedTool === 'grammar' ? 'Document Canvas' : 'Document Draft'}
+                  </label>
+
+                  {selectedTool === 'grammar' ? (
+                    !inputText.trim() ? null : isAnalyzingSpans || loading ? (
+                      <span
+                        data-testid="grammar-status-analyzing"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#38858a] dark:text-[#4fa3a8] bg-[#38858a]/10 dark:bg-[#38858a]/20 px-2.5 py-0.5 rounded-full border border-[#38858a]/30 shadow-xs animate-in fade-in duration-200"
+                      >
+                        <Loader2 size={12} className="animate-spin text-[#38858a] dark:text-[#4fa3a8]" />
+                        Checking draft…
+                      </span>
+                    ) : hasScannedSpans && (hasFixedGrammar || corrections.length === 0) ? (
+                      <span
+                        data-testid="grammar-status-clear"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-xs animate-in fade-in duration-200"
+                      >
+                        <CheckCheck size={12} className="text-emerald-600 dark:text-emerald-400" />
+                        {hasFixedGrammar ? 'Fixed · Clean & Polished' : 'All Clear · No Issues'}
+                      </span>
+                    ) : corrections.length > 0 ? (
+                      <span
+                        data-testid="grammar-status-issues"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800 shadow-xs"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        {corrections.length} {corrections.length === 1 ? 'issue' : 'issues'} found
+                      </span>
+                    ) : (
+                      <span
+                        data-testid="grammar-status-unscanned"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-[#1a1e27] px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-[#282f3d] shadow-xs"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
+                        Unchecked draft
+                      </span>
+                    )
+                  ) : replacedFromAI ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 shadow-xs">
+                      <CheckCheck size={12} className="text-emerald-600 dark:text-emerald-400" />
+                      Updated with AI result
+                    </span>
+                  ) : null}
+                </div>
                 <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                   <span>
-                    <strong className="text-slate-600 dark:text-slate-300 font-semibold">{inputWords}</strong> {inputWords === 1 ? 'word' : 'words'}
+                    <strong className="text-slate-600 dark:text-slate-300 font-semibold">{inputWords}</strong>{' '}
+                    {inputWords === 1 ? 'word' : 'words'}
                   </span>
                   <span>·</span>
                   <span>{inputChars} chars</span>
@@ -239,22 +407,54 @@ export default function WritingEditor({ onSelectView }) {
                 </div>
               </div>
 
-              <textarea
-                id="editor-input"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    handleProcess();
-                  }
-                }}
-                placeholder="Paste or type your text here. Check grammar, find better words, or improve your sentences..."
-                className="flex-1 min-h-55 lg:min-h-70 w-full rounded-2xl border border-slate-200 dark:border-[#262c3b] bg-slate-50/70 dark:bg-[#0c0e12] p-4 sm:p-5 text-sm sm:text-base text-slate-800 dark:text-slate-100 leading-relaxed resize-y placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#38858a]/20 focus:border-[#38858a] dark:focus:border-[#4fa3a8] focus:bg-white dark:focus:bg-[#10131a] transition-all shadow-inner"
-                aria-label="Original text input"
-              />
+              {selectedTool === 'grammar' ? (
+                <InteractiveGrammarCanvas
+                  text={inputText}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setInputText(val);
+                    if (hasFixedGrammar) setHasFixedGrammar(false);
+                    if (replacedFromAI) setReplacedFromAI(false);
+                    setHasScannedSpans(false);
+                    setIsAnalyzingSpans(Boolean(val.trim()));
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      handleProcess();
+                    }
+                  }}
+                  corrections={corrections}
+                  onApplyCorrection={handleApplyCorrection}
+                  onDismissCorrection={handleDismissCorrection}
+                  placeholder="Paste or type your text here. Check grammar, find better words, or improve your sentences..."
+                  className="flex-1 min-h-65 lg:min-h-80"
+                />
+              ) : (
+                <textarea
+                  id="editor-input"
+                  value={inputText}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setInputText(val);
+                    if (hasFixedGrammar) setHasFixedGrammar(false);
+                    if (replacedFromAI) setReplacedFromAI(false);
+                    setHasScannedSpans(false);
+                    setIsAnalyzingSpans(Boolean(val.trim()));
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      handleProcess();
+                    }
+                  }}
+                  placeholder="Paste or type your text here. Check grammar, find better words, or improve your sentences..."
+                  className="flex-1 min-h-65 lg:min-h-80 w-full rounded-2xl border border-slate-200 dark:border-[#262c3b] bg-slate-50/70 dark:bg-[#0c0e12] p-4 sm:p-5 text-sm sm:text-base text-slate-800 dark:text-slate-100 leading-relaxed resize-y placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#38858a]/20 focus:border-[#38858a] dark:focus:border-[#4fa3a8] focus:bg-white dark:focus:bg-[#10131a] transition-all shadow-inner"
+                  aria-label="Original text input"
+                />
+              )}
 
-              {/* Input actions */}
+              {/* Input action toolbar */}
               <div className="flex flex-wrap items-center gap-2 mt-4">
                 <button
                   onClick={handlePaste}
@@ -286,12 +486,26 @@ export default function WritingEditor({ onSelectView }) {
 
                 <div className="ml-auto flex items-center gap-3">
                   <span className="hidden sm:inline text-xs text-slate-400 dark:text-slate-500">
-                    <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded text-[10px] font-mono text-slate-600 dark:text-slate-400">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded text-[10px] font-mono text-slate-600 dark:text-slate-400">Enter</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded text-[10px] font-mono text-slate-600 dark:text-slate-400">
+                      Ctrl
+                    </kbd>{' '}
+                    +{' '}
+                    <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] rounded text-[10px] font-mono text-slate-600 dark:text-slate-400">
+                      Enter
+                    </kbd>
                   </span>
                   <button
-                    onClick={handleProcess}
+                    onClick={
+                      selectedTool === 'grammar' && corrections.length > 0
+                        ? handleApplyAllCorrections
+                        : handleProcess
+                    }
                     disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 min-h-10.5 text-sm font-semibold text-white bg-[#38858a] hover:bg-[#2c6e73] rounded-xl disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-[#38858a]/20 hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#38858a] focus:ring-offset-2 dark:focus:ring-offset-[#14171f] cursor-pointer"
+                    className={`inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 min-h-10.5 text-sm font-semibold text-white rounded-xl disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-[#14171f] cursor-pointer ${
+                      selectedTool === 'grammar' && corrections.length > 0
+                        ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20 focus:ring-emerald-500'
+                        : 'bg-[#38858a] hover:bg-[#2c6e73] shadow-[#38858a]/20 focus:ring-[#38858a]'
+                    }`}
                     aria-label="Improve text"
                   >
                     {loading ? (
@@ -299,6 +513,18 @@ export default function WritingEditor({ onSelectView }) {
                         <Loader2 size={16} className="animate-spin" />
                         Processing…
                       </>
+                    ) : selectedTool === 'grammar' ? (
+                      corrections.length > 0 ? (
+                        <>
+                          <CheckCheck size={16} />
+                          Fix All Errors ({corrections.length})
+                        </>
+                      ) : (
+                        <>
+                          <CheckCheck size={16} />
+                          Check Grammar
+                        </>
+                      )
                     ) : (
                       <>
                         <Wand2 size={16} />
@@ -310,7 +536,7 @@ export default function WritingEditor({ onSelectView }) {
               </div>
             </div>
 
-            {/* Output panel */}
+            {/* Right panel: Grammar Inspector or Rewrite Result */}
             <div>
               {error ? (
                 <div className="flex flex-col h-full">
@@ -318,7 +544,7 @@ export default function WritingEditor({ onSelectView }) {
                     Improved text
                   </label>
                   <div
-                    className="flex-1 min-h-55 lg:min-h-70 rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/40 p-5 text-sm text-red-700 dark:text-red-300 flex flex-col items-center justify-center text-center transition-colors"
+                    className="flex-1 min-h-65 lg:min-h-80 rounded-2xl border border-red-200 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/40 p-5 text-sm text-red-700 dark:text-red-300 flex flex-col items-center justify-center text-center transition-colors"
                     role="alert"
                   >
                     <p className="font-medium mb-1">Processing Error</p>
@@ -331,15 +557,32 @@ export default function WritingEditor({ onSelectView }) {
                     </button>
                   </div>
                 </div>
+              ) : selectedTool === 'grammar' ? (
+                <GrammarInspector
+                  healthScore={healthScore}
+                  corrections={corrections}
+                  categoryFilter={categoryFilter}
+                  onSelectCategory={setCategoryFilter}
+                  onApplyCorrection={handleApplyCorrection}
+                  onApplyAll={handleApplyAllCorrections}
+                  onDismissCorrection={handleDismissCorrection}
+                  hasScanned={hasScannedSpans}
+                  isAnalyzing={isAnalyzingSpans || loading}
+                  hasText={Boolean(inputText.trim())}
+                  hasFixed={hasFixedGrammar}
+                  className="flex-1 min-h-65 lg:min-h-80"
+                />
               ) : loading ? (
                 <div className="flex flex-col h-full">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Improved text
                   </label>
-                  <div className="flex-1 min-h-55 lg:min-h-70 rounded-2xl border border-slate-200 dark:border-[#222734] bg-slate-50/50 dark:bg-[#0c0e12] p-5 flex flex-col items-center justify-center transition-colors">
+                  <div className="flex-1 min-h-65 lg:min-h-80 rounded-2xl border border-slate-200 dark:border-[#222734] bg-slate-50/50 dark:bg-[#0c0e12] p-5 flex flex-col items-center justify-center transition-colors">
                     <Loader2 size={24} className="animate-spin text-[#38858a] dark:text-[#4fa3a8] mb-3" />
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Refining your words…</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Applying {TOOL_LIST.find(t => t.id === selectedTool)?.label || 'corrections'}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      Applying {TOOL_LIST.find((t) => t.id === selectedTool)?.label || 'corrections'}
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -357,119 +600,6 @@ export default function WritingEditor({ onSelectView }) {
               )}
             </div>
           </div>
-
-          {/* Granular proofreading suggestions panel */}
-          {corrections.length > 0 && (
-            <div className="mt-8 pt-8 border-t border-slate-200/90 dark:border-[#222734]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#38858a]/15 dark:bg-[#38858a]/25 text-[#23585c] dark:text-[#74b6ba] text-xs font-bold">
-                      {corrections.length}
-                    </span>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                      <Layers size={16} className="text-[#38858a] dark:text-[#4fa3a8]" />
-                      Granular Proofreading Suggestions
-                    </h3>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Minimal-span editorial recommendations. Apply individually or accept all at once.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex bg-slate-100 dark:bg-[#1a1e27] p-1 rounded-xl text-xs">
-                    {['all', 'grammar', 'spelling', 'punctuation', 'style'].map((cat) => {
-                      const count =
-                        cat === 'all'
-                          ? corrections.length
-                          : corrections.filter((c) => c.type === cat).length;
-                      if (cat !== 'all' && count === 0) return null;
-                      return (
-                        <button
-                          key={cat}
-                          onClick={() => setCategoryFilter(cat)}
-                          className={`px-2.5 py-1 rounded-lg font-medium capitalize transition-all cursor-pointer ${
-                            categoryFilter === cat
-                              ? 'bg-white dark:bg-[#282f3d] text-slate-900 dark:text-white shadow-xs'
-                              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          {cat} ({count})
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    onClick={handleApplyAllCorrections}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-colors cursor-pointer"
-                    aria-label="Apply all corrections"
-                  >
-                    <CheckCheck size={14} />
-                    Apply All
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
-                {corrections
-                  .filter((c) => categoryFilter === 'all' || c.type === categoryFilter)
-                  .map((c, i) => {
-                    const badgeStyles =
-                      {
-                        grammar:
-                          'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800',
-                        spelling:
-                          'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
-                        punctuation:
-                          'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
-                        style:
-                          'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800',
-                      }[c.type] || 'bg-slate-50 text-slate-700 border-slate-200';
-
-                    return (
-                      <div
-                        key={i}
-                        className="p-3.5 rounded-2xl border border-slate-200 dark:border-[#222734] bg-slate-50/70 dark:bg-[#10131a] flex flex-col justify-between text-xs transition-colors hover:border-[#38858a]/40"
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wider ${badgeStyles}`}
-                          >
-                            {c.type}
-                          </span>
-                          <button
-                            onClick={() => handleApplyCorrection(c)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-semibold transition-colors cursor-pointer"
-                            aria-label={`Apply correction: replace ${c.original} with ${c.replacement}`}
-                          >
-                            <Check size={12} />
-                            Apply
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-2 font-mono text-xs mb-1.5 flex-wrap">
-                          <span className="line-through text-red-500/90 dark:text-red-400/90 bg-red-50 dark:bg-red-950/40 px-1.5 py-0.5 rounded">
-                            {c.original}
-                          </span>
-                          <span className="text-slate-400">→</span>
-                          <span className="font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
-                            {c.replacement}
-                          </span>
-                        </div>
-
-                        {c.explanation && (
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                            {c.explanation}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </section>

@@ -8,8 +8,8 @@ const TOOL_PROMPTS = {
   },
   improve: {
     instruction:
-      'You are a master writing coach for Lexora. Enhance the prose for dynamic sentence rhythm, cadence, clarity, and elegance while strictly preserving the author\'s original meaning and voice. Replace clumsy passive constructions with active, precise verbs. Eliminate repetitive sentence structures and robotic transitions. Preserve all names, facts, and citations. Return ONLY the improved text directly without notes or commentary.',
-    temperature: 0.25,
+      'You are a master writing coach for Lexora. Enhance the prose for dynamic sentence rhythm, natural cadence, clarity, and authentic human voice while strictly preserving the author\'s original meaning and intent. Dynamically vary sentence length (combining crisp, short sentences with longer compound ones) to avoid monotonic rhythms. Eliminate repetitive sentence structures and robotic AI transitions (never begin sentences with "Consequently,", "Moreover,", "Furthermore,", "Therefore,", or "Notably,"). Preserve all names, numbers, facts, and citations verbatim. Return ONLY the improved text directly without notes or commentary.',
+    temperature: 0.55,
   },
   replace: {
     instruction:
@@ -304,7 +304,7 @@ const GRAMMAR_SPAN_SCHEMA = {
           },
           type: {
             type: Type.STRING,
-            enum: ['grammar', 'spelling', 'punctuation', 'style'],
+            enum: ['grammar', 'spelling', 'punctuation', 'clarity', 'style'],
             description: 'The category of the issue.',
           },
         },
@@ -315,12 +315,12 @@ const GRAMMAR_SPAN_SCHEMA = {
   required: ['corrections'],
 };
 
-const GRAMMAR_SPAN_INSTRUCTION = `You are a thorough, publication-grade proofreader. Detect all grammar, spelling, punctuation, and style issues in the text.
+const GRAMMAR_SPAN_INSTRUCTION = `You are a thorough, publication-grade proofreader. Detect all grammar, spelling, punctuation, clarity, and style issues in the text.
 Rules:
 1. Always prefer the MINIMAL edit that makes the sentence grammatically sound. Keep original wording, tone, and citations.
 2. "original" MUST be the exact verbatim substring from the input text (the shortest span containing the error).
 3. "replacement" MUST be the corrected version of that same span.
-4. "type" MUST be one of: "grammar", "spelling", "punctuation", or "style".
+4. "type" MUST be one of: "grammar", "spelling", "punctuation", "clarity", or "style".
 5. Keep "explanation" under 15 words.
 6. Do not flag personal names or correct informal idioms if they are grammatically sound.
 7. If the text has no errors, return an empty corrections array.`;
@@ -358,7 +358,7 @@ export function sanitizeAndLocateCorrections(rawCorrections, sourceText) {
         explanation: typeof c.explanation === 'string' && c.explanation.trim()
           ? c.explanation.trim()
           : 'Grammar correction',
-        type: ['grammar', 'spelling', 'punctuation', 'style'].includes(c.type) ? c.type : 'grammar',
+        type: ['grammar', 'spelling', 'punctuation', 'clarity', 'style'].includes(c.type) ? c.type : 'grammar',
         startIndex,
         endIndex,
       });

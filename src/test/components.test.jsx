@@ -46,6 +46,35 @@ describe('React Components', () => {
         expect(screen.getByText(/Please enter some text/i)).toBeInTheDocument();
       });
     });
+
+    it('displays professional "Document Canvas" header instead of "Original text"', () => {
+      render(<WritingEditor />);
+      // Default tool is grammar
+      expect(screen.getByText(/Document Canvas/i)).toBeInTheDocument();
+      expect(screen.queryByText(/^Original text$/i)).not.toBeInTheDocument();
+    });
+
+    it('does not prematurely display "All Clear" badge when text is freshly entered', () => {
+      render(<WritingEditor />);
+      const textarea = screen.getByLabelText(/Original text input/i);
+      fireEvent.change(textarea, { target: { value: 'This are an bad sentence with grammer issues.' } });
+
+      // Must NOT claim "All Clear · No Issues" prematurely on freshly entered unscanned text
+      expect(screen.queryByText(/All Clear · No Issues/i)).not.toBeInTheDocument();
+      // Should show checking or unchecked draft indicator
+      expect(
+        screen.queryByTestId('grammar-status-analyzing') || screen.queryByTestId('grammar-status-unscanned')
+      ).toBeTruthy();
+    });
+
+    it('shows checking draft badge while grammar scan is in progress', () => {
+      render(<WritingEditor />);
+      const textarea = screen.getByLabelText(/Original text input/i);
+      fireEvent.change(textarea, { target: { value: 'Analyzing this new paragraph of text.' } });
+
+      expect(screen.getByTestId('grammar-status-analyzing')).toBeInTheDocument();
+      expect(screen.getByText(/Checking draft…/i)).toBeInTheDocument();
+    });
   });
 
   describe('WordEnhancer component', () => {

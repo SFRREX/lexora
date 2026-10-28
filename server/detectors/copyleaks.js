@@ -55,7 +55,8 @@ export class CopyleaksAdapter extends BaseDetector {
     // Copyleaks summary format
     // Summary: { summary: { human: 0.2, ai: 0.8 } }
     const summary = raw?.summary || {};
-    const aiProb = typeof summary.ai === 'number' ? summary.ai : typeof raw.score === 'number' ? raw.score : 0.5;
+    const rawAiProb = typeof summary.ai === 'number' ? summary.ai : typeof raw.score === 'number' ? raw.score : 0.5;
+    const aiProb = rawAiProb > 1 ? rawAiProb / 100 : rawAiProb;
 
     let classification = 'mixed';
     if (aiProb >= 0.7) classification = 'ai';

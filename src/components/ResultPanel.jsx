@@ -209,6 +209,11 @@ export default function ResultPanel({
             <button
               onClick={async () => {
                 try {
+                  sessionStorage.setItem('lexora_checker_text', result);
+                } catch {
+                  // Non-fatal if storage quota is exceeded
+                }
+                try {
                   await navigator.clipboard.writeText(result);
                 } catch {
                   // Non-fatal if clipboard access is denied

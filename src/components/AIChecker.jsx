@@ -21,7 +21,18 @@ import { INITIAL_RESEARCH_DATASET } from '../utils/researchDataset.js';
 import { extractTextFromDocument } from '../utils/documentExtractor.js';
 
 export default function AIChecker({ onSelectView }) {
-  const [text, setText] = useState('');
+  const [text, setText] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('lexora_checker_text');
+      if (saved) {
+        sessionStorage.removeItem('lexora_checker_text');
+        return saved;
+      }
+    } catch {
+      // ignore
+    }
+    return '';
+  });
   const [selectedProviders, setSelectedProviders] = useState(['gemini', 'stylometrics']);
   const [providers, setProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,12 +42,36 @@ export default function AIChecker({ onSelectView }) {
   const [activeSentence, setActiveSentence] = useState(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
   const fileInputRef = useRef(null);
+  const requestSeqRef = useRef(0);
 
-  // Load available provider statuses on mount
+  // Load available provider statuses on mount and monitor incoming drafts
   useEffect(() => {
     fetchDetectorStatuses().then((list) => {
       setProviders(list);
     });
+
+    function checkIncomingDraft() {
+      try {
+        const saved = sessionStorage.getItem('lexora_checker_text');
+        if (saved) {
+          sessionStorage.removeItem('lexora_checker_text');
+          setText(saved);
+          setScanResult(null);
+          setError(null);
+          setActiveSentence(null);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    checkIncomingDraft();
+    window.addEventListener('focus', checkIncomingDraft);
+    window.addEventListener('hashchange', checkIncomingDraft);
+    return () => {
+      window.removeEventListener('focus', checkIncomingDraft);
+      window.removeEventListener('hashchange', checkIncomingDraft);
+    };
   }, []);
 
   const geminiConfig = providers.find((p) => p.id === 'gemini');
@@ -58,17 +93,31 @@ export default function AIChecker({ onSelectView }) {
       return;
     }
 
+    const currentReq = ++requestSeqRef.current;
+    const textToScan = text;
+
     setIsLoading(true);
     setError(null);
-    setScanResult(null);
 
     try {
-      const data = await runAiDetection(text, selectedProviders);
-      setScanResult(data);
+      const data = await runAiDetection(textToScan, selectedProviders);
+      // Discard stale request if a newer request was triggered in the interim
+      if (currentReq !== requestSeqRef.current) {
+        return;
+      }
+      setScanResult({
+        ...data,
+        scannedText: textToScan,
+      });
+      setActiveSentence(null);
     } catch (err) {
-      setError(err.message || 'An error occurred during AI detection.');
+      if (currentReq === requestSeqRef.current) {
+        setError(err.message || 'An error occurred during AI detection.');
+      }
     } finally {
-      setIsLoading(false);
+      if (currentReq === requestSeqRef.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -217,6 +266,11 @@ Timestamp: ${primaryResult.scanTimestamp}`;
   // Get primary successful result (if any)
   const primaryResult = scanResult?.results?.find((r) => r.success && r.data)?.data;
   const missingConfigResults = scanResult?.results?.filter((r) => r.notConfigured) || [];
+  const isResultOutdated = Boolean(
+    scanResult &&
+      scanResult.scannedText !== undefined &&
+      scanResult.scannedText.trim() !== text.trim()
+  );
 
   return (
     <section id="ai-checker" className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto transition-colors">
@@ -459,7 +513,7 @@ Timestamp: ${primaryResult.scanTimestamp}`;
               <button
                 type="button"
                 onClick={handleCheckText}
-                disabled={isLoading || !text.trim()}
+                disabled={!text.trim()}
                 className="px-5 py-2 text-xs font-semibold text-white bg-[#38858a] hover:bg-[#2c6e73] rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -507,9 +561,32 @@ Timestamp: ${primaryResult.scanTimestamp}`;
         </div>
       )}
 
+      {/* Outdated Result Warning Banner */}
+      {isResultOutdated && (
+        <div
+          data-testid="outdated-scan-banner"
+          className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200 text-xs sm:text-sm shadow-xs transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold">Text Modified Since Last Scan:</span> The analysis below reflects an earlier draft. Re-scan to analyze your current text.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleCheckText}
+            disabled={isLoading}
+            className="px-3.5 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-xs transition-colors shrink-0 cursor-pointer disabled:opacity-50"
+          >
+            Re-analyze Current Text
+          </button>
+        </div>
+      )}
+
       {/* Scan Results Dashboard */}
       {primaryResult && (
-        <div className="space-y-6 mb-12">
+        <div className={`space-y-6 mb-12 ${isResultOutdated ? 'opacity-75 transition-opacity' : ''}`}>
           {/* Main classification card */}
           <div className="bg-white dark:bg-[#14171f] rounded-2xl border border-slate-200/90 dark:border-[#222734] shadow-sm dark:shadow-none p-6 transition-colors">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-[#222734]">
@@ -532,7 +609,7 @@ Timestamp: ${primaryResult.scanTimestamp}`;
                   )}
                 </span>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 capitalize">
                       {primaryResult.classification === 'human'
                         ? 'Likely Human-Authored'
@@ -543,11 +620,16 @@ Timestamp: ${primaryResult.scanTimestamp}`;
                     <span className="px-2 py-0.5 rounded text-[11px] font-semibold uppercase bg-slate-100 dark:bg-[#1a1e27] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d]">
                       Confidence: {primaryResult.confidence}
                     </span>
+                    {isResultOutdated && (
+                      <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                        Outdated Result
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Provider: <strong>{primaryResult.providerName}</strong> &bull; Model:{' '}
-                    <code>{primaryResult.modelVersion}</code> &bull; Timestamp:{' '}
-                    {new Date(primaryResult.scanTimestamp).toLocaleTimeString()}
+                    <code>{primaryResult.modelVersion}</code>
+                    {primaryResult.scanTimestamp ? ` • Timestamp: ${new Date(primaryResult.scanTimestamp).toLocaleTimeString()}` : ''}
                   </p>
                 </div>
               </div>
@@ -809,7 +891,16 @@ Timestamp: ${primaryResult.scanTimestamp}`;
                 {(primaryResult.classification === 'ai' || primaryResult.classification === 'mixed') && onSelectView && (
                   <button
                     type="button"
-                    onClick={() => onSelectView('academic')}
+                    onClick={() => {
+                      if (text) {
+                        try {
+                          sessionStorage.setItem('lexora_academic_draft', text);
+                        } catch {
+                          // ignore
+                        }
+                      }
+                      onSelectView('academic');
+                    }}
                     className="px-4 py-1.5 text-xs font-semibold text-white bg-[#38858a] hover:bg-[#2c6e73] rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>Polish in Academic Refiner</span>

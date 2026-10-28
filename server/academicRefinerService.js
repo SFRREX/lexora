@@ -112,22 +112,26 @@ export function expandContractions(text) {
  * Scholarly transitions for discourse cohesion in academic manuscripts
  */
 export const ACADEMIC_TRANSITIONS = [
-  'Moreover,',
-  'Additionally,',
-  'Furthermore,',
-  'Consequently,',
-  'Therefore,',
-  'Hence,',
-  'Accordingly,',
-  'Nonetheless,',
-  'Nevertheless,',
+  'In addition,',
+  'Specifically,',
+  'In practice,',
+  'At the same time,',
+  'In response,',
+  'For this reason,',
+  'In particular,',
+  'Beyond this,',
+  'On balance,',
 ];
 
 /**
  * Injects scholarly transitions between sentences to enhance discourse cohesion
  */
-export function addAcademicTransitions(text, rate = 0.35) {
+export function addAcademicTransitions(text, rate = 0.35, intensity = 65) {
   if (!text || !text.trim()) return { text: '', count: 0, transitionsAdded: [] };
+  const normalizedIntensity = typeof intensity === 'number' && intensity > 1 ? intensity / 100 : (intensity ?? 0.65);
+  if (rate <= 0 || normalizedIntensity <= 0) {
+    return { text, count: 0, transitionsAdded: [] };
+  }
 
   const rawSentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
   if (rawSentences.length <= 1) {
@@ -139,6 +143,8 @@ export function addAcademicTransitions(text, rate = 0.35) {
   let count = 0;
   const transitionsAdded = [];
   let tIndex = 0;
+  const effectiveRate = Math.min(1.0, rate * (normalizedIntensity > 0 ? normalizedIntensity : 1.0));
+  const step = effectiveRate >= 0.8 ? 1 : Math.max(2, Math.round(1 / effectiveRate));
 
   const modifiedSentences = rawSentences.map((sent, index) => {
     const trimmed = sent.trim();
@@ -152,8 +158,7 @@ export function addAcademicTransitions(text, rate = 0.35) {
       return sent;
     }
 
-    // Intersperse transitions smoothly into second and subsequent sentences
-    const shouldAdd = (index % 2 === 1) || (Math.random() < rate);
+    const shouldAdd = (index % step === 1) || (step === 1);
     if (!shouldAdd) return sent;
 
     const transition = ACADEMIC_TRANSITIONS[tIndex % ACADEMIC_TRANSITIONS.length];
@@ -264,16 +269,40 @@ export const ACADEMIC_SYNONYMS = [
   { pattern: /\bput forward\b/gi, replacement: 'propose' },
   { pattern: /\bcarry out\b/gi, replacement: 'execute' },
   { pattern: /\bdeal with\b/gi, replacement: 'mitigate' },
+  { pattern: /\bclear\b/gi, replacement: 'evident' },
+  { pattern: /\banswer\b/gi, replacement: 'solution' },
+  { pattern: /\bcheck\b/gi, replacement: 'verify' },
+  { pattern: /\bkeep\b/gi, replacement: 'maintain' },
+  { pattern: /\bguess\b/gi, replacement: 'hypothesize' },
+  { pattern: /\bwrong\b/gi, replacement: 'erroneous' },
+  { pattern: /\benough\b/gi, replacement: 'sufficient' },
+  { pattern: /\bhard\b/gi, replacement: 'demanding' },
+  { pattern: /\beasy\b/gi, replacement: 'straightforward' },
+  { pattern: /\bbuild\b/gi, replacement: 'construct' },
+  { pattern: /\bstop\b/gi, replacement: 'cease' },
 ];
 
-export function replaceWithFormalSynonyms(text) {
+export function replaceWithFormalSynonyms(text, intensity = 100) {
   if (!text) return { text: '', count: 0, replacements: [] };
+  const normalizedIntensity = typeof intensity === 'number' && intensity > 1 ? intensity / 100 : (intensity ?? 1.0);
+  if (normalizedIntensity <= 0) {
+    return { text, count: 0, replacements: [] };
+  }
+
   let replaced = text;
   let count = 0;
+  let matchIndex = 0;
   const replacements = [];
+  const interval = normalizedIntensity >= 1.0 ? 1 : Math.max(1, Math.round(1 / normalizedIntensity));
 
   ACADEMIC_SYNONYMS.forEach(({ pattern, replacement }) => {
     replaced = replaced.replace(pattern, (match) => {
+      const shouldReplace = normalizedIntensity >= 1.0 || (matchIndex % interval === 0);
+      matchIndex++;
+      if (!shouldReplace) {
+        return match;
+      }
+
       count++;
       let rep = replacement;
       if (match[0] === match[0].toUpperCase()) {
@@ -428,7 +457,12 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
     addTransitions: shouldAddTransitions = false,
     passiveVoice: shouldPassiveVoice = false,
     formalSynonyms: shouldFormalSynonyms = true,
+    intensity: customIntensity,
   } = opts || {};
+
+  const intensity = typeof customIntensity === 'number'
+    ? customIntensity
+    : (typeof options?.intensity === 'number' ? options.intensity : 65);
 
   // 0. Isolate citations with placeholders to protect author names, years, and page numbers from alteration
   const originalCitations = extractCitations(text);
@@ -466,7 +500,7 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
   // 4. Formal synonyms replacement (if enabled)
   let synonymCount = 0;
   if (shouldFormalSynonyms) {
-    const synRes = replaceWithFormalSynonyms(refined);
+    const synRes = replaceWithFormalSynonyms(refined, intensity);
     refined = synRes.text;
     synonymCount = synRes.count;
   }
@@ -474,7 +508,7 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
   // 5. Academic transitions injection (if enabled)
   let transitionCount = 0;
   if (shouldAddTransitions) {
-    const transRes = addAcademicTransitions(refined);
+    const transRes = addAcademicTransitions(refined, 0.5, intensity);
     refined = transRes.text;
     transitionCount = transRes.count;
   }
@@ -500,6 +534,7 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
     passiveCount,
     synonymCount,
     transitionCount,
+    intensity,
     isolatedCitationsCount: Object.keys(citationMapping).length,
     source: 'deterministic-rules',
   };
@@ -512,6 +547,7 @@ export async function refineAcademicText(text, options = {}) {
   const {
     mode = 'academic', // 'natural' | 'academic' | 'grammar' | 'concise'
     level = 'balanced', // 'conservative' | 'balanced'
+    intensity = 65,
     expandContractions: shouldExpandContractions = true,
     addTransitions: shouldAddTransitions = false,
     passiveVoice: shouldPassiveVoice = false,
@@ -524,7 +560,7 @@ export async function refineAcademicText(text, options = {}) {
   const { text: maskedDraft, mapping: citationMapping } = maskCitationsWithPlaceholders(text);
 
   if (!isGeminiConfigured()) {
-    const local = refineWithRules(text, mode, level, options);
+    const local = refineWithRules(text, mode, level, { ...options, intensity });
     const refinedMetrics = calculateTextMetrics(local.refinedText);
     const editorialHighlights = [
       `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
@@ -550,11 +586,13 @@ export async function refineAcademicText(text, options = {}) {
       refinedText: local.refinedText,
       mode,
       level,
+      intensity,
       options: {
         expandContractions: shouldExpandContractions,
         addTransitions: shouldAddTransitions,
         passiveVoice: shouldPassiveVoice,
         formalSynonyms: shouldFormalSynonyms,
+        intensity,
       },
       source: 'local-rules',
       preservedCitations: originalCitations,
@@ -580,7 +618,7 @@ export async function refineAcademicText(text, options = {}) {
       ? '- FORMAL CONTRACTION EXPANSION (MANDATORY): Expand all contractions into complete formal forms (e.g., "don\'t" -> "do not", "can\'t" -> "cannot", "it\'s" -> "it is", "won\'t" -> "will not", "they\'re" -> "they are"). Do not leave conversational contractions.'
       : '',
     shouldAddTransitions
-      ? '- ACADEMIC TRANSITIONS: Smoothly integrate scholarly transitional discourse markers (e.g., "Moreover,", "Consequently,", "Furthermore,", "Therefore,", "Hence,", "Accordingly,") where appropriate between sentences to strengthen logical flow.'
+      ? '- DISCOURSE COHESION & FLOW: Smoothly integrate varied, natural transitional discourse markers (e.g., "Specifically,", "In practice,", "At the same time,", "In response,", "Beyond this,") between sentences where logical connection is needed. NEVER use formulaic robotic markers like "Consequently,", "Moreover,", "Furthermore,", "Therefore,", or "Notably,".'
       : '',
     shouldPassiveVoice
       ? '- SCHOLARLY PASSIVE VOICE: Convert active personal formulations (e.g., "we conducted the tests", "the researchers analyzed the cohort", "we observed that") into standard objective academic passive constructions (e.g., "the tests were conducted", "the cohort was analyzed", "it was observed that").'
@@ -592,16 +630,18 @@ export async function refineAcademicText(text, options = {}) {
 
   const systemInstructions = `
 You are the Lexora Academic Refiner, a premier scientific editor for high-impact journals (e.g., Nature, Science, Cell, IEEE Transactions, PNAS).
-Transform the academic draft into publication-grade scholarly prose that is precise, intellectually dense, and naturally phrased.
+Transform the academic draft into publication-grade scholarly prose that is precise, intellectually substantive, and naturally phrased.
 
 CORE EDITING PRINCIPLES:
-1. ELIMINATE AI CLICHÉS & FLUFF:
+1. ELIMINATE AI CLICHÉS, SLOP & FORMULAIC SIGNPOSTING:
    - Purge empty phrases: "delve into", "plays a pivotal role", "intricate tapestry", "sheds light on", "underscores the importance", "beacon of", "testament to", "it is worth noting that", "in recent years the realm of", "witnessed a profound transformation", "cutting-edge", "groundbreaking", "harnessing the power of", "a myriad of", "ever-evolving", "multifaceted", "holistic".
+   - CRITICAL: NEVER start sentences with repetitive AI markers: "Consequently,", "Moreover,", "Furthermore,", "Therefore,", "Notably,", "In conclusion,". Connect thoughts organically or state assertions directly without mechanical signposts.
    - Replace throat-clearing openings with direct, substantive subject-verb statements.
 2. SCHOLARLY PRECISION & ACTIVE VERBS:
    - Use direct, authoritative analytical verbs: "demonstrates", "indicates", "measures", "reveals", "quantifies", "challenges", "isolates", "synthesizes".
-3. NATURAL SENTENCE CADENCE & BURSTINESS:
-   - Vary sentence lengths dynamically: balance complex compound observations with short, impactful summary statements.
+3. NATURAL HUMAN CADENCE & HIGH BURSTINESS (CRITICAL):
+   - Human writing naturally fluctuates in sentence length and syntactic structure. Achieve high burstiness (>25) by intentionally varying sentence architecture: mix short punchy observations (5-10 words) with medium statements and longer, compound analytical thoughts (20-30 words).
+   - NEVER output sentences of monotonous, uniform length.
 4. STRICT CITATION & NUMERICAL IMMUNITY (ZERO HALLUCINATION):
    - Citation placeholders like [[REF_1]], [[REF_2]] isolate academic citations verbatim. You MUST retain all [[REF_x]] placeholders exactly where they belong in the sentences. NEVER remove, translate, or alter them.
    - You MUST preserve all quantitative data, sample sizes, percentages, p-values, confidence intervals, and chemical/biological symbols verbatim.
@@ -609,7 +649,7 @@ CORE EDITING PRINCIPLES:
 ${methodInstructions || '- Standard publication-grade editorial rigor.'}
 6. GOAL: ${mode.toUpperCase()}
    - Academic Writing: Objective, high lexical density, precise domain terminology.
-   - Natural Writing: Fluid sentence flow, human cadence, engaging clarity.
+   - Natural Writing: Fluid sentence flow, human cadence, engaging clarity, high burstiness.
    - Grammar & Clarity: Rigorous syntactic correctness, parallelism, and zero ambiguity.
    - Concise Writing: Strip wordy prepositions and deadwood; maximize signal-to-noise ratio.
 7. INTENSITY: ${level.toUpperCase()}
@@ -641,7 +681,7 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
         ],
         config: {
           systemInstruction: systemInstructions,
-          temperature: level === 'conservative' ? 0.15 : 0.3,
+          temperature: level === 'conservative' ? 0.35 : (mode === 'natural' ? 0.7 : 0.6),
         },
       });
 
@@ -700,11 +740,13 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
         refinedText,
         mode,
         level,
+        intensity,
         options: {
           expandContractions: shouldExpandContractions,
           addTransitions: shouldAddTransitions,
           passiveVoice: shouldPassiveVoice,
           formalSynonyms: shouldFormalSynonyms,
+          intensity,
         },
         source: `gemini (${model})`,
         preservedCitations: originalCitations,
@@ -729,18 +771,20 @@ Return ONLY the refined text directly. Do not include markdown code block quotes
 
   // Graceful fallback to deterministic engine if all models fail
   console.warn('All Gemini models failed for academic refiner, falling back to deterministic rules.', lastError?.message);
-  const local = refineWithRules(text, mode, level, options);
+  const local = refineWithRules(text, mode, level, { ...options, intensity });
   const refinedMetrics = calculateTextMetrics(local.refinedText);
   return {
     originalText: text,
     refinedText: local.refinedText,
     mode,
     level,
+    intensity,
     options: {
       expandContractions: shouldExpandContractions,
       addTransitions: shouldAddTransitions,
       passiveVoice: shouldPassiveVoice,
       formalSynonyms: shouldFormalSynonyms,
+      intensity,
     },
     source: 'local-rules-fallback',
     preservedCitations: originalCitations,

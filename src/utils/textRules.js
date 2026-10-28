@@ -44,6 +44,14 @@ const grammarRules = [
   // "a" vs "an"
   { pattern: /\ba\s+([aeiou])/gi, replacement: (m, vowel) => `an ${vowel}` },
   { pattern: /\ban\s+([bcdfghjklmnpqrstvwxyz])/gi, replacement: (m, cons) => `a ${cons}` },
+
+  // Singular noun agreement
+  {
+    pattern: /\b(researcher|author|scientist|student|teacher|doctor|user|system|process)\s+have\b/gi,
+    replacement: (m, noun) => `${noun} has`,
+    explanation: 'Subject-verb agreement: singular noun requires "has"',
+    type: 'grammar',
+  },
 ];
 
 // ── Spelling corrections ───────────────────────────────────────
@@ -589,6 +597,50 @@ export function unmaskCitationsFromPlaceholders(text, mapping) {
  * Extract granular, non-overlapping rule-based grammar and spelling correction spans
  * from source text for instant zero-latency feedback and offline fallback.
  */
+// ── Clarity and conciseness rules ───────────────────────────────
+const claritySpanRules = [
+  { pattern: /\bin order to\b/gi, replacement: 'to', explanation: 'Wordiness: simplify "in order to" to "to"' },
+  { pattern: /\bdue to the fact that\b/gi, replacement: 'because', explanation: 'Conciseness: replace with "because"' },
+  { pattern: /\bat this point in time\b/gi, replacement: 'currently', explanation: 'Wordiness: replace filler phrase with "currently"' },
+  { pattern: /\bmake a decision\b/gi, replacement: 'decide', explanation: 'Clarity: use active verb "decide"' },
+  { pattern: /\btake into consideration\b/gi, replacement: 'consider', explanation: 'Clarity: replace with "consider"' },
+  { pattern: /\bfor the purpose of\b/gi, replacement: 'for', explanation: 'Wordiness: simplify to "for"' },
+  { pattern: /\bhas the ability to\b/gi, replacement: 'can', explanation: 'Conciseness: replace with "can"' },
+];
+
+// ── Punctuation rules ──────────────────────────────────────────
+const punctuationSpanRules = [
+  {
+    pattern: /\s+([,.:;?!])(?=\s|$)/g,
+    replacement: (m, p1) => p1,
+    explanation: 'Punctuation spacing: remove space before punctuation mark',
+  },
+];
+
+/**
+ * Calculates a document health score (0-100) based on error density and types.
+ */
+export function calculateHealthScore(text, corrections = []) {
+  if (!text || !text.trim()) return 100;
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  if (words === 0) return 100;
+  if (!corrections || corrections.length === 0) return 100;
+
+  const totalDeductions = corrections.reduce((acc, c) => {
+    if (c.type === 'grammar' || c.type === 'spelling') return acc + 12;
+    if (c.type === 'clarity') return acc + 8;
+    if (c.type === 'punctuation') return acc + 5;
+    return acc + 6;
+  }, 0);
+
+  const normalizedPenalty = (totalDeductions / Math.max(12, words)) * 30;
+  return Math.max(0, Math.min(100, Math.round(100 - normalizedPenalty)));
+}
+
+/**
+ * Extract granular, non-overlapping rule-based grammar and spelling correction spans
+ * from source text for instant zero-latency feedback and offline fallback.
+ */
 export function extractRuleBasedGrammarSpans(text) {
   if (!text || typeof text !== 'string') return [];
   const rawSpans = [];
@@ -633,8 +685,8 @@ export function extractRuleBasedGrammarSpans(text) {
         rawSpans.push({
           original,
           replacement,
-          explanation: `Grammar rule: "${original}" → "${replacement}"`,
-          type: 'grammar',
+          explanation: rule.explanation || `Grammar rule: "${original}" → "${replacement}"`,
+          type: rule.type || 'grammar',
           startIndex: m.index,
           endIndex: m.index + original.length,
         });
@@ -642,7 +694,63 @@ export function extractRuleBasedGrammarSpans(text) {
     }
   }
 
-  // 3. Repeated word detector
+  // 3. Clarity rules
+  for (const rule of claritySpanRules) {
+    const regex = new RegExp(
+      rule.pattern.source,
+      rule.pattern.flags.includes('g') ? rule.pattern.flags : rule.pattern.flags + 'g'
+    );
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      const original = m[0];
+      let replacement = '';
+      if (typeof rule.replacement === 'function') {
+        replacement = rule.replacement(original, m[1]);
+      } else {
+        replacement = original.replace(rule.pattern, rule.replacement);
+      }
+      if (replacement && replacement !== original) {
+        rawSpans.push({
+          original,
+          replacement,
+          explanation: rule.explanation || `Clarity suggestion: replace "${original}" with "${replacement}"`,
+          type: 'clarity',
+          startIndex: m.index,
+          endIndex: m.index + original.length,
+        });
+      }
+    }
+  }
+
+  // 4. Punctuation rules
+  for (const rule of punctuationSpanRules) {
+    const regex = new RegExp(
+      rule.pattern.source,
+      rule.pattern.flags.includes('g') ? rule.pattern.flags : rule.pattern.flags + 'g'
+    );
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      const original = m[0];
+      let replacement = '';
+      if (typeof rule.replacement === 'function') {
+        replacement = rule.replacement(original, m[1]);
+      } else {
+        replacement = original.replace(rule.pattern, rule.replacement);
+      }
+      if (replacement !== original) {
+        rawSpans.push({
+          original,
+          replacement,
+          explanation: rule.explanation || `Punctuation correction: "${original}"`,
+          type: 'punctuation',
+          startIndex: m.index,
+          endIndex: m.index + original.length,
+        });
+      }
+    }
+  }
+
+  // 5. Repeated word detector
   const repRegex = new RegExp(repeatedWordRule.pattern.source, 'gi');
   let rm;
   while ((rm = repRegex.exec(text)) !== null) {
@@ -673,3 +781,97 @@ export function extractRuleBasedGrammarSpans(text) {
 }
 
 export const EXAMPLE_TEXT = `I am writing this email to tell you that I cannot come to the meeting because I have some important work to do. Their is alot of stuff I gotta finish before tommorrow. I should of started earlier but I was real busy with other things. In order to make sure everything is done on time, I will need to work late. I hope you understand and I will definately try to attend the next one. It would be a good idea to reschedule if their are other people who can not make it. Thanks for your understanding, I recieve your message and will respond as soon as possible.`;
+
+// ── Client-side Academic Humanizer & Citation Shield (DadaNanjesha Mirror) ────────
+
+const CLIENT_ACADEMIC_SYNONYMS = [
+  { pattern: /\bgood\b/gi, replacement: 'favorable' },
+  { pattern: /\bbad\b/gi, replacement: 'adverse' },
+  { pattern: /\bbig\b/gi, replacement: 'substantial' },
+  { pattern: /\bsmall\b/gi, replacement: 'marginal' },
+  { pattern: /\bget\b/gi, replacement: 'obtain' },
+  { pattern: /\bgive(?:s|d)?\b/gi, replacement: 'provide' },
+  { pattern: /\bfix(?:es|ed)?\b/gi, replacement: 'resolve' },
+  { pattern: /\bhelp(?:s|ed|ing)?\b/gi, replacement: 'facilitate' },
+  { pattern: /\bneed(?:s|ed)?\b/gi, replacement: 'require' },
+  { pattern: /\bmake sure\b/gi, replacement: 'ensure' },
+  { pattern: /\bfind out\b/gi, replacement: 'determine' },
+  { pattern: /\blook at\b/gi, replacement: 'examine' },
+  { pattern: /\bshows?\b/gi, replacement: 'demonstrates' },
+];
+
+const CLIENT_CONTRACTIONS = [
+  { pattern: /\bwon['’]t\b/gi, replacement: 'will not' },
+  { pattern: /\bcan['’]t\b/gi, replacement: 'cannot' },
+  { pattern: /\bdon['’]t\b/gi, replacement: 'do not' },
+  { pattern: /\bdoesn['’]t\b/gi, replacement: 'does not' },
+  { pattern: /\bdidn['’]t\b/gi, replacement: 'did not' },
+  { pattern: /\bisn['’]t\b/gi, replacement: 'is not' },
+  { pattern: /\baren['’]t\b/gi, replacement: 'are not' },
+  { pattern: /\bwasn['’]t\b/gi, replacement: 'was not' },
+  { pattern: /\bweren['’]t\b/gi, replacement: 'were not' },
+  { pattern: /\bhaven['’]t\b/gi, replacement: 'have not' },
+  { pattern: /\bhasn['’]t\b/gi, replacement: 'has not' },
+  { pattern: /\b(i|he|she|it|they|we|you)['’]ll\b/gi, replacement: '$1 will' },
+  { pattern: /\bit['’]s\b/gi, replacement: 'it is' },
+  { pattern: /\bthat['’]s\b/gi, replacement: 'that is' },
+];
+
+/**
+ * Client-side mirror of academic humanization for instant zero-latency feedback
+ */
+export function refineAcademicWithRules(text, options = {}) {
+  if (!text) return { refinedText: '', contractionCount: 0, synonymCount: 0, intensity: 65 };
+  const {
+    intensity = 65,
+    expandContractions: shouldExpandContractions = true,
+    formalSynonyms: shouldFormalSynonyms = true,
+  } = options;
+
+  const normalizedIntensity = typeof intensity === 'number' && intensity > 1 ? intensity / 100 : (intensity ?? 0.65);
+  const citations = extractCitations(text);
+  const { text: masked, mapping } = maskCitationsWithPlaceholders(text);
+
+  let refined = masked;
+  let contractionCount = 0;
+  if (shouldExpandContractions) {
+    CLIENT_CONTRACTIONS.forEach(({ pattern, replacement }) => {
+      refined = refined.replace(pattern, (match, p1) => {
+        contractionCount++;
+        let rep = replacement.includes('$1') && p1 ? replacement.replace('$1', p1) : replacement;
+        if (match[0] === match[0].toUpperCase()) {
+          rep = rep.charAt(0).toUpperCase() + rep.slice(1);
+        }
+        return rep;
+      });
+    });
+  }
+
+  let synonymCount = 0;
+  if (shouldFormalSynonyms && normalizedIntensity > 0) {
+    let matchIdx = 0;
+    const interval = normalizedIntensity >= 1.0 ? 1 : Math.max(1, Math.round(1 / normalizedIntensity));
+    CLIENT_ACADEMIC_SYNONYMS.forEach(({ pattern, replacement }) => {
+      refined = refined.replace(pattern, (match) => {
+        const shouldReplace = normalizedIntensity >= 1.0 || (matchIdx % interval === 0);
+        matchIdx++;
+        if (!shouldReplace) return match;
+        synonymCount++;
+        if (match[0] === match[0].toUpperCase()) {
+          return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+        }
+        return replacement;
+      });
+    });
+  }
+
+  refined = unmaskCitationsFromPlaceholders(refined, mapping);
+
+  return {
+    refinedText: refined,
+    contractionCount,
+    synonymCount,
+    intensity,
+    preservedCitations: citations,
+  };
+}

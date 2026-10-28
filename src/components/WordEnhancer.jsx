@@ -237,7 +237,7 @@ export default function WordEnhancer() {
                           className="flex items-center justify-between px-3 py-2 rounded-xl bg-white dark:bg-[#1a1e27] border border-slate-200/70 dark:border-[#282f3d] hover:border-[#38858a]/60 dark:hover:border-[#4fa3a8]/60 hover:shadow-xs transition-all group"
                         >
                           <span className="text-sm text-slate-800 dark:text-slate-200 font-medium">{w}</span>
-                          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                             {context.trim() && (
                               <button
                                 onClick={() => handleApply(w)}

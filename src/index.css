@@ -120,3 +120,44 @@ button, a, [role="button"], [role="radio"], [role="tab"] {
   background: #333b4c;
 }
 
+/* ── Interactive Grammar Squiggly Underlines ────────── */
+.lexora-underline-grammar {
+  text-decoration: underline wavy #ef4444 !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  cursor: pointer;
+}
+
+.lexora-underline-spelling {
+  text-decoration: underline wavy #f43f5e !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  cursor: pointer;
+}
+
+.lexora-underline-clarity {
+  text-decoration: underline wavy #0284c7 !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  cursor: pointer;
+}
+
+.lexora-underline-punctuation {
+  text-decoration: underline wavy #d97706 !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  cursor: pointer;
+}
+
+.lexora-underline-style {
+  text-decoration: underline wavy #7c3aed !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 4px !important;
+  cursor: pointer;
+}
+
+.lexora-underline-active {
+  background-color: rgba(45, 212, 191, 0.25) !important;
+  border-radius: 4px;
+}
+

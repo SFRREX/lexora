@@ -27,14 +27,19 @@ export class GeminiDetectorAdapter extends BaseDetector {
 
   normalizeDetectionResult(raw, originalText) {
     const classification = (raw.overall_classification || 'mixed').toLowerCase();
+    const rawProb = typeof raw.probability_score === 'number' ? raw.probability_score : 0.5;
     const probabilityScore =
-      typeof raw.probability_score === 'number'
-        ? Math.round(raw.probability_score * 100) / 100
-        : 0.5;
+      rawProb > 1
+        ? Math.round(rawProb) / 100
+        : Math.round(rawProb * 100) / 100;
 
     const sentences = Array.isArray(raw.sentences)
       ? raw.sentences.map((s, idx) => {
-          const score = typeof s.score === 'number' ? Math.round(s.score * 100) / 100 : probabilityScore;
+          const rawSentScore = typeof s.score === 'number' ? s.score : probabilityScore;
+          const score =
+            rawSentScore > 1
+              ? Math.round(rawSentScore) / 100
+              : Math.round(rawSentScore * 100) / 100;
           const label = (s.classification || 'mixed').toLowerCase();
           const tierInfo = classifySentenceFourTier(score, label);
           return {

@@ -50,7 +50,7 @@ export class BaseDetector {
  * 4. 'ai-generated' (AI-generated)
  */
 export function classifySentenceFourTier(score, label) {
-  const s =
+  const rawScore =
     typeof score === 'number'
       ? score
       : label === 'ai'
@@ -59,21 +59,24 @@ export function classifySentenceFourTier(score, label) {
       ? 0.5
       : 0.15;
 
-  if (s >= 0.75 || (label === 'ai' && s >= 0.65)) {
+  // Defensively normalize percentage-scale scores (0-100) to unit interval (0.0-1.0)
+  const s = rawScore > 1 ? rawScore / 100 : Math.max(0, rawScore);
+
+  if (s >= 0.82) {
     return {
       tier: 'ai-generated',
       tierLabel: 'AI-generated',
       color: '#ef4444',
       lightBg: 'rgba(239, 68, 68, 0.15)',
     };
-  } else if (s >= 0.5) {
+  } else if (s >= 0.55) {
     return {
       tier: 'ai-refined-ai',
       tierLabel: 'AI-generated & AI-refined',
       color: '#f97316',
       lightBg: 'rgba(249, 115, 22, 0.15)',
     };
-  } else if (s >= 0.25) {
+  } else if (s >= 0.28) {
     return {
       tier: 'ai-refined-human',
       tierLabel: 'Human-written & AI-refined',

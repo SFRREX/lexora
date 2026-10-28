@@ -19,7 +19,7 @@
   <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-8.3-646cff.svg?style=flat-square" alt="Vite 8" /></a>
   <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-v4.3-38858a.svg?style=flat-square" alt="Tailwind CSS v4" /></a>
   <a href="https://oxc.rs/"><img src="https://img.shields.io/badge/Linter-Oxlint_0_Errors-22c55e.svg?style=flat-square" alt="Oxlint" /></a>
-  <a href="#-verification--automated-testing"><img src="https://img.shields.io/badge/Tests-55%20Passing-10b981.svg?style=flat-square" alt="Vitest 55 Passing" /></a>
+  <a href="#-verification--automated-testing"><img src="https://img.shields.io/badge/Tests-97%20Passing-10b981.svg?style=flat-square" alt="Vitest 97 Passing" /></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node-%3E%3D18.0.0-339933.svg?style=flat-square" alt="Node Version" /></a>
 </p>
 
@@ -68,6 +68,11 @@ Most consumer writing tools either act as opaque generative text spinners or pro
 ```
 
 ### 1. ✍️ Writing Studio (`#studio`)
+* **Interactive Proofreading Canvas & Real-Time Span Analysis:**
+  * **Color-Coded Diagnostic Highlights:** Underlines detected grammar, spelling, clarity, punctuation, and style issues with non-overlapping visual marks.
+  * **Accessible Suggestion Popover:** Click or keyboard-navigate (`Enter`/`Space`) to inspect explanations and apply immediate one-click replacements.
+  * **Document Health Inspector:** Displays categorized issues by category (*Grammar*, *Spelling*, *Clarity*, *Punctuation*, *Style*), dynamic document health score, and single-click **Accept All** batch correction.
+  * **Honest Scanning Lifecycle:** Clear distinction between *Empty Draft*, *Checking Draft…*, *Unchecked Draft*, *Issues Found*, and verified *All Clear · No Issues*. Never displays false 100% scores on unscanned text.
 * **7 Focused Transformations:**
   * **Grammar & Spelling:** Corrects orthographic, grammatical, and typographical issues.
   * **Sentence Rephrase:** Reconstructs awkward syntax for natural sentence flow.
@@ -86,6 +91,7 @@ Most consumer writing tools either act as opaque generative text spinners or pro
 * **Sentence-Level Perplexity Heatmap:** Color-coded sentence breakdown (*Human*, *Mixed*, *AI*) with per-sentence metrics on hover.
 * **Multi-Provider Cross-Verification:** Optional integrations for commercial providers ([GPTZero](https://docs.gptzero.me/), [Copyleaks](https://docs.copyleaks.com/)) with automated Cohen's Kappa inter-detector agreement calculation.
 * **Four-Tier Provenance Classification:** Classifies text into `human-written`, `human-written & ai-refined`, `ai-generated & ai-refined`, and `ai-generated`.
+* **Outdated Result Detection:** Automatically flags scan results as `[Outdated Result]` when the draft is modified after scanning, preventing stale evaluation.
 
 ### 3. 🎓 Academic Refiner (`#academic-refiner`)
 * **Nature-Standard Unslop Engine:** Purges formulaic LLM stock tropes (*"delve into"*, *"intricate tapestry"*, *"plays a pivotal role"*, *"testament to"*, *"underscores the importance"*, *"sheds light on"*, *"groundbreaking"*).
@@ -215,7 +221,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 Lexora features a comprehensive test harness covering component behavior, adapter normalization, offline statistical routines, and build integrity:
 
 ```bash
-# Run full Vitest unit & component test suite (55 tests across 6 files)
+# Run full Vitest unit & component test suite (97 tests across 12 files)
 npm test
 
 # Run Vitest in interactive watch mode
@@ -238,12 +244,18 @@ npm run check
 ```
 
 ### Verified Test Suite Breakdown
+* **`src/test/humanizerDetectorRegression.test.jsx` (14 tests):** Tests A–H regression suite (cross-view state handoff, manual edit invalidation, score normalization, request race conditions, honest detection results).
 * **`src/test/academicRefiner.test.js` (9 tests):** Citation isolation, contraction expansion, passive voice restructuring, formal synonym replacement, and text metrics calculation.
+* **`src/test/academicHumanizer.test.js` (6 tests):** Scholarly unslop, formulaic transition purging, and cadence variation.
 * **`src/test/detectors.test.js` (9 tests):** Adapter normalization for GPTZero, Copyleaks, Local Stylometrics, and Gemini Neural Detector.
 * **`src/test/researchMetrics.test.js` (3 tests):** Classification statistics (Precision, Recall, F1, FPR, FNR, ROC-AUC) and Cohen's Kappa agreement matrix.
 * **`src/test/textRules.test.js` (16 tests):** Deterministic grammar correction, sentence shortening, tone adjustment, and repeated-word span extraction.
 * **`src/test/theme.test.js` (5 tests):** Light/dark/system theme coordination, local storage synchronization, and OS preference listeners.
-* **`src/test/components.test.jsx` (13 tests):** Component rendering and user interaction tests across `WritingEditor`, `WordEnhancer`, `ResultPanel`, `BeforeAfter`, `FinalCTA`, `Navbar`, and `Footer`.
+* **`src/test/components.test.jsx` (16 tests):** Component rendering and user interaction tests across `WritingEditor`, `WordEnhancer`, `ResultPanel`, `BeforeAfter`, `FinalCTA`, `Navbar`, and `Footer`.
+* **`src/test/AcademicRefiner.test.jsx` (3 tests):** Intensity slider, preset buttons, and view handoff.
+* **`src/test/GrammarInspector.test.jsx` (9 tests):** Health score calculation, empty draft state, in-flight scanning, unscanned draft state, category filtering, single and batch fixes.
+* **`src/test/InteractiveCanvas.test.jsx` (3 tests):** Wavy underline rendering, popover opening, and correction application.
+* **`src/test/grammarSpans.test.js` (4 tests):** Exact character span offset calculation, health score normalization, and overlap elimination.
 
 ---
 
@@ -251,6 +263,13 @@ npm run check
 
 ```text
 lexora/
+├── .agents/                      # Antigravity agent configuration
+│   ├── rules/
+│   │   └── agent-reliability.md  # Workspace operational guardrails
+│   └── skills/                   # Antigravity agent skills
+│       ├── frontend-ux-review/   # WCAG 2.2 AA & responsive review
+│       ├── project-quality-audit/# Full verification pipeline runner
+│       └── release-verification/ # Shipping checklist & security gate
 ├── .github/                      # GitHub automation & configuration
 │   ├── dependabot.yml            # Automated weekly dependency updates
 │   └── workflows/
@@ -261,6 +280,8 @@ lexora/
 │   ├── process-text.js           # Writing Studio text processing
 │   ├── refine-academic.js        # Academic Refiner unslop pipeline
 │   └── word-alternatives.js      # Contextual thesaurus lookup
+├── e2e/                          # Playwright end-to-end verification
+│   └── lexora.spec.js            # Cross-view integration tests
 ├── public/                       # Static public assets
 │   ├── logo-light.png            # Official light-theme logo
 │   ├── logo-dark.png             # Official dark-theme logo
@@ -286,17 +307,28 @@ lexora/
 │   │   ├── DetectorResearchLab.jsx # Empirical classifier benchmark lab
 │   │   ├── FinalCTA.jsx          # Bottom call-to-action banner
 │   │   ├── Footer.jsx            # Accessible footer & legal links
+│   │   ├── GrammarInspector.jsx  # Document health & category suggestions
+│   │   ├── InteractiveGrammarCanvas.jsx # Keyboard-accessible markup canvas
 │   │   ├── Navbar.jsx            # Responsive navigation & theme switcher
 │   │   ├── ResultPanel.jsx       # Diff view & output action controls
+│   │   ├── SuggestionPopover.jsx # Contextual issue explanation card
+│   │   ├── ToolSelector.jsx      # Writing tool mode selector
 │   │   ├── WordEnhancer.jsx      # Contextual vocabulary thesaurus
 │   │   └── WritingEditor.jsx     # Primary editor with 7 writing tools
 │   ├── services/                 # Client API layer
+│   │   ├── suiteServices.js      # Multi-provider detector fetchers
 │   │   └── textProcessor.js      # API communication & local fallbacks
-│   ├── test/                     # Vitest test suites
+│   ├── test/                     # Vitest test suites (97 tests)
 │   │   ├── setup.js              # JSDOM global setup & DOM mocks
+│   │   ├── AcademicRefiner.test.jsx
+│   │   ├── GrammarInspector.test.jsx
+│   │   ├── InteractiveCanvas.test.jsx
+│   │   ├── academicHumanizer.test.js
 │   │   ├── academicRefiner.test.js
 │   │   ├── components.test.jsx
 │   │   ├── detectors.test.js
+│   │   ├── grammarSpans.test.js
+│   │   ├── humanizerDetectorRegression.test.jsx
 │   │   ├── researchMetrics.test.js
 │   │   ├── textRules.test.js
 │   │   └── theme.test.js
@@ -315,6 +347,7 @@ lexora/
 ├── CONTRIBUTING.md               # Contribution standards & workflow
 ├── SECURITY.md                   # Vulnerability disclosure & security architecture
 ├── LICENSE                       # MIT Open-Source License
+├── playwright.config.js          # Playwright E2E configuration
 ├── vite.config.js                # Vite 8 build & Vitest configuration
 └── package.json                  # Dependencies, scripts, and metadata
 ```

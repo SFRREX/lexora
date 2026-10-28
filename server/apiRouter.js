@@ -6,7 +6,7 @@ import {
 } from './geminiService.js';
 import { detectorManager } from './detectors/detectorManager.js';
 import { refineAcademicText } from './academicRefinerService.js';
-import { extractRuleBasedGrammarSpans } from '../src/utils/textRules.js';
+import { extractRuleBasedGrammarSpans, calculateHealthScore } from '../src/utils/textRules.js';
 
 const MAX_PAYLOAD_CHARS = 100000;
 const MAX_BODY_BYTES = 2 * 1024 * 1024; // 2MB stream limit
@@ -160,7 +160,7 @@ export async function handleApiRequest(req, res) {
   ) {
     try {
       const body = await getJsonBody(req);
-      const { text, mode, level, expandContractions, addTransitions, passiveVoice, formalSynonyms } = body;
+      const { text, mode, level, intensity, expandContractions, addTransitions, passiveVoice, formalSynonyms } = body;
       if (!text || !text.trim()) {
         sendJson(res, 400, { error: 'Text is required for academic refinement.' });
         return true;
@@ -173,6 +173,7 @@ export async function handleApiRequest(req, res) {
       const result = await refineAcademicText(text, {
         mode,
         level,
+        intensity: typeof intensity === 'number' ? intensity : 65,
         expandContractions,
         addTransitions,
         passiveVoice,
@@ -277,7 +278,8 @@ export async function handleApiRequest(req, res) {
       if (isGeminiConfigured()) {
         try {
           const result = await checkGrammarSpansWithGemini(text);
-          sendJson(res, 200, result);
+          const healthScore = calculateHealthScore(text, result.corrections || []);
+          sendJson(res, 200, { ...result, healthScore });
           return true;
         } catch (geminiErr) {
           console.warn('[GrammarCheck] Gemini span check failed, falling back to local rule engine:', geminiErr.message);
@@ -286,9 +288,11 @@ export async function handleApiRequest(req, res) {
 
       // Local rule engine fallback
       const corrections = extractRuleBasedGrammarSpans(text);
+      const healthScore = calculateHealthScore(text, corrections);
       sendJson(res, 200, {
         corrections,
         count: corrections.length,
+        healthScore,
         source: 'local',
       });
     } catch (err) {

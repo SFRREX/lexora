@@ -47,6 +47,8 @@ Thumbs.db
 coverage/
 *.lcov
 .nyc_output/
+test-results/
+playwright-report/
 
 # Temporary and cache directories
 .cache/
@@ -57,3 +59,4 @@ coverage/
 findings.md
 progress.md
 task_plan.md
+.superpowers/

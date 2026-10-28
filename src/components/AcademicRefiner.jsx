@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   BookOpen,
   Sparkles,
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { runAcademicRefinement } from '../services/suiteServices.js';
 import { extractTextFromDocument } from '../utils/documentExtractor.js';
+import { extractCitations } from '../utils/textRules.js';
 
 /**
  * Computes exact word-by-word sequence diff using Longest Common Subsequence (LCS)
@@ -165,9 +166,21 @@ const PRESETS = [
 ];
 
 export default function AcademicRefiner({ onSelectView }) {
-  const [text, setText] = useState('');
+  const [text, setText] = useState(() => {
+    try {
+      const draft = sessionStorage.getItem('lexora_academic_draft');
+      if (draft && typeof draft === 'string' && draft.trim()) {
+        sessionStorage.removeItem('lexora_academic_draft');
+        return draft;
+      }
+    } catch {
+      // ignore
+    }
+    return '';
+  });
   const [mode, setMode] = useState('academic');
   const [level, setLevel] = useState('balanced'); // 'conservative' | 'balanced'
+  const [intensity, setIntensity] = useState(65); // 0 - 100%
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -182,6 +195,54 @@ export default function AcademicRefiner({ onSelectView }) {
 
   const [isFileLoading, setIsFileLoading] = useState(false);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    function checkIncomingDraft() {
+      try {
+        const draft = sessionStorage.getItem('lexora_academic_draft');
+        if (draft && typeof draft === 'string' && draft.trim()) {
+          sessionStorage.removeItem('lexora_academic_draft');
+          setText(draft);
+          setResult(null);
+          setError(null);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    window.addEventListener('focus', checkIncomingDraft);
+    window.addEventListener('hashchange', checkIncomingDraft);
+    return () => {
+      window.removeEventListener('focus', checkIncomingDraft);
+      window.removeEventListener('hashchange', checkIncomingDraft);
+    };
+  }, []);
+
+  function handleVerifyInChecker() {
+    const textToVerify = result?.refinedText || text;
+    if (textToVerify && typeof textToVerify === 'string') {
+      try {
+        sessionStorage.setItem('lexora_checker_text', textToVerify);
+      } catch {
+        // ignore
+      }
+    }
+    if (onSelectView) {
+      onSelectView('checker');
+    }
+  }
+
+  function handleSendToStudio() {
+    if (!result?.refinedText) return;
+    try {
+      sessionStorage.setItem('lexora_studio_draft', result.refinedText);
+    } catch {
+      // ignore
+    }
+    if (onSelectView) {
+      onSelectView('studio');
+    }
+  }
 
   async function handlePaste() {
     try {
@@ -244,6 +305,7 @@ export default function AcademicRefiner({ onSelectView }) {
       const data = await runAcademicRefinement(text, {
         mode,
         level,
+        intensity,
         expandContractions,
         addTransitions,
         passiveVoice,
@@ -272,6 +334,7 @@ export default function AcademicRefiner({ onSelectView }) {
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const sentenceCount = text.trim() ? (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).length : 0;
+  const detectedCitations = extractCitations(text);
 
   const refinedWordCount = result?.refinedText?.trim()
     ? result.refinedText.trim().split(/\s+/).filter(Boolean).length
@@ -346,44 +409,99 @@ export default function AcademicRefiner({ onSelectView }) {
             </div>
           </div>
 
-          {/* Intensity & Presets */}
+          {/* Intensity Slider & Presets */}
           <div className="flex flex-col justify-between">
-            <div>
-              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                <Sliders size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
-                Editing Intensity
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLevel('conservative')}
-                  className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
-                    level === 'conservative'
-                      ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
-                      : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-[#0c0e12]'
-                  }`}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="humanizer-intensity-slider"
+                  className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
                 >
-                  <div className="font-semibold text-xs sm:text-sm">Conservative</div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
-                    Preserves exact sentence frames; fixes syntax and clumsy phrasing only.
-                  </p>
-                </button>
+                  <Sliders size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
+                  Humanization Intensity: <span className="text-[#1c4b4f] dark:text-[#a0dfe4] font-mono text-sm">{intensity}%</span>
+                </label>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#eef6f7] dark:bg-[#152329] text-[#23585c] dark:text-[#a0dfe4] border border-[#a2d0d3]/70 dark:border-[#224448]">
+                  {intensity < 40 ? 'Subtle' : intensity > 75 ? 'Deep' : 'Balanced'}
+                </span>
+              </div>
 
+              {/* Intensity Slider Input */}
+              <div className="space-y-1">
+                <input
+                  id="humanizer-intensity-slider"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={intensity}
+                  aria-label="Humanization Intensity"
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setIntensity(val);
+                    if (val < 40) setLevel('conservative');
+                    else setLevel('balanced');
+                  }}
+                  className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#38858a] dark:accent-[#4fa3a8]"
+                />
+                <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono px-0.5">
+                  <span>0% (Preserve)</span>
+                  <span>50% (Standard)</span>
+                  <span>100% (Maximum)</span>
+                </div>
+              </div>
+
+              {/* Preset buttons */}
+              <div className="grid grid-cols-3 gap-1.5 pt-1">
                 <button
                   type="button"
-                  onClick={() => setLevel('balanced')}
-                  className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
-                    level === 'balanced'
-                      ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] shadow-xs'
-                      : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#2e3748] text-slate-700 dark:text-slate-300 bg-slate-50/50 dark:bg-[#0c0e12]'
+                  onClick={() => {
+                    setIntensity(35);
+                    setLevel('conservative');
+                  }}
+                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
+                    intensity === 35
+                      ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] font-semibold'
+                      : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#333b4d] text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-[#0c0e12]'
                   }`}
                 >
-                  <div className="font-semibold text-xs sm:text-sm">Balanced (Recommended)</div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
-                    Elevates vocabulary, cuts AI stock tropes, and refines rhythmic cadence.
-                  </p>
+                  Subtle 35%
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIntensity(65);
+                    setLevel('balanced');
+                  }}
+                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
+                    intensity === 65
+                      ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] font-semibold'
+                      : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#333b4d] text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-[#0c0e12]'
+                  }`}
+                >
+                  Balanced 65%
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIntensity(90);
+                    setLevel('balanced');
+                  }}
+                  className={`py-1.5 px-2 text-xs font-medium rounded-lg border text-center transition-all cursor-pointer ${
+                    intensity === 90
+                      ? 'border-[#38858a] dark:border-[#4fa3a8] bg-[#eef6f7] dark:bg-[#16272e] text-[#1c4b4f] dark:text-[#a0dfe4] font-semibold'
+                      : 'border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#333b4d] text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-[#0c0e12]'
+                  }`}
+                >
+                  Deep 90%
                 </button>
               </div>
+
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                {intensity < 40
+                  ? 'Subtle Polish: Preserves exact sentence structures, fixes syntax and clumsy phrasing only.'
+                  : intensity > 75
+                  ? 'Deep Humanize: Maximum scholarly vocabulary elevation, active-to-passive conversions, and discourse flow.'
+                  : 'Balanced Scholar: Elevates vocabulary, cuts stock AI clichés, refines rhythmic flow.'}
+              </p>
             </div>
 
             {/* Presets */}
@@ -528,6 +646,31 @@ export default function AcademicRefiner({ onSelectView }) {
               onChange={handleFileUpload}
             />
           </div>
+
+          {detectedCitations.length > 0 && (
+            <div className="mb-3 p-3 bg-emerald-50/80 dark:bg-[#10241b] border border-emerald-200/90 dark:border-emerald-800/60 rounded-xl flex flex-wrap items-center justify-between gap-2.5 text-xs transition-all">
+              <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300 font-semibold">
+                <ShieldCheck size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Citation Shield: {detectedCitations.length} protected</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {detectedCitations.slice(0, 5).map((cit, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 rounded-md font-mono text-[11px] bg-white dark:bg-[#163828] text-emerald-800 dark:text-emerald-200 border border-emerald-300/80 dark:border-emerald-700/60 shadow-2xs"
+                    title="Verbatim protected citation token"
+                  >
+                    {cit}
+                  </span>
+                ))}
+                {detectedCitations.length > 5 && (
+                  <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium">
+                    +{detectedCitations.length - 5} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           <textarea
             id="academic-input"
@@ -855,7 +998,7 @@ export default function AcademicRefiner({ onSelectView }) {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => onSelectView('checker')}
+                  onClick={handleVerifyInChecker}
                   className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#202634] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <ShieldAlert size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
@@ -865,7 +1008,7 @@ export default function AcademicRefiner({ onSelectView }) {
 
                 <button
                   type="button"
-                  onClick={() => onSelectView('studio')}
+                  onClick={handleSendToStudio}
                   className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-slate-100 dark:bg-[#1a1e27] hover:bg-slate-200 dark:hover:bg-[#202634] border border-slate-200 dark:border-[#282f3d] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />

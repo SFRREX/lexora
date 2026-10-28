@@ -46,6 +46,7 @@ export async function runAcademicRefinement(text, options = {}) {
   const {
     mode = 'academic',
     level = 'balanced',
+    intensity = 65,
     expandContractions = true,
     addTransitions = false,
     passiveVoice = false,
@@ -59,6 +60,7 @@ export async function runAcademicRefinement(text, options = {}) {
       text,
       mode,
       level,
+      intensity,
       expandContractions,
       addTransitions,
       passiveVoice,
