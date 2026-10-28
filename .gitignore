@@ -60,5 +60,4 @@ playwright-report/
 *.temp
 scratch*.mjs
 scratch*.js
-
-
+.superpowers/
