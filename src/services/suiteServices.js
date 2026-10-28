@@ -79,3 +79,40 @@ export async function runAcademicRefinement(text, options = {}) {
 
   return await response.json();
 }
+
+/**
+ * Fetches configured state for all Lexora intelligence engines (Gemini, Cloudflare, Local).
+ */
+export async function fetchSystemStatus() {
+  try {
+    const res = await fetch('/api/status', { cache: 'no-store' });
+    if (!res.ok) return { geminiConfigured: false, cloudflareConfigured: false };
+    return await res.json();
+  } catch {
+    return { geminiConfigured: false, cloudflareConfigured: false };
+  }
+}
+
+/**
+ * Runs a live ping test to measure round-trip API latency.
+ */
+export async function pingEngineLatency() {
+  const start = performance.now();
+  try {
+    const res = await fetch('/api/status', { cache: 'no-store' });
+    const end = performance.now();
+    const data = await res.json();
+    return {
+      success: res.ok,
+      latencyMs: Math.max(1, Math.round(end - start)),
+      ...data,
+    };
+  } catch {
+    return {
+      success: false,
+      latencyMs: null,
+      geminiConfigured: false,
+      cloudflareConfigured: false,
+    };
+  }
+}

@@ -167,14 +167,19 @@ export default function ResultPanel({
       {/* Source label */}
       {result && source && (
         <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          {source === 'gemini' ? (
-            <span className="text-[#23585c] dark:text-[#74b6ba] font-medium bg-[#eef6f7] dark:bg-[#121f24] border border-[#a2d0d3]/80 dark:border-[#224448] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 shadow-xs">
+          {source === 'cloudflare' ? (
+            <span className="text-[#1c4b4f] dark:text-[#a0dfe4] font-semibold bg-[#eef6f7] dark:bg-[#152329] border border-[#a2d0d3] dark:border-[#224448] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Powered by Cloudflare Workers AI {model ? `(${model.replace('@cf/meta/', '')})` : '(Llama 3.1 70B)'}
+            </span>
+          ) : source === 'gemini' ? (
+            <span className="text-[#1c4b4f] dark:text-[#a0dfe4] font-semibold bg-[#eef6f7] dark:bg-[#152329] border border-[#a2d0d3] dark:border-[#224448] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-[#38858a] animate-pulse" />
               Powered by Google Gemini {model ? `(${model})` : 'Neural AI'}
             </span>
           ) : (
-            <span className="text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-[#1a1e27] px-2 py-0.5 rounded-md">
-              ⚙ Demo mode: limited local corrections
+            <span className="text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1c202a] border border-slate-200 dark:border-[#262c3b] px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5">
+              ⚙ Deterministic rules engine (Offline fallback)
             </span>
           )}
         </div>

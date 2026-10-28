@@ -178,7 +178,7 @@ export default function GrammarInspector({
                 Ready to Review
               </p>
               <p className="text-xs mt-0.5 max-w-xs text-center text-slate-500 dark:text-slate-400">
-                Draft modified. Click &quot;Check Grammar&quot; below or wait for automatic scan.
+                Draft modified. Click &quot;Check Grammar&quot; below to review.
               </p>
             </div>
           ) : (

@@ -79,7 +79,11 @@ export async function processText(text, toolId) {
     if (response.ok) {
       const data = await response.json();
       if (data && typeof data.result === 'string') {
-        return { result: data.result, model: data.model || 'gemini', source: 'gemini' };
+        return {
+          result: data.result,
+          model: data.model || 'gemini',
+          source: data.source || 'gemini',
+        };
       }
     }
   } catch (err) {

@@ -145,7 +145,7 @@ export const ROBUSTNESS_TEST_PAIRS = [
 /**
  * Generates an exportable research evaluation report in Markdown and JSON formats
  */
-export function generateResearchReport({ metrics, dataset, providerStatuses, activeProvider = 'GPTZero' }) {
+export function generateResearchReport({ metrics, dataset, providerStatuses, activeProvider = 'Cloudflare Llama 3.1 70B' }) {
   const dateStr = new Date().toISOString();
 
   const markdown = `

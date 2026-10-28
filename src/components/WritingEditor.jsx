@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   Wand2,
   Trash2,
@@ -67,46 +67,6 @@ export default function WritingEditor({ onSelectView }) {
   const resultWords = countWords(result);
   const healthScore = calculateHealthScore(inputText, corrections);
 
-  // Debounced real-time grammar checks while typing in grammar mode
-  useEffect(() => {
-    if (selectedTool !== 'grammar') return;
-    if (!inputText || !inputText.trim()) {
-      const resetTimer = setTimeout(() => {
-        setCorrections([]);
-        setHasScannedSpans(false);
-        setIsAnalyzingSpans(false);
-      }, 0);
-      return () => clearTimeout(resetTimer);
-    }
-
-    const currentSeq = ++scanSeqRef.current;
-
-    const timer = setTimeout(() => {
-      setIsAnalyzingSpans(true);
-      checkGrammarSpans(inputText)
-        .then((res) => {
-          if (currentSeq !== scanSeqRef.current) return;
-          if (res && Array.isArray(res.corrections)) {
-            setCorrections(res.corrections);
-            setHasScannedSpans(true);
-          }
-        })
-        .catch(() => {
-          if (currentSeq !== scanSeqRef.current) return;
-          setHasScannedSpans(true);
-        })
-        .finally(() => {
-          if (currentSeq === scanSeqRef.current) {
-            setIsAnalyzingSpans(false);
-          }
-        });
-    }, 450);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [inputText, selectedTool]);
-
   const handleProcess = useCallback(async () => {
     if (loading) return; // prevent duplicate requests
     setError('');
@@ -127,37 +87,15 @@ export default function WritingEditor({ onSelectView }) {
 
     try {
       if (selectedTool === 'grammar') {
-        const [processRes, spanRes] = await Promise.allSettled([
-          processText(inputText, selectedTool),
-          checkGrammarSpans(inputText),
-        ]);
+        const spanRes = await checkGrammarSpans(inputText);
 
         if (currentSeq !== scanSeqRef.current) return;
 
-        if (processRes.status === 'fulfilled') {
-          setResult(processRes.value.result);
-          setSource(processRes.value.source);
-          setModel(processRes.value.model || '');
-
-          if (
-            (!spanRes.value?.corrections || spanRes.value.corrections.length === 0) &&
-            processRes.value.result &&
-            processRes.value.result.trim() !== inputText.trim()
-          ) {
-            setInputText(processRes.value.result);
-            setHasFixedGrammar(true);
-            setHasScannedSpans(true);
-          }
-        } else {
-          throw processRes.reason;
-        }
-
-        if (spanRes.status === 'fulfilled' && spanRes.value?.corrections) {
-          setCorrections(spanRes.value.corrections);
-          setHasScannedSpans(true);
-          if (spanRes.value.corrections.length === 0) {
-            setHasFixedGrammar(true);
-          }
+        const foundCorrections = Array.isArray(spanRes?.corrections) ? spanRes.corrections : [];
+        setCorrections(foundCorrections);
+        setHasScannedSpans(true);
+        if (foundCorrections.length === 0) {
+          setHasFixedGrammar(false);
         }
       } else {
         const { result: processed, source: src, model: mdl } = await processText(inputText, selectedTool);
@@ -177,6 +115,19 @@ export default function WritingEditor({ onSelectView }) {
       }
     }
   }, [inputText, selectedTool, loading]);
+
+  function handleInputChange(e) {
+    const val = e.target.value;
+    scanSeqRef.current++;
+    setInputText(val);
+    if (hasFixedGrammar) setHasFixedGrammar(false);
+    if (replacedFromAI) setReplacedFromAI(false);
+    setHasScannedSpans(false);
+    setIsAnalyzingSpans(false);
+    if (!val.trim()) {
+      setCorrections([]);
+    }
+  }
 
   function handleClear() {
     scanSeqRef.current++;
@@ -201,7 +152,7 @@ export default function WritingEditor({ onSelectView }) {
     setHasFixedGrammar(false);
     setReplacedFromAI(false);
     setHasScannedSpans(false);
-    setIsAnalyzingSpans(true);
+    setIsAnalyzingSpans(false);
   }
 
   function handleApplyCorrection(corr) {
@@ -218,6 +169,7 @@ export default function WritingEditor({ onSelectView }) {
     } else {
       return;
     }
+    scanSeqRef.current++;
     setInputText(newText);
     setCorrections((prev) => {
       const next = prev.filter((c) => c !== corr);
@@ -279,7 +231,7 @@ export default function WritingEditor({ onSelectView }) {
         setHasFixedGrammar(false);
         setReplacedFromAI(false);
         setHasScannedSpans(false);
-        setIsAnalyzingSpans(true);
+        setIsAnalyzingSpans(false);
       }
     } catch {
       const el = document.getElementById('editor-input');
@@ -410,14 +362,7 @@ export default function WritingEditor({ onSelectView }) {
               {selectedTool === 'grammar' ? (
                 <InteractiveGrammarCanvas
                   text={inputText}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setInputText(val);
-                    if (hasFixedGrammar) setHasFixedGrammar(false);
-                    if (replacedFromAI) setReplacedFromAI(false);
-                    setHasScannedSpans(false);
-                    setIsAnalyzingSpans(Boolean(val.trim()));
-                  }}
+                  onChange={handleInputChange}
                   onKeyDown={(e) => {
                     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                       e.preventDefault();
@@ -434,14 +379,7 @@ export default function WritingEditor({ onSelectView }) {
                 <textarea
                   id="editor-input"
                   value={inputText}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setInputText(val);
-                    if (hasFixedGrammar) setHasFixedGrammar(false);
-                    if (replacedFromAI) setReplacedFromAI(false);
-                    setHasScannedSpans(false);
-                    setIsAnalyzingSpans(Boolean(val.trim()));
-                  }}
+                  onChange={handleInputChange}
                   onKeyDown={(e) => {
                     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                       e.preventDefault();

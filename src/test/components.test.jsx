@@ -71,9 +71,37 @@ describe('React Components', () => {
       render(<WritingEditor />);
       const textarea = screen.getByLabelText(/Original text input/i);
       fireEvent.change(textarea, { target: { value: 'Analyzing this new paragraph of text.' } });
+      const checkBtn = screen.getByRole('button', { name: /Check Grammar|Improve Text/i });
+      fireEvent.click(checkBtn);
 
       expect(screen.getByTestId('grammar-status-analyzing')).toBeInTheDocument();
       expect(screen.getByText(/Checking draft…/i)).toBeInTheDocument();
+    });
+
+    it('does not re-trigger grammar check when fixing a suggestion and remains clean and polished', async () => {
+      render(<WritingEditor />);
+      const textarea = screen.getByLabelText(/Original text input/i);
+      fireEvent.change(textarea, { target: { value: 'He have an apple.' } });
+      const checkBtn = screen.getByRole('button', { name: /Improve text/i });
+      fireEvent.click(checkBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Fix All Errors/i)).toBeInTheDocument();
+      });
+
+      // Click Fix All Errors
+      const fixAllBtn = screen.getByText(/Fix All Errors/i);
+      fireEvent.click(fixAllBtn);
+
+      // Verify it immediately becomes Clean & Polished without flipping back to checking
+      await waitFor(() => {
+        expect(screen.getByTestId('grammar-status-clear')).toBeInTheDocument();
+        expect(screen.getByText(/Fixed · Clean & Polished/i)).toBeInTheDocument();
+      });
+
+      // Verify it does NOT restart checking
+      expect(screen.queryByTestId('grammar-status-analyzing')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Checking draft…/i)).not.toBeInTheDocument();
     });
   });
 

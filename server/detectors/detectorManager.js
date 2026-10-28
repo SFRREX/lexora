@@ -14,30 +14,22 @@ class DetectorManager {
       copyleaks: new CopyleaksAdapter(),
     };
 
-    // Catalog of available providers with free tier flags and roles
+    // Catalog of available zero-cost providers with roles and status
     this.catalog = [
       {
         id: 'cloudflare',
         name: 'Lexora Neural AI Detector (Cloudflare Llama 3.1 70B)',
-        role: 'Open-weight neural forensic classifier. Advanced stylistic perplexity & burstiness modeling.',
+        role: 'Primary open-weight neural forensic classifier. Advanced stylistic perplexity & burstiness modeling.',
         docUrl: 'https://developers.cloudflare.com/workers-ai/',
         envKeys: ['CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_API_TOKEN'],
         isFree: true,
-        status: 'implemented',
-      },
-      {
-        id: 'gemini',
-        name: 'Lexora Neural AI Detector (Gemini)',
-        role: 'Multi-turn neural detection provider. Advanced linguistic perplexity & cadence modeling.',
-        docUrl: 'https://ai.google.dev/docs',
-        envKeys: ['GEMINI_API_KEY'],
-        isFree: true,
+        isMajor: true,
         status: 'implemented',
       },
       {
         id: 'stylometrics',
         name: 'Lexora Local Stylometrics Engine',
-        role: '100% free and offline. Statistical analysis of burstiness, TTR, and n-gram uniformity.',
+        role: '100% free and offline. Real-time statistical analysis of burstiness, perplexity, and Zipf cadence in 1ms.',
         docUrl: 'https://github.com/KalarisLabs/research-agent-skills',
         envKeys: [],
         isFree: true,
@@ -45,49 +37,13 @@ class DetectorManager {
         status: 'implemented',
       },
       {
-        id: 'gptzero',
-        name: 'GPTZero',
-        role: 'Commercial detection provider (Requires paid API subscription).',
-        docUrl: 'https://docs.gptzero.me/api-reference/',
-        envKeys: ['GPTZERO_API_KEY'],
-        isFree: false,
+        id: 'gemini',
+        name: 'Lexora Neural AI Detector (Gemini)',
+        role: 'Secondary neural detection provider. Advanced linguistic perplexity & cadence modeling.',
+        docUrl: 'https://ai.google.dev/docs',
+        envKeys: ['GEMINI_API_KEY'],
+        isFree: true,
         status: 'implemented',
-      },
-      {
-        id: 'copyleaks',
-        name: 'Copyleaks',
-        role: 'Commercial multilingual classifier (Requires paid enterprise credentials).',
-        docUrl: 'https://docs.copyleaks.com/concepts/products/ai-text-detection-api',
-        envKeys: ['COPYLEAKS_EMAIL', 'COPYLEAKS_API_KEY'],
-        isFree: false,
-        status: 'implemented',
-      },
-      {
-        id: 'originality',
-        name: 'Originality.ai',
-        role: 'Commercial comparative provider for web content (Paid API).',
-        docUrl: 'https://docs.originality.ai/',
-        envKeys: ['ORIGINALITY_API_KEY'],
-        isFree: false,
-        status: 'adapter-ready',
-      },
-      {
-        id: 'pangram',
-        name: 'Pangram',
-        role: 'Research token-level analysis provider (Paid API).',
-        docUrl: 'https://www.pangram.work/research/how-it-works',
-        envKeys: ['PANGRAM_API_KEY'],
-        isFree: false,
-        status: 'adapter-ready',
-      },
-      {
-        id: 'winston',
-        name: 'Winston AI',
-        role: 'Alternative sentence classifier with OCR support (Paid API).',
-        docUrl: 'https://winstonai.ai/api-docs',
-        envKeys: ['WINSTON_API_KEY'],
-        isFree: false,
-        status: 'adapter-ready',
       },
     ];
   }
@@ -107,6 +63,21 @@ class DetectorManager {
 
   getAdapter(id) {
     return this.adapters[id] || null;
+  }
+
+  /**
+   * Returns prioritized active free providers:
+   * Cloudflare Llama 3.1 70B (Primary neural detector) + Local Stylometrics (1ms instant consensus)
+   */
+  getDefaultProviders() {
+    const cf = this.getAdapter('cloudflare');
+    const active = [];
+    if (cf && cf.isConfigured()) {
+      active.push('cloudflare');
+    }
+    // Always include instant local stylometrics consensus engine
+    active.push('stylometrics');
+    return active;
   }
 
   calculateAgreement(results) {
@@ -152,16 +123,16 @@ class DetectorManager {
     };
   }
 
-  async runDetection(text, providerIds = ['gemini', 'stylometrics'], options = {}) {
+  async runDetection(text, providerIds, options = {}) {
     const trimmed = (text || '').trim();
     if (!trimmed) {
       throw new Error('Text input cannot be empty.');
     }
 
-    // Default to free providers if none specified or if only unconfigured paid providers passed
+    // Default to prioritized active free providers if none specified
     const targetProviders = Array.isArray(providerIds) && providerIds.length > 0
       ? providerIds
-      : ['gemini', 'stylometrics'];
+      : this.getDefaultProviders();
 
     const results = [];
 

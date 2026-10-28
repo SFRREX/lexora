@@ -40,6 +40,7 @@ export default function AIChecker({ onSelectView }) {
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState(null);
   const [activeSentence, setActiveSentence] = useState(null);
+  const [activeSampleId, setActiveSampleId] = useState(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
   const fileInputRef = useRef(null);
   const requestSeqRef = useRef(0);
@@ -86,31 +87,35 @@ export default function AIChecker({ onSelectView }) {
 
   const geminiConfig = providers.find((p) => p.id === 'gemini');
   const isGeminiConfigured = geminiConfig?.configured;
-  const gptzeroConfig = providers.find((p) => p.id === 'gptzero');
-  const isGptzeroConfigured = gptzeroConfig?.configured;
-  const copyleaksConfig = providers.find((p) => p.id === 'copyleaks');
+  const cloudflareConfig = providers.find((p) => p.id === 'cloudflare');
+  const isCloudflareConfigured = cloudflareConfig?.configured;
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const charCount = text.length;
 
-  async function handleCheckText() {
-    if (!text.trim()) {
+  async function handleCheckText(overrideProviders, overrideText) {
+    const textToScan = typeof overrideText === 'string' ? overrideText : text;
+    const providersToUse = Array.isArray(overrideProviders) && overrideProviders.length > 0
+      ? overrideProviders
+      : selectedProviders;
+
+    if (!textToScan.trim()) {
       setError('Please enter or paste some text to analyze.');
       return;
     }
-    if (wordCount < 10) {
+    const currentWordCount = textToScan.trim().split(/\s+/).filter(Boolean).length;
+    if (currentWordCount < 10) {
       setError('Please provide at least 10 words for statistical text analysis.');
       return;
     }
 
     const currentReq = ++requestSeqRef.current;
-    const textToScan = text;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await runAiDetection(textToScan, selectedProviders);
+      const data = await runAiDetection(textToScan, providersToUse);
       // Discard stale request if a newer request was triggered in the interim
       if (currentReq !== requestSeqRef.current) {
         return;
@@ -133,6 +138,7 @@ export default function AIChecker({ onSelectView }) {
 
   function handleClear() {
     setText('');
+    setActiveSampleId(null);
     setScanResult(null);
     setError(null);
     setActiveSentence(null);
@@ -258,10 +264,14 @@ Timestamp: ${primaryResult.scanTimestamp}`;
     const s = INITIAL_RESEARCH_DATASET.find((item) => item.id === sampleId);
     if (s) {
       setText(s.text);
+      setActiveSampleId(sampleId);
       setScanResult(null);
       setError(null);
     }
   }
+
+  const ALL_DETECTOR_IDS = ['cloudflare', 'stylometrics', 'gemini'];
+  const DEFAULT_DETECTOR_IDS = ['cloudflare', 'stylometrics'];
 
   function toggleProvider(id) {
     if (selectedProviders.includes(id)) {
@@ -272,6 +282,61 @@ Timestamp: ${primaryResult.scanTimestamp}`;
       setSelectedProviders([...selectedProviders, id]);
     }
   }
+
+  function handleSelectAll() {
+    if (selectedProviders.length === ALL_DETECTOR_IDS.length) {
+      setSelectedProviders(DEFAULT_DETECTOR_IDS);
+    } else {
+      setSelectedProviders(ALL_DETECTOR_IDS);
+    }
+  }
+
+  function handleSelectDefault() {
+    setSelectedProviders(DEFAULT_DETECTOR_IDS);
+  }
+
+  function handleSelectAllAndRun() {
+    setSelectedProviders(ALL_DETECTOR_IDS);
+    if (text.trim() && wordCount >= 10) {
+      handleCheckText(ALL_DETECTOR_IDS, text);
+    } else if (!text.trim()) {
+      const sample = INITIAL_RESEARCH_DATASET.find((item) => item.id === 'sample-ai1') || INITIAL_RESEARCH_DATASET[0];
+      setText(sample.text);
+      setActiveSampleId(sample.id);
+      setScanResult(null);
+      setError(null);
+      handleCheckText(ALL_DETECTOR_IDS, sample.text);
+    } else {
+      setError('Please provide at least 10 words for statistical text analysis.');
+    }
+  }
+
+  const DETECTOR_ITEMS = [
+    {
+      id: 'cloudflare',
+      name: 'Cloudflare Llama 70B',
+      tier: 'Major • Edge Free',
+      isMajor: true,
+      isConfigured: isCloudflareConfigured,
+      tooltip: 'Major online neural classifier: Meta Llama 3.1 70B at edge (10,000 neurons/day included)',
+    },
+    {
+      id: 'stylometrics',
+      name: 'Local Stylometrics',
+      tier: 'Consensus • Offline',
+      isMajor: false,
+      isConfigured: true,
+      tooltip: 'Instant 1ms offline statistical engine: Perplexity cadence & Zipf burstiness',
+    },
+    {
+      id: 'gemini',
+      name: 'Gemini Neural',
+      tier: 'Secondary • Free Tier',
+      isMajor: false,
+      isConfigured: isGeminiConfigured,
+      tooltip: 'Google Gemini 3.8 / 3.5 Flash neural forensic stylometrics (Free tier)',
+    },
+  ];
 
   // Get primary successful result (if any)
   const primaryResult = scanResult?.results?.find((r) => r.success && r.data)?.data;
@@ -288,14 +353,14 @@ Timestamp: ${primaryResult.scanTimestamp}`;
       <div className="text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#eef6f7] dark:bg-[#121f24] border border-[#a2d0d3]/80 dark:border-[#224448] text-[#23585c] dark:text-[#74b6ba] text-xs font-semibold tracking-wide uppercase mb-3 shadow-xs">
           <ShieldAlert size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
-          Feature A &bull; 100% Free AI Text Detection
+          Feature A &bull; 100% Free Multi-Engine AI Text Detection
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-slate-100 tracking-tight">
           Lexora AI Checker
         </h1>
         <p className="mt-3 text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
           AI text detection with sentence-level highlights, perplexity scoring, and burstiness analysis.
-          Powered by <strong>free, accessible engines</strong> (Gemini AI & Local Stylometrics) with optional paid commercial adapters.
+          Powered by <strong>Cloudflare Meta Llama 3.1 70B</strong> (Major Neural Classifier), <strong>Local Stylometrics</strong> (1ms Consensus Engine), and <strong>Google Gemini</strong>. 100% free with zero paywalls.
         </p>
       </div>
 
@@ -307,137 +372,288 @@ Timestamp: ${primaryResult.scanTimestamp}`;
         <div className="flex-1 text-xs sm:text-sm text-slate-800 dark:text-slate-200">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-sm sm:text-base font-bold text-[#1b4346] dark:text-[#a0dfe4]">
-              Free AI Detection Active
+              Zero-Cost Multi-Engine AI Detection Active
             </h2>
             <span className="px-2 py-0.5 rounded-full bg-[#d2ebed] dark:bg-[#1c3542] text-[#1b4346] dark:text-[#a0dfe4] text-[11px] font-bold">
-              Zero Subscription Fees
+              100% Free Tiers
             </span>
           </div>
           <p className="mt-1 text-slate-600 dark:text-slate-300 leading-relaxed">
-            You don't need expensive paid API subscriptions (like GPTZero or Copyleaks). Lexora includes:
+            Lexora provides enterprise-grade multi-engine detection without subscription paywalls:
           </p>
-          <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <div className="p-2.5 bg-white dark:bg-[#161f28] rounded-lg border border-[#cbe6e8] dark:border-[#263a48]">
-              <span className="font-bold text-[#1b4346] dark:text-[#a0dfe4]">1. Lexora Neural AI Detector:</span>{' '}
-              {isGeminiConfigured ? (
+              <span className="font-bold text-[#1b4346] dark:text-[#a0dfe4]">1. Cloudflare Llama 70B (Major):</span>{' '}
+              {isCloudflareConfigured ? (
                 <span className="text-[#23585c] dark:text-[#74b6ba] font-semibold">
-                  Connected & Ready via Google Gemini AI Studio (Free Tier)
+                  Active (Meta Llama 3.1 70B at edge)
                 </span>
               ) : (
-                <span className="text-slate-500 dark:text-slate-400">Requires free GEMINI_API_KEY in .env</span>
+                <span className="text-slate-500 dark:text-slate-400">Configured via Cloudflare Token</span>
               )}
             </div>
             <div className="p-2.5 bg-white dark:bg-[#161f28] rounded-lg border border-[#cbe6e8] dark:border-[#263a48]">
-              <span className="font-bold text-[#1b4346] dark:text-[#a0dfe4]">2. Local Stylometrics Engine:</span>{' '}
+              <span className="font-bold text-[#1b4346] dark:text-[#a0dfe4]">2. Local Stylometrics (1ms):</span>{' '}
               <span className="text-[#23585c] dark:text-[#74b6ba] font-semibold">
-                100% Free & Runs Locally (Zero API Keys Needed)
+                100% Free &amp; Offline (Air-Gapped)
               </span>
+            </div>
+            <div className="p-2.5 bg-white dark:bg-[#161f28] rounded-lg border border-[#cbe6e8] dark:border-[#263a48]">
+              <span className="font-bold text-[#1b4346] dark:text-[#a0dfe4]">3. Google Gemini Neural:</span>{' '}
+              {isGeminiConfigured ? (
+                <span className="text-[#23585c] dark:text-[#74b6ba] font-semibold">
+                  Connected &amp; Ready (Free Tier)
+                </span>
+              ) : (
+                <span className="text-slate-500 dark:text-slate-400">Requires free GEMINI_API_KEY</span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Provider Selector and Presets Bar */}
-      <div className="bg-slate-50/80 dark:bg-[#14171f] border border-slate-200/80 dark:border-[#222734] rounded-xl p-4 mb-6 flex flex-wrap items-center justify-between gap-4 transition-colors">
-        {/* Provider Toggles */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">
-            Active Detectors:
-          </span>
+      <div className="bg-slate-50/80 dark:bg-[#14171f] border border-slate-200/80 dark:border-[#222734] rounded-2xl p-4 sm:p-5 mb-6 space-y-3.5 transition-colors">
+        {/* Top Header of the Bar: Label + Quick Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-wide uppercase">
+              Active Detectors:
+            </span>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+              ({selectedProviders.length} of {ALL_DETECTOR_IDS.length} active)
+            </span>
+          </div>
 
-          {/* Free Provider: Gemini */}
-          <button
-            type="button"
-            onClick={() => toggleProvider('gemini')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              selectedProviders.includes('gemini')
-                ? 'bg-[#38858a] text-white shadow-xs'
-                : 'bg-white dark:bg-[#1a1e27] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#282f3d] hover:bg-slate-100 dark:hover:bg-[#202634]'
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isGeminiConfigured ? 'bg-[#4fa3a8]' : 'bg-slate-400'
+          {/* Quick Select Buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${
+                selectedProviders.length === ALL_DETECTOR_IDS.length
+                  ? 'bg-[#2c6e73]/10 dark:bg-[#4fa3a8]/20 text-[#1b4346] dark:text-[#a0dfe4] border-[#2c6e73]/40 dark:border-[#4fa3a8]/40'
+                  : 'bg-white dark:bg-[#1c202a] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#384156]'
               }`}
-            />
-            Gemini Neural (Free)
-          </button>
-
-          {/* Free Provider: Local Stylometrics */}
-          <button
-            type="button"
-            onClick={() => toggleProvider('stylometrics')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              selectedProviders.includes('stylometrics')
-                ? 'bg-[#2c6e73] text-white shadow-xs'
-                : 'bg-white dark:bg-[#1a1e27] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#282f3d] hover:bg-slate-100 dark:hover:bg-[#202634]'
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-[#4fa3a8]" />
-            Local Stylometrics (Free/Offline)
-          </button>
-
-          {/* Commercial Provider: GPTZero */}
-          <button
-            type="button"
-            onClick={() => toggleProvider('gptzero')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              selectedProviders.includes('gptzero')
-                ? 'bg-slate-800 dark:bg-[#252c3a] text-white shadow-xs'
-                : 'bg-white dark:bg-[#1a1e27] text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-[#282f3d] hover:bg-slate-100 dark:hover:bg-[#202634]'
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isGptzeroConfigured ? 'bg-[#4fa3a8]' : 'bg-amber-400'
+            >
+              {selectedProviders.length === ALL_DETECTOR_IDS.length ? 'Deselect Extra' : 'Select All (3)'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSelectDefault}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer border ${
+                selectedProviders.length === DEFAULT_DETECTOR_IDS.length &&
+                DEFAULT_DETECTOR_IDS.every((id) => selectedProviders.includes(id))
+                  ? 'bg-[#2c6e73]/10 dark:bg-[#4fa3a8]/20 text-[#1b4346] dark:text-[#a0dfe4] border-[#2c6e73]/40 dark:border-[#4fa3a8]/40'
+                  : 'bg-white dark:bg-[#1c202a] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-[#262c3b]'
               }`}
-            />
-            GPTZero {isGptzeroConfigured ? '(Active)' : '(Paid API)'}
-          </button>
-
-          {/* Commercial Provider: Copyleaks */}
-          <button
-            type="button"
-            onClick={() => toggleProvider('copyleaks')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              selectedProviders.includes('copyleaks')
-                ? 'bg-slate-800 dark:bg-[#252c3a] text-white shadow-xs'
-                : 'bg-white dark:bg-[#1a1e27] text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-[#282f3d] hover:bg-slate-100 dark:hover:bg-[#202634]'
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                copyleaksConfig?.configured ? 'bg-[#4fa3a8]' : 'bg-slate-400'
-              }`}
-            />
-            Copyleaks (Paid API)
-          </button>
+              title="Activate the recommended Major Neural (Cloudflare) + Local Stylometrics pair"
+            >
+              Recommended (2)
+            </button>
+            <button
+              type="button"
+              onClick={handleSelectAllAndRun}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-white bg-[#38858a] hover:bg-[#2c6e73] rounded-lg shadow-xs transition-all cursor-pointer disabled:opacity-50"
+              title="Select all 3 detectors and run detection immediately"
+            >
+              <Sparkles size={12} />
+              Select All &amp; Run (3)
+            </button>
+          </div>
         </div>
 
-        {/* Preset Samples */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-slate-500 dark:text-slate-400 font-medium">Load Research Sample:</span>
-          <button
-            type="button"
-            onClick={() => loadSample('sample-h1')}
-            className="px-2.5 py-1 bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] rounded-md transition-colors cursor-pointer"
-          >
-            Human Academic
-          </button>
-          <button
-            type="button"
-            onClick={() => loadSample('sample-ai1')}
-            className="px-2.5 py-1 bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] rounded-md transition-colors cursor-pointer"
-          >
-            AI Essay
-          </button>
-          <button
-            type="button"
-            onClick={() => loadSample('sample-mix1')}
-            className="px-2.5 py-1 bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] rounded-md transition-colors cursor-pointer"
-          >
-            Mixed / Edited
-          </button>
+        {/* Detector Chips Grid */}
+        <div className="flex flex-wrap items-center gap-2">
+          {DETECTOR_ITEMS.map((item) => {
+            const isSelected = selectedProviders.includes(item.id);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => toggleProvider(item.id)}
+                className={`group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer select-none border ${
+                  isSelected
+                    ? 'bg-[#2c6e73]/10 dark:bg-[#4fa3a8]/15 text-[#1b4346] dark:text-[#a0dfe4] border-[#2c6e73]/40 dark:border-[#4fa3a8]/40 ring-1 ring-[#4fa3a8]/25 shadow-xs font-semibold'
+                    : 'bg-white dark:bg-[#181d28] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-[#262c3b] hover:border-slate-300 dark:hover:border-[#384156] hover:bg-slate-50 dark:hover:bg-[#1e2534] hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+                title={item.tooltip}
+              >
+                {/* Checkbox square indicator */}
+                <span
+                  className={`w-3.5 h-3.5 rounded-md flex items-center justify-center transition-colors shrink-0 ${
+                    isSelected
+                      ? 'bg-[#2c6e73] dark:bg-[#4fa3a8] text-white'
+                      : 'border border-slate-300 dark:border-slate-600 bg-transparent'
+                  }`}
+                >
+                  {isSelected && <Check size={10} className="stroke-3" />}
+                </span>
+
+                {/* Status Beacon Dot */}
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    item.isConfigured
+                      ? isSelected
+                        ? 'bg-emerald-500 animate-pulse'
+                        : 'bg-emerald-500'
+                      : 'bg-slate-400 dark:bg-slate-500'
+                  }`}
+                />
+
+                {/* Name */}
+                <span className="tracking-tight">{item.name}</span>
+
+                {/* Major Indicator if applicable */}
+                {item.isMajor && (
+                  <span className="text-[10px] px-1 py-0.2 rounded font-bold bg-[#38858a]/20 text-[#1b4346] dark:text-[#a0dfe4] border border-[#38858a]/40 shrink-0">
+                    Major
+                  </span>
+                )}
+
+                {/* Tier Badge */}
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-normal transition-colors shrink-0 ${
+                    isSelected
+                      ? 'bg-[#2c6e73]/15 dark:bg-[#4fa3a8]/20 text-[#1b4346] dark:text-[#a0dfe4]'
+                      : 'bg-slate-100 dark:bg-[#202736] text-slate-500 dark:text-slate-400'
+                  }`}
+                >
+                  {item.tier}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Multi-Example Research Presets */}
+        <div className="pt-3 border-t border-slate-200/70 dark:border-[#222734] flex flex-col gap-2.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-slate-500 dark:text-slate-400 font-semibold mr-1">Load Research Sample:</span>
+
+            {/* Human Samples */}
+            <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 ml-0.5">
+              Human
+            </span>
+            <button
+              type="button"
+              onClick={() => loadSample('sample-h1')}
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                activeSampleId === 'sample-h1'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700 font-semibold'
+                  : 'bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#282f3d]'
+              }`}
+              title="Biophysics peer-reviewed excerpt (1998, pre-LLM)"
+            >
+              Academic (CRISPR)
+            </button>
+            <button
+              type="button"
+              onClick={() => loadSample('sample-h3')}
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                activeSampleId === 'sample-h3'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700 font-semibold'
+                  : 'bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#282f3d]'
+              }`}
+              title="Byzantine systems consensus paper (2016, pre-LLM)"
+            >
+              Systems (PBFT)
+            </button>
+
+            {/* AI Samples */}
+            <span className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-900/60 ml-1.5">
+              AI
+            </span>
+            <button
+              type="button"
+              onClick={() => loadSample('sample-ai1')}
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                activeSampleId === 'sample-ai1'
+                  ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-200 border-rose-300 dark:border-rose-700 font-semibold'
+                  : 'bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#282f3d]'
+              }`}
+              title="Autonomous multi-agent essay (Gemini)"
+            >
+              AI Multi-Agent
+            </button>
+            <button
+              type="button"
+              onClick={() => loadSample('sample-ai2')}
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                activeSampleId === 'sample-ai2'
+                  ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-200 border-rose-300 dark:border-rose-700 font-semibold'
+                  : 'bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#282f3d]'
+              }`}
+              title="Sustainable urban logistics essay (GPT-4o)"
+            >
+              AI Logistics (GPT-4o)
+            </button>
+            <button
+              type="button"
+              onClick={() => loadSample('sample-ai3')}
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                activeSampleId === 'sample-ai3'
+                  ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-200 border-rose-300 dark:border-rose-700 font-semibold'
+                  : 'bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#282f3d]'
+              }`}
+              title="Quantum cryptography memo (Claude 3.5 Sonnet)"
+            >
+              AI Cryptography (Sonnet)
+            </button>
+
+            {/* Mixed Samples */}
+            <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 ml-1.5">
+              Mixed
+            </span>
+            <button
+              type="button"
+              onClick={() => loadSample('sample-mix1')}
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                activeSampleId === 'sample-mix1'
+                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700 font-semibold'
+                  : 'bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#282f3d]'
+              }`}
+              title="Oncology clinical trial notes (Human draft + Claude 3.5 pass)"
+            >
+              Mixed Oncology
+            </button>
+            <button
+              type="button"
+              onClick={() => loadSample('sample-mix2')}
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                activeSampleId === 'sample-mix2'
+                  ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700 font-semibold'
+                  : 'bg-white dark:bg-[#1a1e27] hover:bg-slate-100 dark:hover:bg-[#222835] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#282f3d]'
+              }`}
+              title="Remote work review (AI draft + human survey citations)"
+            >
+              Mixed Remote Work
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+            <span>
+              {activeSampleId ? (
+                <>
+                  Loaded:{' '}
+                  <strong className="text-slate-700 dark:text-slate-200">
+                    {INITIAL_RESEARCH_DATASET.find((item) => item.id === activeSampleId)?.title}
+                  </strong>{' '}
+                  &bull; Ground Truth:{' '}
+                  <span className="capitalize font-semibold text-[#1b4346] dark:text-[#a0dfe4]">
+                    {INITIAL_RESEARCH_DATASET.find((item) => item.id === activeSampleId)?.groundTruth}
+                  </span>
+                </>
+              ) : (
+                'Select any research sample above to test and compare detection accuracy across models.'
+              )}
+            </span>
+            <span className="hidden sm:inline">
+              Cloudflare Llama 70B (Major) + Local Stylometrics provide instant dual-layer consensus.
+            </span>
+          </div>
         </div>
       </div>
 
@@ -451,7 +667,10 @@ Timestamp: ${primaryResult.scanTimestamp}`;
             id="ai-checker-input"
             rows={9}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              setActiveSampleId(null);
+            }}
             placeholder="Paste your paper, essay, abstract, or draft text here for external AI text detection analysis (recommended 250+ words for statistical reliability)..."
             className="w-full p-4 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 bg-slate-50/70 dark:bg-[#0c0e12] border border-slate-200 dark:border-[#262c3b] rounded-xl focus:bg-white dark:focus:bg-[#10131a] focus:outline-none focus:ring-2 focus:ring-[#38858a]/20 focus:border-[#38858a] dark:focus:border-[#4fa3a8] transition-all font-normal leading-relaxed text-sm sm:text-base resize-y shadow-inner"
           />

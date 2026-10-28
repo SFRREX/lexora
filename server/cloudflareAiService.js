@@ -47,10 +47,35 @@ export function clearCloudflareCache() {
   cfResponseCache.clear();
 }
 
+import { readFileSync } from 'node:fs';
+
+function ensureEnvLoaded() {
+  if (process.env.NODE_ENV === 'test' || process.env.VITEST) return;
+  if (process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN) return;
+  try {
+    const content = readFileSync('.env', 'utf8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const idx = trimmed.indexOf('=');
+      if (idx !== -1) {
+        const key = trimmed.slice(0, idx).trim();
+        const val = trimmed.slice(idx + 1).trim();
+        if (!process.env[key]) {
+          process.env[key] = val;
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Checks whether Cloudflare Workers AI credentials are configured in the environment.
  */
 export function isCloudflareConfigured() {
+  ensureEnvLoaded();
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_API_TOKEN;
   return Boolean(

@@ -93,8 +93,8 @@ export default function DetectorResearchLab({ onSelectView }) {
     const report = generateResearchReport({
       metrics,
       dataset,
-      providerStatuses: [{ id: 'gptzero', name: 'GPTZero v2' }],
-      activeProvider: 'GPTZero v2 Predict (Benchmark Spec)',
+      providerStatuses: [{ id: 'cloudflare', name: 'Cloudflare Llama 3.1 70B' }],
+      activeProvider: 'Cloudflare Meta Llama 3.1 70B (Major Neural Detector)',
     });
 
     const content = format === 'markdown' ? report.markdown : JSON.stringify(report.json, null, 2);

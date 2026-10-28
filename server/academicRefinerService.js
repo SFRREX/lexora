@@ -457,6 +457,36 @@ export function ensureCitationIntegrity(refinedText, originalCitations) {
 }
 
 /**
+ * Improves rhythmic burstiness and breaks overly long compound sentences
+ * at coordinating conjunctions, semicolons, or transitional clauses.
+ */
+export function optimizeSentenceCadence(text) {
+  if (!text || typeof text !== 'string') return text;
+
+  let modified = text;
+
+  // 1. Semicolon clause transitions: "; furthermore, ", "; moreover, ", "; in addition, ", "; however, "
+  modified = modified.replace(/;\s*(furthermore|moreover|in addition|however|consequently|therefore|nevertheless|nonetheless),\s+/gi, (_, conj) => {
+    const capitalized = conj.charAt(0).toUpperCase() + conj.slice(1);
+    return `. ${capitalized}, `;
+  });
+
+  // 2. Compound transitions: ", and in addition, ", ", and consequently, ", ", and therefore, "
+  modified = modified.replace(/,\s*and\s+(in addition|consequently|therefore|furthermore|moreover),\s+/gi, (_, conj) => {
+    const capitalized = conj.charAt(0).toUpperCase() + conj.slice(1);
+    return `. ${capitalized}, `;
+  });
+
+  // 3. Coordinate clause: ", while at the same time, " or ", while at the same time "
+  modified = modified.replace(/,\s*while\s+at\s+the\s+same\s+time,?\s+/gi, '. Simultaneously, ');
+
+  // 4. Contrast clause: ", whereas "
+  modified = modified.replace(/,\s*whereas\s+/gi, '. In contrast, ');
+
+  return modified;
+}
+
+/**
  * Deterministic rule-based refinement pass supporting method options
  */
 export function refineWithRules(text, mode = 'academic', level = 'balanced', options = {}) {
@@ -524,6 +554,9 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
     refined = transRes.text;
     transitionCount = transRes.count;
   }
+
+  // 5b. Sentence cadence and rhythmic burstiness optimization for compound clauses
+  refined = optimizeSentenceCadence(refined);
 
   // 6. Clean up multiple spaces or dangling punctuation from deletions
   refined = refined.replace(/\s{2,}/g, ' ');

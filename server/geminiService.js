@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 
-const TOOL_PROMPTS = {
+export const TOOL_PROMPTS = {
   grammar: {
     instruction:
       'You are an elite, publication-grade copy editor for Lexora adhering strictly to the Chicago Manual of Style. Correct all grammatical errors, spelling mistakes, punctuation issues (commas, hyphens, em-dashes, apostrophes, colons, semicolons), capitalization, dangling modifiers, comma splices, and syntax flaws. Strictly preserve the original tone, intent, factual assertions, citations, and markdown/formatting. Do not add any introductory or explanatory text, notes, or surrounding quotes. Return ONLY the perfected, corrected text directly.',
@@ -111,11 +111,22 @@ export function enqueue(fn) {
   return run;
 }
 
-function isRateLimitError(err) {
+export function isRateLimitError(err) {
   if (!err) return false;
   const msg = (err.message || '').toLowerCase();
   const status = err.status || err.statusCode || 0;
   return status === 429 || msg.includes('429') || msg.includes('quota') || msg.includes('resource_exhausted');
+}
+
+export function isDailyQuotaError(err) {
+  if (!err) return false;
+  const msg = (err.message || '').toLowerCase();
+  return (
+    msg.includes('quota') ||
+    msg.includes('daily') ||
+    msg.includes('resource_exhausted') ||
+    msg.includes('limit: 20')
+  );
 }
 
 /**
@@ -176,8 +187,12 @@ export async function processWithGemini(text, toolId, apiKey) {
       } catch (err) {
         lastError = err;
         if (isRateLimitError(err)) {
-          backoffUntil = Date.now() + 20000;
-          console.warn(`[Gemini] Hit rate limit on ${model}. Backing off for 20s.`);
+          if (isDailyQuotaError(err)) {
+            console.warn(`[Gemini] Daily quota exhausted on ${model}. Fast-failing immediately to secondary fallback without delay.`);
+          } else {
+            backoffUntil = Date.now() + 1500;
+            console.warn(`[Gemini] Transient throttle on ${model}. Brief 1.5s backoff.`);
+          }
         } else {
           console.info(`Model ${model} unavailable, trying fallback:`, err.message);
         }
@@ -264,8 +279,12 @@ export async function getAlternativesWithGemini(word, context, apiKey) {
       } catch (err) {
         lastError = err;
         if (isRateLimitError(err)) {
-          backoffUntil = Date.now() + 20000;
-          console.warn(`[Gemini] Rate limit hit on ${model} during alternatives: 20s backoff.`);
+          if (isDailyQuotaError(err)) {
+            console.warn(`[Gemini] Daily quota exhausted on ${model} during alternatives. Fast-failing immediately.`);
+          } else {
+            backoffUntil = Date.now() + 1500;
+            console.warn(`[Gemini] Transient throttle on ${model} during alternatives: 1.5s backoff.`);
+          }
         } else {
           console.info(`Model ${model} unavailable for alternatives:`, err.message);
         }
@@ -430,8 +449,12 @@ export async function checkGrammarSpansWithGemini(text, apiKey) {
       } catch (err) {
         lastError = err;
         if (isRateLimitError(err)) {
-          backoffUntil = Date.now() + 20000;
-          console.warn(`[Gemini] Rate limit hit on ${model} during grammar check: 20s backoff.`);
+          if (isDailyQuotaError(err)) {
+            console.warn(`[Gemini] Daily quota exhausted on ${model} during grammar check. Fast-failing immediately.`);
+          } else {
+            backoffUntil = Date.now() + 1500;
+            console.warn(`[Gemini] Transient throttle on ${model} during grammar check: 1.5s backoff.`);
+          }
         } else {
           console.info(`Model ${model} unavailable for grammar check:`, err.message);
         }

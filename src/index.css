@@ -161,3 +161,21 @@ button, a, [role="button"], [role="radio"], [role="tab"] {
   border-radius: 4px;
 }
 
+/* ── Premium Specular Highlights & Glassmorphic Utilities ── */
+.lexora-glass-surface {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.specular-border {
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Micro-spring tactile feedback */
+.press-scale {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.press-scale:active {
+  transform: scale(0.98);
+}
+

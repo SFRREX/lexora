@@ -143,7 +143,7 @@ export default function InteractiveGrammarCanvas({
       <div
         ref={backdropRef}
         aria-hidden="true"
-        className="absolute inset-0 p-4 sm:p-5 text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words overflow-y-auto pointer-events-none select-none text-transparent font-sans"
+        className="absolute inset-0 p-4 sm:p-5 text-sm sm:text-base leading-relaxed whitespace-pre-wrap wrap-break-word overflow-y-auto pointer-events-none select-none text-transparent font-sans"
         style={{
           fontFamily: 'inherit',
           letterSpacing: 'normal',

@@ -55,17 +55,10 @@ playwright-report/
 .parcel-cache/
 .vite/
 
-# Local agent scratch & planning artifacts
-findings.md
-progress.md
-task_plan.md
-.superpowers/
-.agents/
-AGENTS.md
-docs/
-scratch*.mjs
-scratch*.js
-scratch/
+# Temporary and scratch files
 *.tmp
 *.temp
+scratch*.mjs
+scratch*.js
+
 

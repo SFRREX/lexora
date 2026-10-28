@@ -1109,7 +1109,7 @@ export default function AcademicRefiner({ onSelectView }) {
                   <span>Original Draft</span>
                   <span className="text-slate-400 font-normal">{wordCount} words &bull; {sentenceCount} sentences</span>
                 </div>
-                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-normal overflow-y-auto max-h-[420px]">
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-normal overflow-y-auto max-h-105">
                   {result.originalText}
                 </div>
               </div>
@@ -1156,7 +1156,7 @@ export default function AcademicRefiner({ onSelectView }) {
                   {sentencePairs.filter((p) => p.accepted).length} of {sentencePairs.length} refined sentences accepted
                 </span>
               </div>
-              <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-125 overflow-y-auto pr-1">
                 {sentencePairs.map((pair) => (
                   <div
                     key={pair.id}

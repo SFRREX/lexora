@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { BaseDetector, classifySentenceFourTier, computeFourTierDistribution } from './baseDetector.js';
+import { isDailyQuotaError } from '../geminiService.js';
 
 export class GeminiDetectorAdapter extends BaseDetector {
   constructor() {
@@ -192,6 +193,10 @@ Evaluate every sentence and the overall document strictly adhering to the JSON s
       } catch (err) {
         lastError = err;
         console.warn(`Gemini detector with model ${model} failed, trying fallback:`, err.message);
+        if (isDailyQuotaError(err)) {
+          console.warn('Gemini daily quota exhausted. Fast-failing detector model loop.');
+          break;
+        }
       }
     }
 
