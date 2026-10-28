@@ -94,8 +94,10 @@ Most consumer writing tools either act as opaque generative text spinners or pro
 * **Outdated Result Detection:** Automatically flags scan results as `[Outdated Result]` when the draft is modified after scanning, preventing stale evaluation.
 
 ### 3. 🎓 Academic Refiner (`#academic-refiner`)
+* **Multi-Engine Intelligence (Cloudflare Workers AI, Gemini, & Local Rules):** Executes high-throughput open-weight models (`@cf/meta/llama-3.3-70b-instruct`, `@cf/meta/llama-3.1-8b-instruct`, `@cf/qwen/qwen2.5-7b-instruct`) via Cloudflare Workers AI with model fallbacks and 200-item LRU caching, seamlessly falling back to Google Gemini or local deterministic rules.
 * **Nature-Standard Unslop Engine:** Purges formulaic LLM stock tropes (*"delve into"*, *"intricate tapestry"*, *"plays a pivotal role"*, *"testament to"*, *"underscores the importance"*, *"sheds light on"*, *"groundbreaking"*).
-* **Guaranteed Citation Protection:** Tokenizes references into protected placeholders `[[REF_1]]` prior to processing, ensuring 100% preservation of bracketed citations `[1, 2]`, author-year formats `(Smith et al., 2023)`, DOIs, and empirical statistics ($p < 0.05$, $R^2$).
+* **Guaranteed Citation & Meaning Guardrails:** Tokenizes references into protected placeholders `[[REF_1]]` prior to processing, ensuring 100% preservation of bracketed citations `[1, 2]`, author-year formats `(Smith et al., 2023)`, DOIs, and empirical statistics ($p < 0.05$, $R^2$, sample sizes). Actively validates negation polarity to prevent hallucinated inversions.
+* **Interactive Side-by-Side & Sentence Review Modes:** Directly edit refined prose in real-time or review drafts sentence-by-sentence with one-click Accept/Revert buttons, ensuring complete human editorial oversight.
 * **Scholarly Discourse Methods:** Automated contraction expansion, objective passive voice transformation, and academic discourse transition synthesis.
 
 ### 4. 🔬 Detector Research Lab (`#detector-lab`)
@@ -243,7 +245,10 @@ npm run build
 npm run check
 ```
 
-### Verified Test Suite Breakdown
+### Verified Test Suite Breakdown (15 Test Suites • 128 Automated Unit & Integration Tests)
+* **`src/test/meaningValidator.test.js` (12 tests):** Empirical fact extraction, p-value and confidence interval tracking, bracketed/author-year citation integrity, technical acronym preservation, negation polarity audit, and automated reference healing.
+* **`src/test/cloudflareWorkersAI.test.js` (10 tests):** Cloudflare Workers AI configuration validation, LRU response caching and capacity eviction, multi-model fallback chain (`llama-3.3-70b` &rarr; `llama-3.1-8b` &rarr; `qwen2.5-7b`), and timeout handling.
+* **`src/test/humanAndAiDrafts.test.js` (7 tests):** Human-written manuscript preservation, AI cliché purging, statistical citation retention, zero-width character evasion checks, and non-deceptive metadata guarantees.
 * **`src/test/humanizerDetectorRegression.test.jsx` (14 tests):** Tests A–H regression suite (cross-view state handoff, manual edit invalidation, score normalization, request race conditions, honest detection results).
 * **`src/test/academicRefiner.test.js` (9 tests):** Citation isolation, contraction expansion, passive voice restructuring, formal synonym replacement, and text metrics calculation.
 * **`src/test/academicHumanizer.test.js` (6 tests):** Scholarly unslop, formulaic transition purging, and cadence variation.
@@ -252,7 +257,7 @@ npm run check
 * **`src/test/textRules.test.js` (16 tests):** Deterministic grammar correction, sentence shortening, tone adjustment, and repeated-word span extraction.
 * **`src/test/theme.test.js` (5 tests):** Light/dark/system theme coordination, local storage synchronization, and OS preference listeners.
 * **`src/test/components.test.jsx` (16 tests):** Component rendering and user interaction tests across `WritingEditor`, `WordEnhancer`, `ResultPanel`, `BeforeAfter`, `FinalCTA`, `Navbar`, and `Footer`.
-* **`src/test/AcademicRefiner.test.jsx` (3 tests):** Intensity slider, preset buttons, and view handoff.
+* **`src/test/AcademicRefiner.test.jsx` (5 tests):** Intensity slider, preset buttons, view handoff, AI Engine selector, and Side-by-Side vs. Sentence Review modes.
 * **`src/test/GrammarInspector.test.jsx` (9 tests):** Health score calculation, empty draft state, in-flight scanning, unscanned draft state, category filtering, single and batch fixes.
 * **`src/test/InteractiveCanvas.test.jsx` (3 tests):** Wavy underline rendering, popover opening, and correction application.
 * **`src/test/grammarSpans.test.js` (4 tests):** Exact character span offset calculation, health score normalization, and overlap elimination.
@@ -283,6 +288,7 @@ lexora/
 ├── server/                       # Node.js service logic & dev proxy
 │   ├── academicRefinerService.js # Scholarly unslop & citation engine
 │   ├── apiRouter.js              # Unified request router & payload limiter
+│   ├── cloudflareAiService.js    # Cloudflare Workers AI client & LRU cache
 │   ├── geminiService.js          # Multi-model Gemini client & LRU cache
 │   ├── vitePluginGemini.js       # Vite development middleware proxy
 │   └── detectors/                # Modular detector adapters
@@ -311,22 +317,26 @@ lexora/
 │   ├── services/                 # Client API layer
 │   │   ├── suiteServices.js      # Multi-provider detector fetchers
 │   │   └── textProcessor.js      # API communication & local fallbacks
-│   ├── test/                     # Vitest test suites (97 tests)
+│   ├── test/                     # Vitest test suites (128 tests)
 │   │   ├── setup.js              # JSDOM global setup & DOM mocks
 │   │   ├── AcademicRefiner.test.jsx
 │   │   ├── GrammarInspector.test.jsx
 │   │   ├── InteractiveCanvas.test.jsx
 │   │   ├── academicHumanizer.test.js
 │   │   ├── academicRefiner.test.js
+│   │   ├── cloudflareWorkersAI.test.js
 │   │   ├── components.test.jsx
 │   │   ├── detectors.test.js
 │   │   ├── grammarSpans.test.js
+│   │   ├── humanAndAiDrafts.test.js
 │   │   ├── humanizerDetectorRegression.test.jsx
+│   │   ├── meaningValidator.test.js
 │   │   ├── researchMetrics.test.js
 │   │   ├── textRules.test.js
 │   │   └── theme.test.js
 │   ├── utils/                    # Frontend utilities & dataset specs
 │   │   ├── documentExtractor.js  # Client-side PDF / TXT / MD extractor
+│   │   ├── meaningValidator.js   # Fact, number, & citation guardrail engine
 │   │   ├── researchDataset.js    # Curated benchmark documents
 │   │   ├── researchMetrics.js    # Classification statistics (ROC-AUC, F1, Kappa)
 │   │   ├── textRules.js          # Offline regex grammar & tone engine

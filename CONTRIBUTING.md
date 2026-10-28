@@ -54,7 +54,13 @@ Visit [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### 4. Deterministic Offline Fallbacks
 - Every cloud-dependent intelligence feature must have a graceful, transparent fallback when API keys are absent or rate limits are reached.
+- Cloudflare Workers AI (`llama-3.3-70b-instruct`, `llama-3.1-8b-instruct`, `qwen2.5-7b-instruct`) and Google Gemini automatically fallback to local deterministic rules when credentials are unconfigured or unavailable.
 - Never fail silently or crash the UI when an external service is unreachable.
+
+### 5. Meaning & Fact Preservation Guardrails
+- Refinements and rewrites must never fabricate, alter, or drop numerical statistics, p-values, percentages, citations, or technical terminology.
+- All refiner transforms must validate outputs with `validateMeaningAndFacts` and verify negation polarity integrity to prevent semantic hallucinations.
+- Never implement detector-evasion loops or make claims of 100% human score / Turnitin bypass.
 
 ---
 

@@ -4,6 +4,7 @@ import {
   checkGrammarSpansWithGemini,
   isGeminiConfigured,
 } from './geminiService.js';
+import { isCloudflareConfigured } from './cloudflareAiService.js';
 import { detectorManager } from './detectors/detectorManager.js';
 import { refineAcademicText } from './academicRefinerService.js';
 import { extractRuleBasedGrammarSpans, calculateHealthScore } from '../src/utils/textRules.js';
@@ -108,6 +109,7 @@ export async function handleApiRequest(req, res) {
     const copyleaksAdapter = detectorManager.getAdapter('copyleaks');
     sendJson(res, 200, {
       geminiConfigured: isGeminiConfigured(),
+      cloudflareConfigured: isCloudflareConfigured(),
       gptzeroConfigured: gptzeroAdapter ? gptzeroAdapter.isConfigured() : false,
       copyleaksConfigured: copyleaksAdapter ? copyleaksAdapter.isConfigured() : false,
     });
@@ -160,7 +162,18 @@ export async function handleApiRequest(req, res) {
   ) {
     try {
       const body = await getJsonBody(req);
-      const { text, mode, level, intensity, expandContractions, addTransitions, passiveVoice, formalSynonyms } = body;
+      const {
+        text,
+        mode,
+        level,
+        intensity,
+        expandContractions,
+        addTransitions,
+        passiveVoice,
+        formalSynonyms,
+        provider,
+        model,
+      } = body;
       if (!text || !text.trim()) {
         sendJson(res, 400, { error: 'Text is required for academic refinement.' });
         return true;
@@ -178,6 +191,8 @@ export async function handleApiRequest(req, res) {
         addTransitions,
         passiveVoice,
         formalSynonyms,
+        provider,
+        model,
       });
       sendJson(res, 200, result);
     } catch (err) {

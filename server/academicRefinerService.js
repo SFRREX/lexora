@@ -1,5 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { isGeminiConfigured } from './geminiService.js';
+import { isCloudflareConfigured, runCloudflareWorkersAI } from './cloudflareAiService.js';
+import { validateMeaningAndFacts } from '../src/utils/meaningValidator.js';
 
 // Unslop vocabulary mapping based on academic corpus research (Nature 2024, Stanford AI markers)
 export const UNSLOP_CATALOG = [
@@ -11,6 +13,10 @@ export const UNSLOP_CATALOG = [
   { pattern: /\bpaves the way for\b/gi, replacement: 'enables', note: 'Direct outcome verb.' },
   { pattern: /\bleverage(?:s|d)?\b/gi, replacement: 'use', note: 'Avoid business jargon in scholarly prose.' },
   { pattern: /\butiliz(?:e|es|ed|ing)\b/gi, replacement: 'use', note: 'Replace inflated Latinate verb with direct term.' },
+  { pattern: /\bdelv(?:e|es|ed|ing)\s+into\b/gi, replacement: 'examine', note: 'Purge notorious LLM cliché.' },
+  { pattern: /\b(?:an?\s+)?intricate tapestry (?:of\s+)?\b/gi, replacement: 'the complex structure of ', note: 'Remove decorative tapestry cliché.' },
+  { pattern: /\bintricate tapestry\b/gi, replacement: 'complex structure', note: 'Remove decorative metaphor.' },
+  { pattern: /\bplays\s+(?:a\s+pivotal|an?\s+instrumental|a\s+crucial|a\s+key)\s+role\s+in\b/gi, replacement: 'is essential for', note: 'Eliminate stock rhetorical trope.' },
   { pattern: /\bmultifaceted\b/gi, replacement: 'complex', note: 'Replace decorative adjective.' },
   { pattern: /\ba testament to\b/gi, replacement: 'evidence of', note: 'Remove rhetorical grandstanding.' },
   { pattern: /\bbeacon of\b/gi, replacement: 'model of', note: 'Remove decorative metaphor.' },
@@ -541,7 +547,8 @@ export function refineWithRules(text, mode = 'academic', level = 'balanced', opt
 }
 
 /**
- * Refines text using Gemini with research-grade scholarly constraints and multi-model fallback
+ * Refines text using Cloudflare Workers AI or Gemini with research-grade scholarly constraints and multi-model fallback.
+ * Includes factual, numerical, and citation validation guardrails.
  */
 export async function refineAcademicText(text, options = {}) {
   const {
@@ -552,66 +559,14 @@ export async function refineAcademicText(text, options = {}) {
     addTransitions: shouldAddTransitions = false,
     passiveVoice: shouldPassiveVoice = false,
     formalSynonyms: shouldFormalSynonyms = true,
+    provider = 'auto', // 'auto' | 'cloudflare' | 'gemini' | 'local'
+    model: requestedModel,
   } = options;
 
   const originalCitations = extractCitations(text);
   const originalStats = extractStatistics(text);
   const originalMetrics = calculateTextMetrics(text);
   const { text: maskedDraft, mapping: citationMapping } = maskCitationsWithPlaceholders(text);
-
-  if (!isGeminiConfigured()) {
-    const local = refineWithRules(text, mode, level, { ...options, intensity });
-    const refinedMetrics = calculateTextMetrics(local.refinedText);
-    const editorialHighlights = [
-      `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
-      `${originalCitations.length > 0 ? 'Protected ' + originalCitations.length + ' citations via placeholder isolation' : '100% data integrity verified'}`,
-      'Standardized sentence clarity and syntax flow',
-    ];
-
-    if (local.contractionCount > 0) {
-      editorialHighlights.push(`Expanded ${local.contractionCount} informal contractions`);
-    }
-    if (local.passiveCount > 0) {
-      editorialHighlights.push(`Converted ${local.passiveCount} active phrases to objective academic passive voice`);
-    }
-    if (local.synonymCount > 0) {
-      editorialHighlights.push(`Upgraded ${local.synonymCount} terms to scholarly synonyms`);
-    }
-    if (local.transitionCount > 0) {
-      editorialHighlights.push(`Integrated ${local.transitionCount} academic transitions`);
-    }
-
-    return {
-      originalText: text,
-      refinedText: local.refinedText,
-      mode,
-      level,
-      intensity,
-      options: {
-        expandContractions: shouldExpandContractions,
-        addTransitions: shouldAddTransitions,
-        passiveVoice: shouldPassiveVoice,
-        formalSynonyms: shouldFormalSynonyms,
-        intensity,
-      },
-      source: 'local-rules',
-      preservedCitations: originalCitations,
-      missingCitations: [],
-      citationPreservationRate: 100,
-      preservedStats: originalStats,
-      statsPreservationRate: 100,
-      unslopCount: local.detectedSlop.length,
-      detectedSlop: local.detectedSlop,
-      originalMetrics,
-      refinedMetrics,
-      editorialHighlights,
-      disclaimer:
-        'Lexora Academic Refiner is designed strictly for clarity and academic rigor. It does not attempt to conceal authorship or evade detection systems.',
-    };
-  }
-
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  const models = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
 
   const methodInstructions = [
     shouldExpandContractions
@@ -670,139 +625,127 @@ MANDATORY PRESERVED DATA/STATS: ${JSON.stringify(originalStats)}
 Return ONLY the refined text directly. Do not include markdown code block quotes, conversational greetings, intros, or summaries.
 `.trim();
 
-  let lastError = null;
+  // Helper to post-process model response, restore citations, and run fact validation
+  function finalizeRefinedText(rawText, sourceEngine) {
+    let clean = rawText.replace(/^```[a-zA-Z]*\n?([\s\S]*?)\n?```$/g, '$1').trim();
+    clean = unmaskCitationsFromPlaceholders(clean, citationMapping);
 
-  for (const model of models) {
+    if (shouldExpandContractions) {
+      clean = expandContractions(clean).text;
+    }
+
+    clean = ensureCitationIntegrity(clean, originalCitations);
+
+    // Validate meaning, numerical facts, and citations
+    const validation = validateMeaningAndFacts(text, clean);
+    if (validation.restoredText && validation.restoredText !== clean) {
+      clean = validation.restoredText;
+    }
+
+    const refinedMetrics = calculateTextMetrics(clean);
+    const local = refineWithRules(text, mode, level, options);
+
+    const editorialHighlights = [
+      `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
+      `${validation.citations.accuracy}% citations preserved (${validation.citations.original.length} verified)`,
+      `${validation.numbers.accuracy}% quantitative facts & numbers preserved (${validation.numbers.original.length} figures)`,
+      `Sentence rhythm optimized (burstiness: ${refinedMetrics.burstiness})`,
+    ];
+
+    if (validation.warnings.length > 0) {
+      editorialHighlights.push(`Validation alert: ${validation.warnings[0]}`);
+    }
+
+    return {
+      originalText: text,
+      refinedText: clean,
+      mode,
+      level,
+      intensity,
+      options: {
+        expandContractions: shouldExpandContractions,
+        addTransitions: shouldAddTransitions,
+        passiveVoice: shouldPassiveVoice,
+        formalSynonyms: shouldFormalSynonyms,
+        intensity,
+      },
+      source: sourceEngine,
+      preservedCitations: originalCitations,
+      missingCitations: validation.citations.missing,
+      citationPreservationRate: validation.citations.accuracy,
+      preservedStats: originalStats,
+      missingStats: validation.numbers.missing,
+      statsPreservationRate: validation.numbers.accuracy,
+      unslopCount: local.detectedSlop.length,
+      detectedSlop: local.detectedSlop,
+      originalMetrics,
+      refinedMetrics,
+      validation,
+      editorialHighlights,
+      disclaimer:
+        'Lexora Academic Refiner is designed strictly for clarity and academic rigor. It does not attempt to conceal authorship or evade detection systems.',
+    };
+  }
+
+  // 1. Try Cloudflare Workers AI if configured or requested
+  const shouldTryCloudflare =
+    provider === 'cloudflare' ||
+    (provider === 'auto' && isCloudflareConfigured());
+
+  if (shouldTryCloudflare) {
     try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: [
-          { role: 'user', parts: [{ text: `Original Draft for Refinement:\n\n${maskedDraft}` }] },
-        ],
-        config: {
-          systemInstruction: systemInstructions,
-          temperature: level === 'conservative' ? 0.35 : (mode === 'natural' ? 0.7 : 0.6),
-        },
+      const userPrompt = `Original Draft for Refinement:\n\n${maskedDraft}`;
+      const cfResult = await runCloudflareWorkersAI(userPrompt, {
+        systemInstruction: systemInstructions,
+        temperature: level === 'conservative' ? 0.35 : (mode === 'natural' ? 0.65 : 0.55),
+        model: requestedModel,
       });
 
-      let rawRefined = response.text ? response.text.trim() : maskedDraft;
-
-      // Clean any accidental markdown code wrappers if model produced them
-      rawRefined = rawRefined.replace(/^```[a-zA-Z]*\n?([\s\S]*?)\n?```$/g, '$1').trim();
-
-      // Restore citations from placeholders
-      rawRefined = unmaskCitationsFromPlaceholders(rawRefined, citationMapping);
-
-      // Contraction safety guarantee if enabled
-      if (shouldExpandContractions) {
-        rawRefined = expandContractions(rawRefined).text;
+      if (cfResult && cfResult.text) {
+        return finalizeRefinedText(cfResult.text, `cloudflare-workers-ai (${cfResult.model})`);
       }
-
-      // Ensure 100% citation integrity (re-anchor if model omitted any)
-      const refinedText = ensureCitationIntegrity(rawRefined, originalCitations);
-
-      // Verify citations and stats
-      const refinedCitations = extractCitations(refinedText);
-      const missingCitations = originalCitations.filter((c) => !refinedCitations.includes(c));
-      const citationPreservationRate =
-        originalCitations.length === 0
-          ? 100
-          : Math.round(((originalCitations.length - missingCitations.length) / originalCitations.length) * 100);
-
-      const refinedStats = extractStatistics(refinedText);
-      const missingStats = originalStats.filter((s) => !refinedStats.includes(s));
-      const statsPreservationRate =
-        originalStats.length === 0
-          ? 100
-          : Math.round(((originalStats.length - missingStats.length) / originalStats.length) * 100);
-
-      // Calculate unslop replacements and method counts from rule catalog for diagnostic reporting
-      const local = refineWithRules(text, mode, level, options);
-      const refinedMetrics = calculateTextMetrics(refinedText);
-
-      const editorialHighlights = [
-        `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
-        `${citationPreservationRate}% of all citations (${originalCitations.length}) preserved verbatim`,
-        `Sentence rhythm optimized (burstiness: ${refinedMetrics.burstiness})`,
-      ];
-      if (local.contractionCount > 0) {
-        editorialHighlights.push(`Expanded ${local.contractionCount} informal contractions`);
+    } catch (cfErr) {
+      console.info('Cloudflare Workers AI unavailable, evaluating next provider:', cfErr.message);
+      if (provider === 'cloudflare') {
+        // If explicitly requested, don't silently switch unless fallback is allowed
+        console.warn('Cloudflare Workers AI explicitly requested but failed:', cfErr.message);
       }
-      if (shouldPassiveVoice) {
-        editorialHighlights.push('Applied scholarly passive voice formatting');
-      }
-      if (shouldAddTransitions) {
-        editorialHighlights.push('Synthesized academic discourse transitions');
-      }
-
-      return {
-        originalText: text,
-        refinedText,
-        mode,
-        level,
-        intensity,
-        options: {
-          expandContractions: shouldExpandContractions,
-          addTransitions: shouldAddTransitions,
-          passiveVoice: shouldPassiveVoice,
-          formalSynonyms: shouldFormalSynonyms,
-          intensity,
-        },
-        source: `gemini (${model})`,
-        preservedCitations: originalCitations,
-        missingCitations,
-        citationPreservationRate,
-        preservedStats: originalStats,
-        missingStats,
-        statsPreservationRate,
-        unslopCount: local.detectedSlop.length,
-        detectedSlop: local.detectedSlop,
-        originalMetrics,
-        refinedMetrics,
-        editorialHighlights,
-        disclaimer:
-          'Lexora Academic Refiner is designed strictly for clarity and academic rigor. It does not attempt to conceal authorship or evade detection systems.',
-      };
-    } catch (err) {
-      lastError = err;
-      console.info(`Model ${model} failed for academic refiner:`, err.message);
     }
   }
 
-  // Graceful fallback to deterministic engine if all models fail
-  console.warn('All Gemini models failed for academic refiner, falling back to deterministic rules.', lastError?.message);
+  // 2. Try Google Gemini if configured and provider allows
+  const shouldTryGemini =
+    (provider === 'gemini' || provider === 'auto') && isGeminiConfigured();
+
+  if (shouldTryGemini) {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const models = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+
+    for (const model of models) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: [
+            { role: 'user', parts: [{ text: `Original Draft for Refinement:\n\n${maskedDraft}` }] },
+          ],
+          config: {
+            systemInstruction: systemInstructions,
+            temperature: level === 'conservative' ? 0.35 : (mode === 'natural' ? 0.7 : 0.6),
+          },
+        });
+
+        const rawRefined = response.text ? response.text.trim() : '';
+        if (rawRefined) {
+          return finalizeRefinedText(rawRefined, `gemini (${model})`);
+        }
+      } catch (err) {
+        console.info(`Model ${model} failed for academic refiner:`, err.message);
+      }
+    }
+  }
+
+  // 3. Deterministic Local Rules Engine (Always available, air-gapped, zero-latency)
   const local = refineWithRules(text, mode, level, { ...options, intensity });
-  const refinedMetrics = calculateTextMetrics(local.refinedText);
-  return {
-    originalText: text,
-    refinedText: local.refinedText,
-    mode,
-    level,
-    intensity,
-    options: {
-      expandContractions: shouldExpandContractions,
-      addTransitions: shouldAddTransitions,
-      passiveVoice: shouldPassiveVoice,
-      formalSynonyms: shouldFormalSynonyms,
-      intensity,
-    },
-    source: 'local-rules-fallback',
-    preservedCitations: originalCitations,
-    missingCitations: [],
-    citationPreservationRate: 100,
-    preservedStats: originalStats,
-    missingStats: [],
-    statsPreservationRate: 100,
-    unslopCount: local.detectedSlop.length,
-    detectedSlop: local.detectedSlop,
-    originalMetrics,
-    refinedMetrics,
-    editorialHighlights: [
-      `Purged ${local.detectedSlop.length} academic and LLM stock clichés`,
-      '100% of all citations and empirical stats preserved',
-      'Syntactic balance and clarity restored',
-    ],
-    disclaimer:
-      'Lexora Academic Refiner is designed strictly for clarity and academic rigor. It does not attempt to conceal authorship or evade detection systems.',
-  };
+  return finalizeRefinedText(local.refinedText, 'local-rules-engine');
 }
+

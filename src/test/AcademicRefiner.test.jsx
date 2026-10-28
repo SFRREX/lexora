@@ -77,4 +77,38 @@ describe('AcademicRefiner Component (Task 5)', () => {
     expect(sessionStorage.getItem('lexora_studio_draft')).toContain('[1, 2]');
     expect(onSelectView).toHaveBeenCalledWith('studio');
   });
+
+  it('renders AI Engine selector and updates selected provider', () => {
+    render(<AcademicRefiner onSelectView={vi.fn()} />);
+
+    const providerSelect = screen.getByRole('combobox');
+    expect(providerSelect).toBeInTheDocument();
+    expect(providerSelect.value).toBe('auto');
+
+    fireEvent.change(providerSelect, { target: { value: 'cloudflare' } });
+    expect(providerSelect.value).toBe('cloudflare');
+  });
+
+  it('supports toggling between Side-by-Side, Sentence Review, and Diff view modes after refinement', async () => {
+    render(<AcademicRefiner onSelectView={vi.fn()} />);
+
+    const textarea = screen.getByPlaceholderText(/paste your abstract/i);
+    fireEvent.change(textarea, {
+      target: { value: 'We delve into the study [1, 2].' },
+    });
+
+    const refineBtn = screen.getByRole('button', { name: /refine academic prose/i });
+    fireEvent.click(refineBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/refinement complete/i)).toBeInTheDocument();
+    });
+
+    // Check View Mode Switcher buttons
+    const sentenceReviewBtn = screen.getByRole('button', { name: /sentence review/i });
+    expect(sentenceReviewBtn).toBeInTheDocument();
+    fireEvent.click(sentenceReviewBtn);
+
+    expect(screen.getByText(/compare each sentence/i)).toBeInTheDocument();
+  });
 });

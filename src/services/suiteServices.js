@@ -51,6 +51,8 @@ export async function runAcademicRefinement(text, options = {}) {
     addTransitions = false,
     passiveVoice = false,
     formalSynonyms = true,
+    provider,
+    model,
   } = options;
 
   const response = await fetch('/api/refine-academic', {
@@ -65,6 +67,8 @@ export async function runAcademicRefinement(text, options = {}) {
       addTransitions,
       passiveVoice,
       formalSynonyms,
+      provider,
+      model,
     }),
   });
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   BookOpen,
   Sparkles,
@@ -23,10 +23,35 @@ import {
   Download,
   CheckSquare,
   Square,
+  Cpu,
+  Edit3,
+  Undo2,
+  CheckCheck,
 } from 'lucide-react';
 import { runAcademicRefinement } from '../services/suiteServices.js';
 import { extractTextFromDocument } from '../utils/documentExtractor.js';
 import { extractCitations } from '../utils/textRules.js';
+import { validateMeaningAndFacts } from '../utils/meaningValidator.js';
+
+/**
+ * Splits text into sentences and pairs original with refined for sentence-by-sentence review
+ */
+function extractSentencePairs(origText, refText) {
+  if (!origText || !refText) return [];
+  const origSentences = (origText.match(/[^.!?]+[.!?]+|\S+/g) || [origText]).map((s) => s.trim()).filter(Boolean);
+  const refSentences = (refText.match(/[^.!?]+[.!?]+|\S+/g) || [refText]).map((s) => s.trim()).filter(Boolean);
+  const maxLen = Math.max(origSentences.length, refSentences.length);
+  const pairs = [];
+  for (let i = 0; i < maxLen; i++) {
+    pairs.push({
+      id: i,
+      original: origSentences[i] || '',
+      refined: refSentences[i] || '',
+      accepted: true,
+    });
+  }
+  return pairs;
+}
 
 /**
  * Computes exact word-by-word sequence diff using Longest Common Subsequence (LCS)
@@ -181,11 +206,14 @@ export default function AcademicRefiner({ onSelectView }) {
   const [mode, setMode] = useState('academic');
   const [level, setLevel] = useState('balanced'); // 'conservative' | 'balanced'
   const [intensity, setIntensity] = useState(65); // 0 - 100%
+  const [provider, setProvider] = useState('auto'); // 'auto' | 'cloudflare' | 'gemini' | 'local'
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [editedText, setEditedText] = useState('');
+  const [sentencePairs, setSentencePairs] = useState([]);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [viewMode, setViewMode] = useState('side-by-side'); // 'side-by-side' | 'highlighted' | 'clean'
+  const [viewMode, setViewMode] = useState('side-by-side'); // 'side-by-side' | 'sentences' | 'highlighted' | 'clean'
 
   // Transformation Method Toggles
   const [expandContractions, setExpandContractions] = useState(true);
@@ -219,7 +247,7 @@ export default function AcademicRefiner({ onSelectView }) {
   }, []);
 
   function handleVerifyInChecker() {
-    const textToVerify = result?.refinedText || text;
+    const textToVerify = editedText || result?.refinedText || text;
     if (textToVerify && typeof textToVerify === 'string') {
       try {
         sessionStorage.setItem('lexora_checker_text', textToVerify);
@@ -233,9 +261,10 @@ export default function AcademicRefiner({ onSelectView }) {
   }
 
   function handleSendToStudio() {
-    if (!result?.refinedText) return;
+    const textToSend = editedText || result?.refinedText;
+    if (!textToSend) return;
     try {
-      sessionStorage.setItem('lexora_studio_draft', result.refinedText);
+      sessionStorage.setItem('lexora_studio_draft', textToSend);
     } catch {
       // ignore
     }
@@ -250,6 +279,8 @@ export default function AcademicRefiner({ onSelectView }) {
       if (clipText) {
         setText(clipText);
         setResult(null);
+        setEditedText('');
+        setSentencePairs([]);
         setError(null);
       }
     } catch {
@@ -268,6 +299,8 @@ export default function AcademicRefiner({ onSelectView }) {
       if (typeof content === 'string') {
         setText(content);
         setResult(null);
+        setEditedText('');
+        setSentencePairs([]);
         setError(null);
       }
     } catch (err) {
@@ -279,8 +312,9 @@ export default function AcademicRefiner({ onSelectView }) {
   }
 
   function handleDownload() {
-    if (!result?.refinedText) return;
-    const blob = new Blob([result.refinedText], { type: 'text/plain;charset=utf-8' });
+    const textToDownload = editedText || result?.refinedText;
+    if (!textToDownload) return;
+    const blob = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -310,8 +344,11 @@ export default function AcademicRefiner({ onSelectView }) {
         addTransitions,
         passiveVoice,
         formalSynonyms,
+        provider,
       });
       setResult(data);
+      setEditedText(data.refinedText);
+      setSentencePairs(extractSentencePairs(text, data.refinedText));
     } catch (err) {
       setError(err.message || 'Academic refinement failed.');
     } finally {
@@ -319,28 +356,49 @@ export default function AcademicRefiner({ onSelectView }) {
     }
   }
 
+  function handleToggleSentence(id) {
+    setSentencePairs((prev) => {
+      const updated = prev.map((p) => (p.id === id ? { ...p, accepted: !p.accepted } : p));
+      const newText = updated
+        .map((p) => (p.accepted ? p.refined : p.original))
+        .filter(Boolean)
+        .join(' ');
+      setEditedText(newText);
+      return updated;
+    });
+  }
+
   function handleClear() {
     setText('');
     setResult(null);
+    setEditedText('');
+    setSentencePairs([]);
     setError(null);
   }
 
   function handleCopy() {
-    if (!result?.refinedText) return;
-    navigator.clipboard.writeText(result.refinedText);
+    const textToCopy = editedText || result?.refinedText;
+    if (!textToCopy) return;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
+
+  const liveValidation = useMemo(() => {
+    if (!result || !editedText) return null;
+    return validateMeaningAndFacts(text, editedText);
+  }, [text, editedText, result]);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const sentenceCount = text.trim() ? (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).length : 0;
   const detectedCitations = extractCitations(text);
 
-  const refinedWordCount = result?.refinedText?.trim()
-    ? result.refinedText.trim().split(/\s+/).filter(Boolean).length
+  const activeRefinedText = editedText || result?.refinedText || '';
+  const refinedWordCount = activeRefinedText.trim()
+    ? activeRefinedText.trim().split(/\s+/).filter(Boolean).length
     : 0;
-  const refinedSentenceCount = result?.refinedText?.trim()
-    ? (result.refinedText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).length
+  const refinedSentenceCount = activeRefinedText.trim()
+    ? (activeRefinedText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).length
     : 0;
 
   return (
@@ -504,8 +562,66 @@ export default function AcademicRefiner({ onSelectView }) {
               </p>
             </div>
 
+            {/* AI Provider Engine Selection */}
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#222734] flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <Cpu size={14} className="text-[#38858a] dark:text-[#4fa3a8]" />
+                <span>AI Engine:</span>
+              </div>
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1a1e27] p-0.5 rounded-lg border border-slate-200 dark:border-[#282f3d]">
+                <button
+                  type="button"
+                  onClick={() => setProvider('auto')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                    provider === 'auto'
+                      ? 'bg-white dark:bg-[#252c3a] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                  title="Auto: Selects fastest available engine (Cloudflare Workers AI -> Gemini -> Local)"
+                >
+                  Auto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProvider('cloudflare')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                    provider === 'cloudflare'
+                      ? 'bg-white dark:bg-[#252c3a] text-[#38858a] dark:text-[#7ce3ab] shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                  title="Cloudflare Workers AI: Open-weight Llama 3.3 70B & 3.1 8B at edge"
+                >
+                  Cloudflare AI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProvider('gemini')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                    provider === 'gemini'
+                      ? 'bg-white dark:bg-[#252c3a] text-[#38858a] dark:text-[#a0dfe4] shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                  title="Google Gemini: 3.5 Flash scholarly model"
+                >
+                  Gemini
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProvider('local')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                    provider === 'local'
+                      ? 'bg-white dark:bg-[#252c3a] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                  title="Local Rules: Air-gapped, offline deterministic regex engine"
+                >
+                  Local Rules
+                </button>
+              </div>
+            </div>
+
             {/* Presets */}
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#222734] flex flex-wrap items-center gap-2">
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#222734] flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Try Preset:</span>
               {PRESETS.map((p, idx) => (
                 <button
@@ -634,10 +750,27 @@ export default function AcademicRefiner({ onSelectView }) {
 
         {/* Input Textarea */}
         <div className="mt-5">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
             <label htmlFor="academic-input" className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
               Draft Text for Refinement
             </label>
+            <div className="flex items-center gap-2">
+              <label htmlFor="ai-engine-select" className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                AI Engine:
+              </label>
+              <select
+                id="ai-engine-select"
+                aria-label="AI Engine Provider"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                className="text-xs bg-white dark:bg-[#1a1e27] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#282f3d] rounded-lg px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#38858a] font-medium cursor-pointer shadow-2xs"
+              >
+                <option value="auto">Auto (Cloudflare AI &rarr; Gemini &rarr; Local)</option>
+                <option value="cloudflare">Cloudflare Workers AI (Llama 3.3 70B / 8B / Qwen)</option>
+                <option value="gemini">Google Gemini AI</option>
+                <option value="local">Local Deterministic Rules (Offline)</option>
+              </select>
+            </div>
             <input
               ref={fileInputRef}
               type="file"
@@ -788,10 +921,23 @@ export default function AcademicRefiner({ onSelectView }) {
                       ? 'bg-white dark:bg-[#252c3a] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
-                  title="Side-by-side comparison"
+                  title="Side-by-side live editor"
                 >
                   <ArrowLeftRight size={12} />
                   Side-by-Side
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('sentences')}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                    viewMode === 'sentences'
+                      ? 'bg-white dark:bg-[#252c3a] text-slate-900 dark:text-slate-100 shadow-xs font-semibold'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                  title="Review sentence-by-sentence with accept/revert controls"
+                >
+                  <CheckCheck size={12} />
+                  Sentence Review
                 </button>
                 <button
                   type="button"
@@ -918,29 +1064,145 @@ export default function AcademicRefiner({ onSelectView }) {
             </div>
           )}
 
+          {/* Live Meaning & Fact Guardrail Card */}
+          {liveValidation && (
+            <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/50 rounded-xl">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/60 dark:border-emerald-900/40">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
+                    Fact, Number & Citation Guardrails (Live Verification)
+                  </span>
+                </div>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200">
+                  Score: {liveValidation.preservationScore}% Verified
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-emerald-950 dark:text-emerald-200">
+                <div className="flex items-center gap-1.5">
+                  <Check size={14} className="text-emerald-600 shrink-0" />
+                  <span>Numbers & Figures: <strong>{liveValidation.numbers.accuracy}%</strong> ({liveValidation.numbers.original.length} figures)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check size={14} className="text-emerald-600 shrink-0" />
+                  <span>Citations & DOIs: <strong>{liveValidation.citations.accuracy}%</strong> ({liveValidation.citations.original.length} verified)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Check size={14} className="text-emerald-600 shrink-0" />
+                  <span>Negation Polarity: <strong>{liveValidation.negationIntegrity ? 'Preserved' : 'Divergent'}</strong></span>
+                </div>
+              </div>
+              {liveValidation.warnings.length > 0 && (
+                <div className="mt-2 text-[11px] text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                  <AlertCircle size={13} className="shrink-0" />
+                  <span>{liveValidation.warnings[0]}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Comparison Panels */}
           {viewMode === 'side-by-side' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-50/70 dark:bg-[#0c0e12] rounded-xl border border-slate-200 dark:border-[#222734]">
+              <div className="p-4 bg-slate-50/70 dark:bg-[#0c0e12] rounded-xl border border-slate-200 dark:border-[#222734] flex flex-col">
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
                   <span>Original Draft</span>
                   <span className="text-slate-400 font-normal">{wordCount} words &bull; {sentenceCount} sentences</span>
                 </div>
-                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-normal">
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-normal overflow-y-auto max-h-[420px]">
                   {result.originalText}
                 </div>
               </div>
 
-              <div className="p-4 bg-[#f0f7f8] dark:bg-[#121c21] rounded-xl border border-[#c0e0e3] dark:border-[#204045]">
+              <div className="p-4 bg-[#f0f7f8] dark:bg-[#121c21] rounded-xl border border-[#c0e0e3] dark:border-[#204045] flex flex-col">
                 <div className="text-xs font-bold uppercase tracking-wider text-[#1c4b4f] dark:text-[#a0dfe4] mb-2 flex items-center justify-between">
-                  <span>Refined Output ({result.mode})</span>
-                  <span className="text-[#23585c] dark:text-[#74b6ba] text-[11px] font-semibold">
-                    {refinedWordCount} words &bull; {refinedSentenceCount} sentences
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <Edit3 size={13} className="text-[#38858a] dark:text-[#4fa3a8]" />
+                    <span>Interactive Final Draft (Live Edit)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {editedText !== result.refinedText && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditedText(result.refinedText);
+                          setSentencePairs(extractSentencePairs(result.originalText, result.refinedText));
+                        }}
+                        className="text-[11px] text-[#38858a] hover:underline flex items-center gap-1 cursor-pointer"
+                        title="Reset manual edits back to AI output"
+                      >
+                        <Undo2 size={11} /> Reset
+                      </button>
+                    )}
+                    <span className="text-[#23585c] dark:text-[#74b6ba] text-[11px] font-semibold">
+                      {refinedWordCount} words
+                    </span>
+                  </div>
                 </div>
-                <div className="text-sm text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap font-normal">
-                  {result.refinedText}
-                </div>
+                <textarea
+                  value={editedText}
+                  onChange={(e) => setEditedText(e.target.value)}
+                  rows={14}
+                  className="w-full text-sm text-slate-900 dark:text-slate-100 bg-transparent resize-y leading-relaxed font-normal focus:outline-none focus:ring-1 focus:ring-[#38858a] rounded p-1"
+                  placeholder="Edit or fine-tune the refined draft directly..."
+                />
+              </div>
+            </div>
+          ) : viewMode === 'sentences' ? (
+            <div className="space-y-3">
+              <div className="text-xs text-slate-500 dark:text-slate-400 font-medium flex flex-wrap items-center justify-between gap-2">
+                <span>Compare each sentence and choose to accept the refined upgrade or revert to the original sentence:</span>
+                <span className="text-[11px] text-[#38858a] dark:text-[#7ce3ab] font-bold">
+                  {sentencePairs.filter((p) => p.accepted).length} of {sentencePairs.length} refined sentences accepted
+                </span>
+              </div>
+              <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                {sentencePairs.map((pair) => (
+                  <div
+                    key={pair.id}
+                    className={`p-3.5 rounded-xl border transition-all ${
+                      pair.accepted
+                        ? 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20'
+                        : 'border-slate-200 dark:border-[#282f3d] bg-slate-50/50 dark:bg-[#0c0e12]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1.5 flex-1">
+                        <div className="text-xs text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1">
+                          <span>Sentence {pair.id + 1}</span>
+                          {!pair.accepted && <span className="text-amber-600 dark:text-amber-400 font-normal">(Reverted to original)</span>}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 line-through">
+                          {pair.original}
+                        </div>
+                        <div className={`text-sm ${pair.accepted ? 'text-slate-900 dark:text-slate-100 font-medium' : 'text-slate-400 line-through'}`}>
+                          {pair.refined}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSentence(pair.id)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg shrink-0 transition-colors flex items-center gap-1.5 cursor-pointer ${
+                          pair.accepted
+                            ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200 dark:hover:bg-emerald-800'
+                            : 'bg-slate-200 dark:bg-[#252c3a] text-slate-700 dark:text-slate-300 hover:bg-slate-300'
+                        }`}
+                      >
+                        {pair.accepted ? (
+                          <>
+                            <Check size={13} className="text-emerald-700 dark:text-emerald-300" />
+                            <span>Accepted</span>
+                          </>
+                        ) : (
+                          <>
+                            <Undo2 size={13} />
+                            <span>Use Original</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : viewMode === 'highlighted' ? (
@@ -948,12 +1210,12 @@ export default function AcademicRefiner({ onSelectView }) {
               <div className="text-xs font-bold uppercase tracking-wider text-[#1c4b4f] dark:text-[#a0dfe4] mb-2">
                 Refined Prose (Key Word Enhancements Highlighted)
               </div>
-              {renderRefinedDiff(result.originalText, result.refinedText)}
+              {renderRefinedDiff(result.originalText, editedText)}
             </div>
           ) : (
             <div className="p-5 bg-slate-50/70 dark:bg-[#0c0e12] rounded-xl border border-slate-200 dark:border-[#222734]">
               <div className="text-base text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap font-normal">
-                {result.refinedText}
+                {editedText}
               </div>
             </div>
           )}
@@ -983,8 +1245,10 @@ export default function AcademicRefiner({ onSelectView }) {
               <button
                 type="button"
                 onClick={() => {
-                  setText(result.refinedText);
+                  setText(editedText || result.refinedText);
                   setResult(null);
+                  setEditedText('');
+                  setSentencePairs([]);
                 }}
                 className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 bg-white dark:bg-[#1a1e27] border border-slate-200 dark:border-[#282f3d] hover:bg-slate-50 dark:hover:bg-[#202634] rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 title="Send refined text back into the editor to refine further"
