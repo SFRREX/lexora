@@ -63,3 +63,9 @@ task_plan.md
 .agents/
 AGENTS.md
 docs/
+scratch*.mjs
+scratch*.js
+scratch/
+*.tmp
+*.temp
+
