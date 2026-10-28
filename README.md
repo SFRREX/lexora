@@ -2,524 +2,263 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="public/logo-dark.png">
     <source media="(prefers-color-scheme: light)" srcset="public/logo-light.png">
-    <img src="public/logo-dark.png" alt="Lexora AI Intelligence Suite Logo" width="240" />
+    <img src="public/logo-dark.png" alt="Lexora Logo" width="200" />
   </picture>
 </p>
 
-<h1 align="center">Lexora AI Intelligence Suite</h1>
+<h1 align="center">Lexora</h1>
 
 <p align="center">
   <strong>The Art of Better Words.</strong><br>
-  A research-grounded linguistic intelligence suite combining editorial writing tools, natural scholarly humanization, open-weight neural AI detection, and empirical classifier benchmarking.
+  An open-source AI writing toolkit — write better, detect AI text, and make AI drafts sound human.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-38858a.svg?style=flat-square" alt="MIT License" /></a>
-  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19.3-2563eb.svg?style=flat-square" alt="React 19" /></a>
-  <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-8.3-646cff.svg?style=flat-square" alt="Vite 8" /></a>
-  <a href="https://developers.cloudflare.com/workers-ai/"><img src="https://img.shields.io/badge/Cloudflare_Workers_AI-Llama_3.1_70B-f38020.svg?style=flat-square&logo=cloudflare" alt="Cloudflare Workers AI" /></a>
-  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-v4.3-38858a.svg?style=flat-square" alt="Tailwind CSS v4" /></a>
-  <a href="https://oxc.rs/"><img src="https://img.shields.io/badge/Linter-Oxlint_0_Errors-22c55e.svg?style=flat-square" alt="Oxlint" /></a>
-  <a href="#-verification--automated-testing"><img src="https://img.shields.io/badge/Tests-128%20Passing-10b981.svg?style=flat-square" alt="Vitest 128 Passing" /></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node-%3E%3D18.0.0-339933.svg?style=flat-square" alt="Node Version" /></a>
-</p>
-
-<p align="center">
-  <a href="#-overview">Overview</a> •
-  <a href="#-how-lexora-humanizes-ai-text">How Humanization Works</a> •
-  <a href="#-core-modules">Core Modules</a> •
-  <a href="#-architecture--engineering-highlights">Architecture</a> •
-  <a href="#-quickstart">Quickstart</a> •
-  <a href="#-environment-configuration">Configuration</a> •
-  <a href="#-verification--automated-testing">Testing</a> •
-  <a href="#-repository-structure">Structure</a> •
-  <a href="#-responsible-ai--methodological-disclosures">Ethical Disclosures</a> •
-  <a href="#-license">License</a>
+  <a href="#-testing"><img src="https://img.shields.io/badge/Tests-128_Passing-10b981.svg?style=flat-square" alt="128 Tests Passing" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-2563eb.svg?style=flat-square" alt="React 19" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node-%3E%3D18-339933.svg?style=flat-square" alt="Node >= 18" /></a>
 </p>
 
 ---
 
-## 📖 Overview
+## What Is Lexora?
 
-**Lexora** is an open-source, ethical linguistic analysis and writing platform designed for researchers, authors, students, and engineers.
+Lexora is a free, open-source writing platform for researchers, students, authors, and engineers. It does four things:
 
-Most consumer writing tools either act as opaque generative text spinners or promote adversarial "AI humanizer" bypasses. Lexora takes a transparent, verifiable approach:
+1. **Writing Studio** — Fix grammar, rephrase sentences, adjust tone, and find better words.
+2. **AI Checker** — Detect whether text was written by a human or AI, with sentence-level detail.
+3. **Academic Refiner** — Take AI-generated drafts and make them sound naturally human, while keeping every citation and fact intact.
+4. **Detector Research Lab** — Benchmark AI detectors against ground-truth datasets with real statistical metrics.
 
-* **Forensic Humanization, Not Evasion Tricks:** Rather than inserting zero-width spaces or corrupting text with homoglyphs, Lexora reconstructs natural human writing rhythms through linguistic science—restoring sentence length variance (burstiness), varying clause structure, and eliminating formulaic AI markers.
-* **100% Citation & Fact Safeguards:** Academic references (`[1, 2]`, `(Author, Year)`), DOIs, sample sizes, and empirical statistics ($p < 0.01$, percentages) are tokenized into protected placeholders prior to processing, guaranteeing zero dropped or hallucinated facts.
-* **Dual-Engine Open Intelligence:** Powered by high-performance open-weight models ([Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) Meta Llama 3.1 70B / 8B) with automatic failover to Google Gemini and zero-latency local deterministic rules.
-* **Empirical Transparency:** Rather than producing misleading binary scores, the AI Checker surfaces sentence-level perplexity heatmaps, four-tier provenance breakdowns, and cross-detector agreement metrics (Cohen's Kappa).
-
----
-
-## 🧬 How Lexora Humanizes AI Text
-
-Why does raw AI text get flagged by detectors? Large language models are statistical prediction engines that favor high-probability, uniform sentences. They repeatedly use the same transition words (*"Furthermore,"*, *"Moreover,"*, *"Consequently,"*) and tack on decorative participial tags (*", driving innovation"*, *", serving as a testament to"*).
-
-Lexora transforms drafts through a 5-stage research-grounded pipeline:
-
-```mermaid
-flowchart TD
-    Raw["<b>Raw AI / Academic Draft</b><br>• Monotonous sentence lengths (16-18 words)<br>• Cliches: 'delve into', 'intricate tapestry'<br>• Typical Detector Score: 90% - 98% AI"] 
-    --> Stage1["<b>Stage 1: Citation & Numerical Masking</b><br>Isolate [1, 2], (Smith et al., 2023), DOIs, and p-values into immutable [[REF_x]] tokens"]
-    
-    Stage1 --> Stage2["<b>Stage 2: Open-Weight Neural Refinement</b><br>Cloudflare Workers AI Llama 3.1 70B / Gemini executes semantic restructuring"]
-    
-    Stage2 --> Stage3["<b>Stage 3: Syntactic Burstiness Optimizer</b><br>Interleave punchy claims (5-10 words) with medium clauses & compound thoughts (22-30 words)"]
-    
-    Stage3 --> Stage4["<b>Stage 4: Deterministic Unslop Sanitizer</b><br>Purge formulaic openers ('Furthermore,') and dangling tags (', driving X')"]
-    
-    Stage4 --> Stage5["<b>Stage 5: Verbatim Restoration & Fact Audit</b><br>Restore citations verbatim, verify negation polarity, and calculate text metrics"]
-    
-    Stage5 --> Out["<b>Human-Cadenced Scholar Text</b><br>• Organic rhythm & high burstiness (>28)<br>• 100% facts & citations preserved<br>• Typical Detector Score: 10% - 17% AI (Human)"]
-
-    style Raw fill:#fee2e2,stroke:#ef4444,stroke-width:2px,color:#991b1b
-    style Stage1 fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px,color:#1e293b
-    style Stage2 fill:#ffedd5,stroke:#f97316,stroke-width:1.5px,color:#9a3412
-    style Stage3 fill:#dbeafe,stroke:#3b82f6,stroke-width:1.5px,color:#1e40af
-    style Stage4 fill:#fef3c7,stroke:#f59e0b,stroke-width:1.5px,color:#92400e
-    style Stage5 fill:#ede9fe,stroke:#8b5cf6,stroke-width:1.5px,color:#5b21b6
-    style Out fill:#d1fae5,stroke:#10b981,stroke-width:2px,color:#065f46
-```
-
-### Visual Before & After Proof: Real Multi-Domain Benchmark
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ BEFORE REFINEMENT (Raw AI Draft — 98% AI Probability)                                          │
-├────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ "In recent years, it is important to note that researchers delve into the intricate tapestry   │
-│ of modern machine learning. Furthermore, this plays a pivotal role in accelerating computer   │
-│ vision workflows, serving as a testament to the transformative power of deep architectures.   │
-│ Additionally, in order to navigate the complexities of data pipelines, scientists utilize      │
-│ holistic approaches to benchmark latency and throughput across heterogeneous clusters."        │
-│                                                                                                │
-│ ❌ AI Detection Score: 98% AI (Flagged)     ❌ Sentence Burstiness: 8.7 (Monotonous)           │
-│ ❌ Cliches Detected: 4 ('intricate tapestry', 'delve into', 'pivotal role', 'testament to')     │
-└────────────────────────────────────────────────────────────────────────────────────────────────┘
-                                                ⬇
-┌────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ AFTER LEXORA HUMANIZATION (Refined Scholar Text — 17% AI / Classified as Human)                │
-├────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ "Machine learning has reshaped modern computer vision. While deep neural architectures process │
-│ visual streams with remarkable efficiency, deploying them across distributed clusters exposes │
-│ severe latency bottlenecks. Standard benchmarks often fail to isolate these communication      │
-│ delays. To measure true end-to-end throughput, researchers analyze memory serialization       │
-│ overhead across heterogeneous cloud nodes."                                                    │
-│                                                                                                │
-│ ✅ AI Detection Score: 17% AI (Human)       ✅ Sentence Burstiness: 20.8 (Dynamic Variety)     │
-│ ✅ Cliches Detected: 0 Purged              ✅ Fact / Citation Preservation: 100% Verbatim      │
-└────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
+**Works offline.** Lexora runs out of the box with zero API keys using its built-in local analysis engine. Add API keys for more powerful cloud models when you're ready.
 
 ---
 
-## 🌟 Core Modules
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                LEXORA INTELLIGENCE SUITE                                │
-├─────────────────────┬─────────────────────┬─────────────────────┬───────────────────────┤
-│  ✍️ Writing Studio  │   🛡️ AI Checker     │   🎓 AI Refiner     │   🔬 Research Lab     │
-│                     │                     │      (Humanizer)    │                       │
-│ • 7 AI rewrite      │ • Cloudflare Llama  │ • Llama 3.1 70B     │ • Statistical ROC-AUC │
-│   modes             │   70B Neural engine │   editorial model   │   & F1 metrics        │
-│ • Live interactive  │ • 100% offline pure │ • Nature unslop &   │ • Dynamic decision    │
-│   proofread canvas  │   stylometrics      │   cadence optimizer │   threshold slider    │
-│ • Contextual Word   │ • Perplexity &      │ • 100% citation &   │ • Ground-truth cross- │
-│   Enhancer          │   burstiness maps   │   fact guardrails   │   dataset validation  │
-│ • Character-level   │ • 4-tier provenance │ • Interactive side- │ • Inter-detector      │
-│   backward diffs    │   distribution      │   by-side review    │   agreement (Kappa)   │
-└─────────────────────┴─────────────────────┴─────────────────────┴───────────────────────┘
-```
-
-### 1. ✍️ Writing Studio (`#studio`)
-* **Interactive Proofreading Canvas:**
-  * **Color-Coded Diagnostic Highlights:** Underlines detected grammar, spelling, clarity, punctuation, and style issues with non-overlapping visual marks.
-  * **Accessible Suggestion Popovers:** Click or keyboard-navigate (`Enter`/`Space`) to inspect diagnostic explanations and apply immediate one-click replacements.
-  * **Document Health Inspector:** Displays categorized counts (*Grammar*, *Spelling*, *Clarity*, *Punctuation*, *Style*), dynamic document health scores, and single-click **Accept All** batch fixes.
-* **7 Tailored Writing Modes:**
-  * **Grammar & Spelling:** Corrects orthographic, grammatical, and typographical issues.
-  * **Sentence Rephrase:** Reconstructs awkward syntax for natural, fluid prose.
-  * **Fluency:** Standardizes idioms and phrasing for non-native English writing.
-  * **Shorten:** Eliminates wordiness and deadwood while preserving core semantics.
-  * **Simplify:** Translates convoluted vocabulary into accessible phrasing.
-  * **Professional Tone:** Polishes casual drafts for business and workplace communications.
-  * **Casual Tone:** Relaxes rigid prose into conversational language.
-* **Contextual Word Enhancer:** High-precision synonym thesaurus grouped across *Professional*, *Casual*, *Stronger*, and *Simpler* registers.
-* **Backward Slice Diff Engine:** Computes character- and token-level visual diffs applied backwards by index, preventing substring span shifting and replacement collisions.
-
----
-
-### 2. 🛡️ AI Text Checker (`#ai-checker`)
-* **Dual Free Default Detectors:**
-  * **Lexora Neural AI Detector (Cloudflare Workers AI Llama 3.1 70B):** Evaluates linguistic cadence and token-level perplexity with zero subscription paywalls.
-  * **Lexora Local Stylometrics Engine (100% Free & Offline):** Pure JavaScript statistical NLP analyzer that evaluates sentence length variance (burstiness index), type-token lexical diversity (TTR), and character n-gram distribution without external network calls.
-  * **Google Gemini Fallback:** Automatically steps in if custom cloud configurations require multi-turn reasoning.
-* **Sentence-Level Perplexity Heatmap:** Color-coded sentence breakdown (*Human*, *Mixed*, *AI*) with per-sentence metrics and explanatory tooltips on hover.
-* **Multi-Provider Cross-Verification:** Optional integrations for commercial providers ([GPTZero](https://docs.gptzero.me/), [Copyleaks](https://docs.copyleaks.com/)) with automated Cohen's Kappa inter-detector agreement calculation.
-* **Four-Tier Provenance Classification:** Classifies drafts into granular authorship tiers:
-  * 🟢 `Human-written`
-  * 🔵 `Human-written & AI-refined`
-  * 🟠 `AI-generated & AI-refined`
-  * 🔴 `AI-generated`
-* **Outdated Result Detection:** Automatically flags scan results as `[Outdated Result]` when the draft is modified after scanning, preventing stale evaluation.
-
----
-
-### 3. 🎓 Academic Refiner & Natural Humanizer (`#academic-refiner`)
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  INTERACTIVE SIDE-BY-SIDE REFINER & HUMAN REVIEW MODE                                 │
-├───────────────────────────────────┬────────────────────────────────────────────────────┤
-│ 📄 ORIGINAL DRAFT                 │ ✨ REFINED & HUMANIZED PROSE (Editable)            │
-│                                   │                                                    │
-│ In recent years, researchers      │ Machine learning has reshaped modern computer      │
-│ delve into the intricate tapestry │ vision. While deep neural architectures process   │
-│ of modern machine learning.       │ visual streams with remarkable efficiency,         │
-│ Furthermore, this plays a pivotal │ deploying them across distributed clusters         │
-│ role in accelerating workflows... │ exposes severe latency bottlenecks...              │
-├───────────────────────────────────┴────────────────────────────────────────────────────┤
-│ 🛡️ FACT & CITATION GUARDRAILS:                                                         │
-│  • 100% Citations Preserved (3/3 verified)   • 100% Quantitative Stats Verified        │
-│  • Burstiness: 8.7 ➔ 20.8 (+12.1 points)     • Slop Cliches Purged: 4 stock tropes     │
-│  [Toggle: Side-by-Side | Sentence Review | Inline Diff]        [Copy Refined Text]      │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-* **Multi-Engine Intelligence:** Executes high-throughput open-weight models (`@cf/meta/llama-3.1-70b-instruct`, `@cf/meta/llama-3.1-8b-instruct`) via Cloudflare Workers AI with model fallbacks and 200-item LRU caching, seamlessly falling back to Google Gemini or local deterministic rules.
-* **Nature-Standard Unslop Engine:** Purges formulaic LLM stock tropes (*"delve into"*, *"intricate tapestry"*, *"plays a pivotal role"*, *"testament to"*, *"underscores the importance"*, *"sheds light on"*, *"groundbreaking"*).
-* **Guaranteed Citation & Meaning Guardrails:** Tokenizes references into protected placeholders `[[REF_1]]` prior to processing, ensuring 100% preservation of bracketed citations `[1, 2]`, author-year formats `(Smith et al., 2023)`, DOIs, and empirical statistics ($p < 0.05$, $R^2$, sample sizes). Actively validates negation polarity to prevent hallucinated inversions.
-* **Interactive Side-by-Side & Sentence Review Modes:** Directly edit refined prose in real-time or review drafts sentence-by-sentence with one-click Accept/Revert buttons, ensuring complete human editorial oversight.
-* **Scholarly Discourse Methods:** Automated contraction expansion, objective passive voice transformation, and academic discourse transition synthesis.
-
----
-
-### 4. 🔬 Detector Research Lab (`#detector-lab`)
-* **Empirical Ground-Truth Dataset:** Pre-loaded with curated research samples across human academic manuscripts, raw LLM outputs, and collaboratively revised texts.
-* **Statistical Metrics Engine:** Computes Precision (PPV), Recall (Sensitivity), Specificity (TNR), F1 Score, False Positive Rate (FPR), False Negative Rate (FNR), and ROC-AUC.
-* **Dynamic Decision Threshold Calibration ($\tau$):** Real-time interactive decision threshold slider to evaluate trade-offs between false positives and false negatives.
-* **Peer-Reviewed Reference Base:** Grounded in research from NAACL 2025, Cambridge University Press (*Data & Policy 2025*), Springer (*Acta Neurochirurgica 2025*), and OpenAI's classifier methodology.
-
----
-
-## 🏗️ Architecture & Engineering Highlights
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as User / Scholar
-    participant UI as React 19 Client (src/)
-    participant Proxy as Node / Vite Middleware (server/apiRouter.js)
-    participant Cache as Sliding LRU Cache & Queue
-    participant CF as Cloudflare Workers AI (Llama 3.1 70B)
-    participant Gemini as Google Gemini AI API
-    participant Local as Deterministic NLP Engine
-
-    User->>UI: Enter text & trigger Refinement / Detection
-    alt Offline Mode / Deterministic Fallback
-        UI->>Local: Run pure JavaScript regex & stylometrics
-        Local-->>UI: Instant response (0ms latency, air-gapped)
-    else Cloud Intelligence Requested
-        UI->>Proxy: POST /api/* (JSON payload, capped at 2MB)
-        Note over Proxy: Server-side API key injection & credential redaction
-        Proxy->>Cache: Check LRU Cache & In-Flight Map
-        alt Cache Hit
-            Cache-->>Proxy: Cached response (<1ms)
-        else Cache Miss
-            alt Cloudflare Workers AI Configured
-                Proxy->>CF: Execute @cf/meta/llama-3.1-70b-instruct
-                CF-->>Proxy: Human-cadenced structured text
-            else Gemini Configured
-                Proxy->>Gemini: Execute request (with 429 backoff queue)
-                Gemini-->>Proxy: Structured response
-            end
-            Proxy->>Cache: Store in LRU cache (capped at 200 items)
-        end
-        Proxy-->>UI: Sanitized JSON response & metrics
-    end
-    UI-->>User: Render visual diffs, sentence heatmaps & metrics
-```
-
-### Key Technical Pillars
-1. **Zero Client-Side Secrets:** Upstream credentials (`CLOUDFLARE_API_TOKEN`, `GEMINI_API_KEY`, `GPTZERO_API_KEY`, `COPYLEAKS_API_KEY`) reside exclusively in server-side environment variables. No credentials are prefixed with `VITE_` or exposed in client bundles.
-2. **Payload Protection & Error Sanitization:** The server proxy enforces a strict 2MB maximum body ceiling with immediate stream termination (`HTTP 413`) to prevent memory exhaustion DoS attacks. Outbound error messages are sanitized to redact API keys and query strings.
-3. **Resilient Rate-Limit & Caching Architecture:**
-   * **Sliding-Window LRU Cache:** In-memory 200-item LRU cache eliminates redundant upstream requests.
-   * **In-Flight Request Deduplication:** Merges identical concurrent queries into a single shared promise.
-   * **Graceful 429 Backoff Queue:** Catches HTTP 429 quota exhaustion, serializes subsequent requests via an execution queue, and enforces automatic 20-second backoff.
-4. **Optimized Route-Level Code Splitting:** Heavy PDF processing (`pdfjs-dist`) and secondary views are dynamically loaded with `React.lazy` and `Suspense`, keeping the initial bundle under 485 kB (145 kB gzip).
-5. **Strict JavaScript + JSX Constraint:** Pure modern React 19 architecture with zero TypeScript compile-time overhead or build friction.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technology | Details |
-| :--- | :--- | :--- |
-| **Frontend Framework** | [React 19.3](https://react.dev/) | Functional components, hooks, concurrent rendering |
-| **Build Tooling** | [Vite 8.3](https://vite.dev/) | Lightning-fast HMR and Rollup-based production bundling |
-| **Styling & Design** | [Tailwind CSS v4.3](https://tailwindcss.com/) | CSS-first configuration, bespoke dark/light design system |
-| **Icons & Motion** | [Lucide React](https://lucide.dev/) / [Framer Motion](https://www.framer.com/motion/) | Scalable accessible iconography and micro-animations |
-| **Linter** | [Oxlint](https://oxc.rs/) | Rust-based high-performance JavaScript linter (0 errors, 0 warnings) |
-| **Testing Harness** | [Vitest](https://vitest.dev/) / [Testing Library](https://testing-library.com/) | Unit, component, and regression testing with v8 coverage |
-| **Document Parsing** | [PDF.js](https://mozilla.github.io/pdf.js/) (`pdfjs-dist`) | Lazy-loaded client-side PDF document text extraction |
-| **AI Refinement Engine** | [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) | `@cf/meta/llama-3.1-70b-instruct` high-speed open-weight inference |
-| **Fallback Cloud AI** | [Google Gemini API](https://ai.google.dev/) | `@google/genai` multi-model fallback (`3.5-flash`, `3.5-flash-lite`, `3.8-flash`) |
-
----
-
-## 🚀 Quickstart
+## Get Started
 
 ### Prerequisites
-* **Node.js:** `v18.0.0` or higher (`v20.x` or `v24.x` recommended LTS)
-* **npm:** `v9.0.0` or higher
 
-### Installation
+- **Node.js** v18 or higher (v20+ recommended)
+- **npm** v9 or higher
+
+### Install
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/SFRREX/lexora.git
 cd lexora
-
-# 2. Install dependencies (clean reproducible install)
 npm ci
 ```
 
-### Environment Configuration
+### Configure
 
-Copy the sanitized environment template:
+Copy the example environment file and add your API keys:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` to configure your keys:
+Edit `.env`:
 
 ```env
-# Cloudflare Workers AI Credentials (Recommended for fast, open-weight refinement)
-# Get Account ID & Token at https://dash.cloudflare.com/
-CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id_here
-CLOUDFLARE_API_TOKEN=your_cloudflare_api_token_here
+# Cloudflare Workers AI — fast open-weight models (free tier: 10,000 neurons/day)
+CLOUDFLARE_ACCOUNT_ID=your_account_id
+CLOUDFLARE_API_TOKEN=your_api_token
 CLOUDFLARE_AI_MODEL=@cf/meta/llama-3.1-70b-instruct
 
-# Google Gemini API Key (Free at https://aistudio.google.com/)
-GEMINI_API_KEY=your_gemini_api_key_here
+# Google Gemini — free at https://aistudio.google.com/
+GEMINI_API_KEY=your_gemini_key
 
-# Optional Commercial Detectors (Leave blank to use Free Default Detectors)
+# Optional commercial detectors (leave blank to skip)
 GPTZERO_API_KEY=
 COPYLEAKS_EMAIL=
 COPYLEAKS_API_KEY=
 ```
 
-> **Offline Note:** Lexora is fully functional **out of the box** without any API keys. When keys are unconfigured, it automatically utilizes its built-in Local Rules Engine and Local Stylometrics NLP analyzer.
+> **No keys? No problem.** Without API keys, Lexora uses its built-in rules engine and local stylometrics analyzer. Everything still works.
 
-### Local Development
-
-Start the development server with local API proxy middleware:
+### Run
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:5173](http://localhost:5173).
 
 ---
 
-## 🧪 Verification & Automated Testing
+## Features
 
-Lexora features a comprehensive test harness covering component behavior, adapter normalization, offline statistical routines, and build integrity:
+### ✍️ Writing Studio
+
+- **7 writing modes** — Grammar & Spelling, Sentence Rephrase, Fluency, Shorten, Simplify, Professional Tone, Casual Tone.
+- **Interactive proofreading** — Color-coded highlights for grammar, spelling, clarity, punctuation, and style issues. Click any highlight to see an explanation and apply a fix.
+- **Document health score** — See issue counts by category and fix them all with one click.
+- **Word enhancer** — Right-click any word to find synonyms grouped by register (Professional, Casual, Stronger, Simpler).
+- **Visual diffs** — Character-level before/after comparison so you can see exactly what changed.
+
+### 🛡️ AI Checker
+
+- **Two free built-in detectors:**
+  - **Lexora Neural** — Uses Cloudflare Workers AI (Llama 3.1 70B) to evaluate writing patterns.
+  - **Lexora Local** — 100% offline JavaScript analyzer that scores sentence burstiness, lexical diversity, and character patterns.
+- **Sentence-level heatmap** — Each sentence is color-coded (Human / Mixed / AI) with per-sentence scores.
+- **Optional commercial detectors** — Plug in GPTZero or Copyleaks for cross-verification. Lexora calculates Cohen's Kappa agreement between detectors automatically.
+- **Four-tier classification** — Human-written → Human-written & AI-refined → AI-generated & AI-refined → AI-generated.
+- **Stale result warnings** — If you edit your text after scanning, results are flagged as outdated.
+
+### 🎓 Academic Refiner (Humanizer)
+
+- **Strips AI clichés** — Removes stock phrases like "delve into", "intricate tapestry", "plays a pivotal role", "testament to".
+- **Protects every citation** — References like `[1, 2]`, `(Smith et al., 2023)`, DOIs, p-values, and sample sizes are tokenized into safe placeholders before processing. Nothing gets dropped or changed.
+- **Adds natural rhythm** — Mixes short punchy sentences (5–10 words) with longer compound ones (20–30 words) to break the flat, predictable cadence that AI detectors flag.
+- **Side-by-side review** — Compare your original and refined text. Edit the output directly. Accept or revert sentence by sentence.
+- **Multi-engine** — Powered by Cloudflare Workers AI (Llama 3.1 70B/8B) with automatic fallback to Google Gemini, then local rules.
+
+### 🔬 Detector Research Lab
+
+- **Ground-truth datasets** — Pre-loaded with human manuscripts, raw AI outputs, and mixed texts.
+- **Real metrics** — Precision, Recall, F1, False Positive Rate, False Negative Rate, ROC-AUC.
+- **Threshold slider** — Drag to explore the trade-off between false positives and false negatives in real time.
+
+---
+
+## How the Humanizer Works
+
+AI text gets flagged because language models produce uniform, predictable sentences. They overuse the same transitions ("Furthermore," "Moreover,") and tack on decorative phrases (", driving innovation").
+
+Lexora fixes this in five steps:
+
+1. **Mask citations & numbers** — Isolate references, DOIs, and statistics into protected `[[REF_x]]` tokens.
+2. **Neural rewrite** — Cloudflare Workers AI (Llama 3.1 70B) restructures the text semantically.
+3. **Vary sentence length** — Interleave short claims with medium and long sentences to create natural burstiness.
+4. **Strip AI clichés** — Remove formulaic openers and dangling participial tags.
+5. **Restore & verify** — Put citations back verbatim, check negation polarity, calculate text metrics.
+
+**Result:** Text that typically scores 90–98% AI before processing scores 10–17% AI after — classified as human-written.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | [React 19](https://react.dev/) with [Vite 8](https://vite.dev/) |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) |
+| **Icons & Animation** | [Lucide React](https://lucide.dev/) + [Framer Motion](https://www.framer.com/motion/) |
+| **AI Engine** | [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) (Llama 3.1 70B) |
+| **AI Fallback** | [Google Gemini](https://ai.google.dev/) (3.5 Flash / 3.8 Flash) |
+| **PDF Parsing** | [PDF.js](https://mozilla.github.io/pdf.js/) (lazy-loaded) |
+| **Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + [Playwright](https://playwright.dev/) |
+| **Linting** | [Oxlint](https://oxc.rs/) (0 errors, 0 warnings) |
+
+---
+
+## Architecture at a Glance
+
+Lexora is a React SPA backed by a Node.js API proxy. No client-side secrets — all API keys stay server-side.
+
+- **Offline mode** — When no keys are configured, all analysis runs locally in pure JavaScript with zero network calls.
+- **Cloud mode** — The Vite dev middleware proxies requests to Cloudflare Workers AI or Gemini. Credentials are injected server-side and never exposed to the browser.
+- **LRU cache** — A 200-item in-memory cache deduplicates identical requests. Concurrent duplicate queries share a single promise.
+- **Rate-limit handling** — HTTP 429 responses trigger a backoff queue with 20-second delays.
+- **Payload limits** — Requests are capped at 2 MB with immediate stream termination to prevent abuse.
+- **Code splitting** — Heavy dependencies (PDF.js) are lazy-loaded. Initial bundle: ~485 KB (145 KB gzipped).
+
+---
+
+## Testing
+
+128 tests across 15 test suites covering components, adapters, NLP routines, and build output.
 
 ```bash
-# Run full Vitest unit & component test suite (128 tests across 15 files)
-npm test
-
-# Run Vitest in interactive watch mode
-npm run test:watch
-
-# Generate code coverage report via v8 engine
-npm run test:coverage
-
-# Run integration & adapter verification suites
-npm run test:suite
-
-# Run Oxlint high-performance code linter
-npm run lint
-
-# Compile optimized production bundle
-npm run build
-
-# Run complete unified quality gate (lint + tests + integration + build)
-npm run check
+npm test                # Run all tests
+npm run test:watch      # Watch mode
+npm run test:coverage   # Coverage report (v8)
+npm run test:suite      # Integration & adapter tests
+npm run lint            # Oxlint
+npm run build           # Production build
+npm run check           # Everything: lint + tests + integration + build
 ```
-
-### Verified Test Suite Breakdown (15 Test Suites • 128 Automated Unit & Integration Tests)
-* **`src/test/meaningValidator.test.js` (12 tests):** Empirical fact extraction, p-value and confidence interval tracking, bracketed/author-year citation integrity, technical acronym preservation, negation polarity audit, and automated reference healing.
-* **`src/test/cloudflareWorkersAI.test.js` (10 tests):** Cloudflare Workers AI configuration validation, LRU response caching and capacity eviction, multi-model fallback chain (`llama-3.1-70b` &rarr; `llama-3.1-8b`), and timeout handling.
-* **`src/test/humanAndAiDrafts.test.js` (7 tests):** Human-written manuscript preservation, AI cliché purging, statistical citation retention, zero-width character evasion checks, and non-deceptive metadata guarantees.
-* **`src/test/humanizerDetectorRegression.test.jsx` (14 tests):** Tests A–H regression suite (cross-view state handoff, manual edit invalidation, score normalization, request race conditions, honest detection results).
-* **`src/test/academicRefiner.test.js` (9 tests):** Citation isolation, contraction expansion, passive voice restructuring, formal synonym replacement, and text metrics calculation.
-* **`src/test/academicHumanizer.test.js` (6 tests):** Scholarly unslop, formulaic transition purging, and cadence variation.
-* **`src/test/detectors.test.js` (9 tests):** Adapter normalization for Cloudflare Workers AI, GPTZero, Copyleaks, Local Stylometrics, and Gemini Neural Detector.
-* **`src/test/researchMetrics.test.js` (3 tests):** Classification statistics (Precision, Recall, F1, FPR, FNR, ROC-AUC) and Cohen's Kappa agreement matrix.
-* **`src/test/textRules.test.js` (16 tests):** Deterministic grammar correction, sentence shortening, tone adjustment, and repeated-word span extraction.
-* **`src/test/theme.test.js` (5 tests):** Light/dark/system theme coordination, local storage synchronization, and OS preference listeners.
-* **`src/test/components.test.jsx` (16 tests):** Component rendering and user interaction tests across `WritingEditor`, `WordEnhancer`, `ResultPanel`, `BeforeAfter`, `FinalCTA`, `Navbar`, and `Footer`.
-* **`src/test/AcademicRefiner.test.jsx` (5 tests):** Intensity slider, preset buttons, view handoff, AI Engine selector, and Side-by-Side vs. Sentence Review modes.
-* **`src/test/GrammarInspector.test.jsx` (9 tests):** Health score calculation, empty draft state, in-flight scanning, unscanned draft state, category filtering, single and batch fixes.
-* **`src/test/InteractiveCanvas.test.jsx` (3 tests):** Wavy underline rendering, popover opening, and correction application.
-* **`src/test/grammarSpans.test.js` (4 tests):** Exact character span offset calculation, health score normalization, and overlap elimination.
 
 ---
 
-## 📂 Repository Structure
+## Project Structure
 
 ```text
 lexora/
-├── .github/                      # GitHub automation & configuration
-│   ├── dependabot.yml            # Automated weekly dependency updates
-│   └── workflows/
-│       └── ci.yml                # CI quality gate (lint, test, build, audit)
-├── api/                          # Serverless entry points (Vercel / Edge)
-│   ├── detectors/scan.js         # Multi-provider scan endpoint
-│   ├── detectors/status.js       # Provider configuration check
-│   ├── process-text.js           # Writing Studio text processing
-│   ├── refine-academic.js        # Academic Refiner unslop pipeline
-│   └── word-alternatives.js      # Contextual thesaurus lookup
-├── e2e/                          # Playwright end-to-end verification
-│   └── lexora.spec.js            # Cross-view integration tests
-├── public/                       # Static public assets
-│   ├── logo-light.png            # Official light-theme logo
-│   ├── logo-dark.png             # Official dark-theme logo
-│   ├── favicon-light.png         # Browser favicon (light mode)
-│   └── favicon-dark.png          # Browser favicon (dark mode)
-├── server/                       # Node.js service logic & dev proxy
-│   ├── academicRefinerService.js # Scholarly unslop & cadence engine
-│   ├── apiRouter.js              # Unified request router & payload limiter
-│   ├── cloudflareAiService.js    # Cloudflare Workers AI client & LRU cache
-│   ├── geminiService.js          # Multi-model Gemini client & LRU cache
-│   ├── vitePluginGemini.js       # Vite development middleware proxy
-│   └── detectors/                # Modular detector adapters
-│       ├── baseDetector.js       # Base detector interface
-│       ├── cloudflareDetector.js # Cloudflare Llama 3.1 70B neural detector
-│       ├── copyleaks.js          # Copyleaks API adapter
-│       ├── detectorManager.js    # Multi-detector orchestrator & Kappa matrix
-│       ├── geminiDetector.js     # Free Gemini neural detector adapter
-│       ├── gptzero.js            # GPTZero API adapter
-│       └── localStylometrics.js  # Offline statistical NLP analyzer
-├── src/                          # React 19 Frontend application
-│   ├── components/               # Modular UI components
-│   │   ├── AIChecker.jsx         # Multi-model AI detection suite
-│   │   ├── AcademicRefiner.jsx   # Scholarly unslop & citation safeguard
-│   │   ├── BeforeAfter.jsx       # Visual comparison cards
-│   │   ├── DetectorResearchLab.jsx # Empirical classifier benchmark lab
-│   │   ├── FinalCTA.jsx          # Bottom call-to-action banner
-│   │   ├── Footer.jsx            # Accessible footer & legal links
-│   │   ├── GrammarInspector.jsx  # Document health & category suggestions
-│   │   ├── InteractiveGrammarCanvas.jsx # Keyboard-accessible markup canvas
-│   │   ├── Navbar.jsx            # Responsive navigation & theme switcher
-│   │   ├── ResultPanel.jsx       # Diff view & output action controls
-│   │   ├── SuggestionPopover.jsx # Contextual issue explanation card
-│   │   ├── ToolSelector.jsx      # Writing tool mode selector
-│   │   ├── WordEnhancer.jsx      # Contextual vocabulary thesaurus
-│   │   └── WritingEditor.jsx     # Primary editor with 7 writing tools
-│   ├── services/                 # Client API layer
-│   │   ├── suiteServices.js      # Multi-provider detector fetchers
-│   │   └── textProcessor.js      # API communication & local fallbacks
-│   ├── test/                     # Vitest test suites (128 tests)
-│   │   ├── setup.js              # JSDOM global setup & DOM mocks
-│   │   ├── AcademicRefiner.test.jsx
-│   │   ├── GrammarInspector.test.jsx
-│   │   ├── InteractiveCanvas.test.jsx
-│   │   ├── academicHumanizer.test.js
-│   │   ├── academicRefiner.test.js
-│   │   ├── cloudflareWorkersAI.test.js
-│   │   ├── components.test.jsx
-│   │   ├── detectors.test.js
-│   │   ├── grammarSpans.test.js
-│   │   ├── humanAndAiDrafts.test.js
-│   │   ├── humanizerDetectorRegression.test.jsx
-│   │   ├── meaningValidator.test.js
-│   │   ├── researchMetrics.test.js
-│   │   ├── textRules.test.js
-│   │   └── theme.test.js
-│   ├── utils/                    # Frontend utilities & dataset specs
-│   │   ├── documentExtractor.js  # Client-side PDF / TXT / MD extractor
-│   │   ├── meaningValidator.js   # Fact, number, & citation guardrail engine
-│   │   ├── researchDataset.js    # Curated benchmark documents
-│   │   ├── researchMetrics.js    # Classification statistics (ROC-AUC, F1, Kappa)
-│   │   ├── textRules.js          # Offline regex grammar & tone engine
-│   │   └── theme.js              # Theme coordinator (Light/Dark/System)
-│   ├── App.jsx                   # Root router & view coordinator
-│   ├── index.css                 # Tailwind CSS v4 design tokens
-│   └── main.jsx                  # Application entry point
-├── test-rules.js                 # Integration test suite for textRules
-├── test-suite.js                 # Integration test suite for detector adapters
-├── CONTRIBUTING.md               # Contribution standards & workflow
-├── SECURITY.md                   # Vulnerability disclosure & security architecture
-├── LICENSE                       # MIT Open-Source License
-├── playwright.config.js          # Playwright E2E configuration
-├── vite.config.js                # Vite 8 build & Vitest configuration
-└── package.json                  # Dependencies, scripts, and metadata
+├── api/                # Serverless endpoints (Vercel / Edge)
+├── e2e/                # Playwright end-to-end tests
+├── public/             # Logos and favicons
+├── server/             # Node.js services, API router, and detector adapters
+│   └── detectors/      # Modular detector adapters (Cloudflare, GPTZero, Copyleaks, local)
+├── src/
+│   ├── components/     # React UI components (14 files)
+│   ├── services/       # Client-side API layer
+│   ├── test/           # Vitest test suites (15 files, 128 tests)
+│   └── utils/          # NLP utilities, metrics, theme, document extraction
+├── .env.example        # Environment variable template
+├── package.json        # Dependencies and scripts
+├── vite.config.js      # Vite + Vitest configuration
+└── vercel.json         # Vercel deployment config
 ```
 
 ---
 
-## 🌐 Deployment
+## Deployment
 
-### Vercel (Serverless Full-Stack)
-The repository includes a root `vercel.json` and serverless entry points in `api/`:
-1. Push your repository to GitHub.
-2. Import the project into your [Vercel Dashboard](https://vercel.com).
-3. Set your environment variables (`CLOUDFLARE_API_TOKEN`, `GEMINI_API_KEY`, etc.) in project settings.
-4. Deploy. Vercel automatically routes `/api/*` requests to the serverless functions and serves the static Vite frontend with client-side SPA routing.
+### Vercel (Recommended)
 
-### Static Single-Page App (SPA)
-When deploying strictly as a static client (e.g. GitHub Pages, Netlify, Cloudflare Pages):
-1. Execute `npm run build` to generate the production bundle in `dist/`.
-2. Configure SPA fallback rewriting to point all non-asset routes to `index.html`.
-3. In static-only deployments, Lexora operates seamlessly in offline mode using its built-in deterministic rules and local stylometrics analyzer.
+1. Push the repo to GitHub.
+2. Import it into [Vercel](https://vercel.com).
+3. Set environment variables in project settings.
+4. Deploy. Vercel routes `/api/*` to serverless functions and serves the SPA.
 
----
+### Static Hosting (GitHub Pages, Netlify, Cloudflare Pages)
 
-## 🔒 Responsible AI & Methodological Disclosures
-
-1. **Probabilistic Nature of AI Detection:** Statistical and neural detectors generate probabilistic estimates, not irrefutable proof of authorship. Output scores should inform editorial review rather than serve as punitive determinants.
-2. **Linguistic & Non-Native Disparities:** Consistent with published findings in NAACL and Springer (*Acta Neurochirurgica*), non-native English writing may exhibit lower burstiness and reduced lexical variation. Lexora explicitly surfaces methodological caveats on small text samples (< 250 words) to avoid false-positive bias.
-3. **Privacy & Data Retention:** User inputs are processed strictly in-memory during active sessions and are never persisted, stored in databases, or utilized for model training.
+1. Run `npm run build` to generate the `dist/` folder.
+2. Configure SPA fallback (all routes → `index.html`).
+3. In static mode, Lexora runs fully offline using its built-in engines.
 
 ---
 
-## 🤝 Contributing
+## Responsible AI
 
-We welcome contributions! Please review our guidelines before opening a pull request:
-* Read [CONTRIBUTING.md](CONTRIBUTING.md) for local development setup, architectural constraints (React 19 + JavaScript + JSX), and coding standards.
-* Ensure all checks pass cleanly via `npm run check`.
-
----
-
-## 🛡️ Security
-
-Please report security vulnerabilities responsibly through our [Security Policy](SECURITY.md) via GitHub Private Vulnerability Reporting. Do not report security vulnerabilities through public GitHub issues.
+- **AI detection is probabilistic, not proof.** Scores are estimates, not verdicts. Use them to inform review, not to punish.
+- **Non-native English bias exists.** Research shows non-native writing can score differently. Lexora warns about this on short texts (< 250 words).
+- **No data is stored.** User text is processed in memory only. Nothing is saved, logged, or used for training.
 
 ---
 
-## 📄 License & Citation
+## Contributing
 
-This project is licensed under the [MIT License](LICENSE).
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first, then make sure `npm run check` passes before opening a PR.
 
-If you reference Lexora in academic research or linguistic benchmarking, please cite:
+---
+
+## Security
+
+Report vulnerabilities through [GitHub Private Vulnerability Reporting](SECURITY.md). Do not use public issues for security reports.
+
+---
+
+## License
+
+[MIT](LICENSE)
+
+### Citation
+
+If you reference Lexora in research, please cite:
 
 ```bibtex
 @software{lexora2026,
   author = {Razedus Safar and Contributors},
-  title = {Lexora AI Intelligence Suite: Production Writing, Neural Detection, and Academic Refinement},
+  title = {Lexora: AI Writing, Detection, and Academic Refinement Suite},
   year = {2026},
   url = {https://github.com/SFRREX/lexora}
 }
 ```
 
 <p align="center">
-  Crafted with care by <a href="https://github.com/SFRREX">Razedus Safar</a> • Lexora Intelligence Suite
+  Built by <a href="https://github.com/SFRREX">Razedus Safar</a>
 </p>
