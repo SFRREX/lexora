@@ -60,3 +60,6 @@ findings.md
 progress.md
 task_plan.md
 .superpowers/
+.agents/
+AGENTS.md
+docs/

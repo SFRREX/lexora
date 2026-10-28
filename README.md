@@ -263,13 +263,6 @@ npm run check
 
 ```text
 lexora/
-├── .agents/                      # Antigravity agent configuration
-│   ├── rules/
-│   │   └── agent-reliability.md  # Workspace operational guardrails
-│   └── skills/                   # Antigravity agent skills
-│       ├── frontend-ux-review/   # WCAG 2.2 AA & responsive review
-│       ├── project-quality-audit/# Full verification pipeline runner
-│       └── release-verification/ # Shipping checklist & security gate
 ├── .github/                      # GitHub automation & configuration
 │   ├── dependabot.yml            # Automated weekly dependency updates
 │   └── workflows/
@@ -343,7 +336,6 @@ lexora/
 │   └── main.jsx                  # Application entry point
 ├── test-rules.js                 # Integration test suite for textRules
 ├── test-suite.js                 # Integration test suite for detector adapters
-├── AGENTS.md                     # Operational guidelines for AI agents
 ├── CONTRIBUTING.md               # Contribution standards & workflow
 ├── SECURITY.md                   # Vulnerability disclosure & security architecture
 ├── LICENSE                       # MIT Open-Source License
@@ -374,7 +366,7 @@ When deploying strictly as a static client (e.g. GitHub Pages, Netlify, Cloudfla
 ## 🔒 Responsible AI & Methodological Disclosures
 
 1. **Probabilistic Nature of AI Detection:** Statistical and neural detectors generate probabilistic estimates, not irrefutable proof of authorship. Output scores should inform editorial review rather than serve as punitive determinants.
-2. **Linguistic & Non-Native Disparities:** Consistent with published findings in NAACL and Springer (*Acta Neurochirurgica*), non-native English writing may exhibit lower burstiness and reduced lexical variation. Lexora explicitly surfaces methodological caveats on small text samples (&lt; 250 words) to avoid false-positive bias.
+2. **Linguistic & Non-Native Disparities:** Consistent with published findings in NAACL and Springer (*Acta Neurochirurgica*), non-native English writing may exhibit lower burstiness and reduced lexical variation. Lexora explicitly surfaces methodological caveats on small text samples (< 250 words) to avoid false-positive bias.
 3. **Privacy & Data Retention:** User inputs are processed strictly in-memory during active sessions and are never persisted, stored in databases, or utilized for model training.
 
 ---
@@ -382,9 +374,9 @@ When deploying strictly as a static client (e.g. GitHub Pages, Netlify, Cloudfla
 ## 🤝 Contributing
 
 We welcome contributions! Please review our guidelines before opening a pull request:
-* Read [CONTRIBUTING.md](CONTRIBUTING.md) for local development setup and coding standards.
-* Consult [AGENTS.md](AGENTS.md) for architectural constraints (React 19 + JavaScript + JSX; strictly no TypeScript migration).
+* Read [CONTRIBUTING.md](CONTRIBUTING.md) for local development setup, architectural constraints (React 19 + JavaScript + JSX), and coding standards.
 * Ensure all checks pass cleanly via `npm run check`.
+
 
 ---
 
