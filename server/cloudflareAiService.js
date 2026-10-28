@@ -9,8 +9,6 @@
 const DEFAULT_MODELS = [
   '@cf/meta/llama-3.1-70b-instruct',
   '@cf/meta/llama-3.1-8b-instruct',
-  '@cf/meta/llama-3.2-3b-instruct',
-  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
 ];
 
 // In-memory LRU Cache (Capacity: 200 items)
@@ -96,13 +94,16 @@ export async function runCloudflareWorkersAI(prompt, options = {}) {
     temperature = 0.3,
     maxTokens = 2048,
     model: requestedModel,
+    noCache = false,
   } = options;
 
   // Check LRU cache
-  const cacheKey = `${requestedModel || 'auto'}:${temperature}:${prompt}`;
-  const cached = cfResponseCache.get(cacheKey);
-  if (cached) {
-    return { ...cached, cached: true };
+  const cacheKey = `${requestedModel || 'auto'}:${temperature}:${systemInstruction}:${prompt}`;
+  if (!noCache) {
+    const cached = cfResponseCache.get(cacheKey);
+    if (cached) {
+      return { ...cached, cached: true };
+    }
   }
 
   const modelsToTry = requestedModel ? [requestedModel, ...DEFAULT_MODELS.filter((m) => m !== requestedModel)] : getCloudflareModels();
@@ -112,7 +113,7 @@ export async function runCloudflareWorkersAI(prompt, options = {}) {
   for (const model of modelsToTry) {
     const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for 70B inference
 
     try {
       const response = await fetch(endpoint, {

@@ -33,7 +33,7 @@ export default function AIChecker({ onSelectView }) {
     }
     return '';
   });
-  const [selectedProviders, setSelectedProviders] = useState(['gemini', 'stylometrics']);
+  const [selectedProviders, setSelectedProviders] = useState(['cloudflare', 'stylometrics']);
   const [providers, setProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFileLoading, setIsFileLoading] = useState(false);
@@ -48,6 +48,16 @@ export default function AIChecker({ onSelectView }) {
   useEffect(() => {
     fetchDetectorStatuses().then((list) => {
       setProviders(list);
+      if (Array.isArray(list) && list.length > 0) {
+        // Auto-select configured free providers
+        const activeFree = list.filter((p) => p.configured && p.isFree).map((p) => p.id);
+        if (activeFree.length > 0) {
+          setSelectedProviders((prev) => {
+            const preserved = prev.filter((id) => list.some((p) => p.id === id && p.configured));
+            return preserved.length > 0 ? preserved : activeFree;
+          });
+        }
+      }
     });
 
     function checkIncomingDraft() {

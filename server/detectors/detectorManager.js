@@ -1,3 +1,4 @@
+import { CloudflareDetectorAdapter } from './cloudflareDetector.js';
 import { GeminiDetectorAdapter } from './geminiDetector.js';
 import { LocalStylometricsAdapter } from './localStylometrics.js';
 import { GPTZeroAdapter } from './gptzero.js';
@@ -6,6 +7,7 @@ import { CopyleaksAdapter } from './copyleaks.js';
 class DetectorManager {
   constructor() {
     this.adapters = {
+      cloudflare: new CloudflareDetectorAdapter(),
       gemini: new GeminiDetectorAdapter(),
       stylometrics: new LocalStylometricsAdapter(),
       gptzero: new GPTZeroAdapter(),
@@ -15,9 +17,18 @@ class DetectorManager {
     // Catalog of available providers with free tier flags and roles
     this.catalog = [
       {
+        id: 'cloudflare',
+        name: 'Lexora Neural AI Detector (Cloudflare Llama 3.1 70B)',
+        role: 'Open-weight neural forensic classifier. Advanced stylistic perplexity & burstiness modeling.',
+        docUrl: 'https://developers.cloudflare.com/workers-ai/',
+        envKeys: ['CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_API_TOKEN'],
+        isFree: true,
+        status: 'implemented',
+      },
+      {
         id: 'gemini',
         name: 'Lexora Neural AI Detector (Gemini)',
-        role: 'Primary free detection provider. Advanced linguistic perplexity & cadence modeling.',
+        role: 'Multi-turn neural detection provider. Advanced linguistic perplexity & cadence modeling.',
         docUrl: 'https://ai.google.dev/docs',
         envKeys: ['GEMINI_API_KEY'],
         isFree: true,

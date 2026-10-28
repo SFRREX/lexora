@@ -33,7 +33,13 @@ export const UNSLOP_CATALOG = [
   { pattern: /\bat the forefront of\b/gi, replacement: 'leading', note: 'Use concise descriptor.' },
   { pattern: /\bholistic approach\b/gi, replacement: 'comprehensive method', note: 'Replace vague buzzword with methodological term.' },
   { pattern: /\bever-evolving\b/gi, replacement: 'dynamic', note: 'Use concise adjective.' },
-  { pattern: /\brevolutionize(?:s|d)?\b/gi, replacement: 'substantially change', note: 'Temper sensationalist claims.' },
+  { pattern: /\brevolutioniz(?:ed|ing|es|e)\b/gi, replacement: 'advanced', note: 'Temper sensationalist claims.' },
+  { pattern: /\bis\s+revolutionizing\b/gi, replacement: 'is advancing', note: 'Temper sensationalist claims.' },
+  { pattern: /\bunderscores?\s+the\s+(?:potential|importance|necessity|significance|need)\s+(?:of|to|for)?\b/gi, replacement: 'demonstrates', note: 'Assert evidence rather than decorative importance.' },
+  { pattern: /\byielding\s+substantial\s+gains\b/gi, replacement: 'improving throughput', note: 'Avoid vague business outcomes.' },
+  { pattern: /\brobust\s+foundation\b/gi, replacement: 'empirical basis', note: 'Replace architectural metaphor.' },
+  { pattern: /\bthe\s+interplay\s+between\b/gi, replacement: 'interaction among', note: 'Avoid theatrical phrasing.' },
+  { pattern: /\bfosters?\s+a\s+culture\s+of\b/gi, replacement: 'supports', note: 'Purge HR buzzword.' },
   { pattern: /\bin the realm of\b/gi, replacement: 'in', note: 'Remove domain filler.' },
   { pattern: /\bwitnessed a (?:profound|dramatic) transformation\b/gi, replacement: 'changed significantly', note: 'Switch passive observation to direct verb.' },
   { pattern: /\bserves as a reminder that\b/gi, replacement: 'demonstrates that', note: 'Assert evidence rather than moral reflection.' },
@@ -586,40 +592,55 @@ export async function refineAcademicText(text, options = {}) {
   const hasCitationsInDraft = originalCitations.length > 0;
 
   const systemInstructions = `
-You are the Lexora Academic Refiner, a premier scientific editor for high-impact journals (e.g., Nature, Science, Cell, IEEE Transactions, PNAS).
-Transform the academic draft into publication-grade scholarly prose that is precise, intellectually substantive, and naturally phrased.
+You are the Lexora Academic Refiner, a premier scientific editor for top-tier academic journals (e.g., Nature, Science, Cell, IEEE Transactions, PNAS).
+Transform the input draft into publication-grade prose with the organic rhythmic cadence, lexical depth, and syntactic asymmetry characteristic of human scholars.
 
-CORE EDITING PRINCIPLES:
-1. ELIMINATE AI CLICHÉS, SLOP & FORMULAIC SIGNPOSTING:
-   - Purge empty phrases: "delve into", "plays a pivotal role", "intricate tapestry", "sheds light on", "underscores the importance", "beacon of", "testament to", "it is worth noting that", "in recent years the realm of", "witnessed a profound transformation", "cutting-edge", "groundbreaking", "harnessing the power of", "a myriad of", "ever-evolving", "multifaceted", "holistic".
-   - CRITICAL: NEVER start sentences with repetitive AI markers: "Consequently,", "Moreover,", "Furthermore,", "Therefore,", "Notably,", "In conclusion,". Connect thoughts organically or state assertions directly without mechanical signposts.
-   - NO trailing participial comma tags (avoid ", driving X", ", revealing Y", ", serving as Z"). Write direct, complete declarative clauses instead.
-   - Replace throat-clearing openings with direct, substantive subject-verb statements.
-2. SCHOLARLY PRECISION & ACTIVE VERBS:
-   - Use direct, authoritative analytical verbs: "demonstrates", "indicates", "measures", "reveals", "quantifies", "challenges", "isolates", "synthesizes".
-3. NATURAL HUMAN CADENCE & HIGH BURSTINESS (CRITICAL):
-   - Human writing naturally fluctuates in sentence length and syntactic structure. Achieve high burstiness (>25) by intentionally varying sentence architecture: mix short punchy observations (5-10 words) with medium statements and longer, compound analytical thoughts (20-30 words).
-   - NEVER output sentences of monotonous, uniform length.
-4. CITATION & NUMERICAL IMMUNITY:
+NON-NEGOTIABLE CORE DIRECTIVES:
+1. SYNTACTIC BURSTINESS & SENTENCE CADENCE (MANDATORY):
+   - Human prose has an irregular, dynamic cadence (burstiness > 28).
+   - Deliberately vary sentence length: interleave short, punchy statements (5 to 10 words) with medium analytical clauses (12 to 18 words) and expansive compound sentences (22 to 32 words).
+   - NEVER output consecutive sentences of similar word counts. Break up uniform rhythms.
+
+2. ABSOLUTE BAN ON LLM CLICHÉS & BUZZWORDS:
+   - NEVER use the following words or phrases:
+     "delve into", "intricate tapestry", "plays a pivotal role", "plays an instrumental role", "underscores the importance", "sheds light on", "paves the way", "beacon of", "testament to", "multifaceted", "holistic", "seamlessly", "harnessing the power of", "leveraging the power of", "cutting-edge", "groundbreaking", "ever-evolving", "in the realm of", "paradigm shift", "transformative power", "intricate", "a myriad of", "plethora".
+   - Replace abstract hype with concrete, verifiable empirical descriptions.
+
+3. STRICT PROHIBITION ON MECHANICAL TRANSITIONAL OPENERS:
+   - NEVER start sentences with:
+     "Furthermore,", "Moreover,", "Additionally,", "Consequently,", "Notably,", "In conclusion,", "Therefore,", "In addition,", "Overall,", "To navigate these complexities,", "Importantly,", "At the forefront of,".
+   - Begin sentences directly with the empirical subject, concrete data, or an organic qualifying clause.
+
+4. NO TRAILING PARTICIPIAL FLUFF:
+   - NEVER tack on trailing participial tags like ", driving X", ", highlighting Y", ", serving as a testament to Z", ", paving the way for W", ", showcasing the importance of Q".
+   - State findings as direct, independent declarative sentences.
+
+5. ZERO THROAT-CLEARING:
+   - Strip all conversational meta-framing: "It is important to note that", "It is worth noting that", "It is crucial to recognize that", "In recent years,".
+
+6. CITATION & NUMERICAL IMMUNITY:
    ${hasCitationsInDraft
      ? '- Citation placeholders like [[REF_1]], [[REF_2]] isolate academic citations verbatim. You MUST retain all [[REF_x]] placeholders exactly where they belong in the sentences. NEVER remove, translate, or alter them.'
      : '- CRITICAL: The input draft contains NO citations. Do NOT invent, hallucinate, or add citation brackets or reference placeholders.'}
    - You MUST preserve all quantitative data, sample sizes, percentages, p-values, confidence intervals, and chemical/biological symbols verbatim.
-5. TRANSFORMATION METHOD DIRECTIVES:
+
+7. TRANSFORMATION METHOD DIRECTIVES:
 ${methodInstructions || '- Standard publication-grade editorial rigor.'}
-6. GOAL: ${mode.toUpperCase()}
+
+8. GOAL: ${mode.toUpperCase()}
    - Academic Writing: Objective, high lexical density, precise domain terminology.
    - Natural Writing: Fluid sentence flow, human cadence, engaging clarity, high burstiness.
    - Grammar & Clarity: Rigorous syntactic correctness, parallelism, and zero ambiguity.
    - Concise Writing: Strip wordy prepositions and deadwood; maximize signal-to-noise ratio.
-7. INTENSITY: ${level.toUpperCase()}
+
+9. INTENSITY: ${level.toUpperCase()}
    - Conservative: Minimal edits. Fix syntax, awkward phrasing, and punctuation while preserving original structure.
    - Balanced: Elevate vocabulary, eliminate stock AI tropes, improve rhythmic cadence, while preserving exact meaning.
 
 CALIBRATED EDITORIAL EXEMPLARS:
-[Example 1 - AI Fluff Removal & Direct Assertion]
-Draft: "In recent years, the realm of artificial intelligence hasn't witnessed a slowdown. These cutting-edge frameworks delve into complex environments and play a pivotal role in unlocking new capabilities."
-Refined: "Recent advancements in artificial intelligence have not experienced a slowdown. These frameworks analyze complex environments to coordinate decentralized decisions."
+[Example 1 - AI Fluff Removal, High Burstiness & Direct Assertion]
+Draft: "In recent years, it is important to note that researchers delve into the intricate tapestry of modern machine learning. Furthermore, this plays a pivotal role in accelerating computer vision workflows, serving as a testament to the transformative power of deep architectures. Additionally, in order to navigate the complexities of distributed data pipelines, scientists utilize holistic approaches to benchmark latency and throughput across heterogeneous clusters. Consequently, this underscores the importance of rigorous empirical evaluation across various cloud platforms."
+Refined: "Machine learning has reshaped modern computer vision. While deep neural architectures process visual streams with remarkable efficiency, deploying them across distributed clusters exposes severe latency bottlenecks. Standard benchmarks often fail to isolate these communication delays. To measure true end-to-end throughput, researchers analyze memory serialization overhead across heterogeneous cloud nodes."
 
 ${hasCitationsInDraft ? `[Example 2 - Empirical Oncology Study with Protected Citations]
 Draft: "It is worth noting that at median follow-up of 21.4 months, the cohort had a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002) [[REF_1]]. This discovery sheds light on future pathways."
@@ -627,17 +648,40 @@ Refined: "At a median follow-up of 21.4 months, the cohort demonstrated a 38% re
 
 MANDATORY PRESERVED DATA/STATS: ${JSON.stringify(originalStats)}
 
-CRITICAL: Return ONLY the refined text directly. Do NOT include greetings, intros like "Here is the refined text:", summaries, or markdown formatting.
+CRITICAL: Return ONLY the refined text directly. Do NOT include greetings, intros like "Here is the refined text:", "Refined Text:", summaries, or markdown formatting.
 `.trim();
 
   // Helper to post-process model response, restore citations, and run fact validation
   function finalizeRefinedText(rawText, sourceEngine) {
     let clean = rawText.replace(/^```[a-zA-Z]*\n?([\s\S]*?)\n?```$/g, '$1').trim();
 
-    // Strip common conversational introductory filler from LLMs
-    clean = clean.replace(/^(?:here(?:'s| is) (?:a |the )?(?:refined|revised|rewritten|edited|improved) (?:text|version|draft|prose)[^:\n]*:?\s*)+/i, '').trim();
+    // Strip common conversational introductory filler and prefixes from LLMs
+    clean = clean.replace(/^(?:(?:here(?:'s| is)|this is)\s+(?:a |the )?)?(?:refined|revised|rewritten|edited|improved|academic|formal)\s+(?:text|version|draft|prose|output)[^:\n]*:?\s*/i, '').trim();
+    clean = clean.replace(/^(?:refined|revised|edited)\s*:\s*/i, '').trim();
     clean = clean.replace(/^(?:certainly!|sure,|here you go:?)\s*/i, '').trim();
+    clean = clean.replace(/^["'“”]([\s\S]*)["'“”]$/g, '$1').trim();
 
+    // 1. Purge robotic transitional sentence openers that LLMs slip in
+    clean = clean.replace(/(?:^|\.\s+)(?:Furthermore|Moreover|Additionally|Consequently|Notably|In conclusion|Overall|In addition|Importantly|To navigate these complexities|In order to navigate the complexities),\s+/gi, (match) => {
+      return match.startsWith('.') ? '. ' : '';
+    });
+
+    // 2. Purge trailing participial fluff tags
+    clean = clean.replace(/,\s*(?:thereby|thus|further)?\s*(?:driving|highlighting|paving the way for|serving as a testament to|serving as|underscoring the (?:importance|significance) of|fostering|illuminating|showcasing)[^.!?]+([.!?])/gi, '$1');
+
+    // 3. Purge throat-clearing openings
+    clean = clean.replace(/(?:^|\.\s+)(?:It is (?:important|worth noting|crucial|essential) to (?:note|recognize|highlight) that|In recent years,?)\s+/gi, (match) => {
+      return match.startsWith('.') ? '. ' : '';
+    });
+
+    // 4. Run unslop catalog on refined text
+    UNSLOP_CATALOG.forEach(({ pattern, replacement }) => {
+      if (pattern.test(clean)) {
+        clean = clean.replace(pattern, replacement);
+      }
+    });
+
+    // 5. Unmask citations
     clean = unmaskCitationsFromPlaceholders(clean, citationMapping);
 
     if (shouldExpandContractions) {
@@ -646,7 +690,14 @@ CRITICAL: Return ONLY the refined text directly. Do NOT include greetings, intro
 
     clean = ensureCitationIntegrity(clean, originalCitations);
 
-    // Validate meaning, numerical facts, and citations
+    // 6. Fix sentence capitalization after removals
+    clean = clean.replace(/(^\s*|\.\s+)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
+
+    // 7. Clean up multiple spaces and dangling punctuation
+    clean = clean.replace(/\s{2,}/g, ' ');
+    clean = clean.replace(/\s+([,.;:?!])/g, '$1').trim();
+
+    // 8. Validate meaning, numerical facts, and citations
     const validation = validateMeaningAndFacts(text, clean);
     if (validation.restoredText && validation.restoredText !== clean) {
       clean = validation.restoredText;
@@ -707,7 +758,7 @@ CRITICAL: Return ONLY the refined text directly. Do NOT include greetings, intro
       const userPrompt = `Original Draft for Refinement:\n\n${maskedDraft}`;
       const cfResult = await runCloudflareWorkersAI(userPrompt, {
         systemInstruction: systemInstructions,
-        temperature: level === 'conservative' ? 0.35 : (mode === 'natural' ? 0.65 : 0.55),
+        temperature: level === 'conservative' ? 0.45 : (mode === 'natural' ? 0.72 : 0.65),
         model: requestedModel,
       });
 
