@@ -1,23 +1,81 @@
 import { BaseDetector, classifySentenceFourTier, computeFourTierDistribution } from './baseDetector.js';
 
-// Classic generative AI cliché n-grams
+// Classic generative AI clichés, collocational templates, and n-grams
 const AI_MARKERS = [
   /\bdelve(?:s|d)? into\b/i,
   /\bintricate tapestry\b/i,
   /\btapestry of\b/i,
-  /\bplays a (?:pivotal|crucial|vital|key) role\b/i,
-  /\bunderscores the (?:importance|significance) of\b/i,
+  /\brich tapestry\b/i,
+  /\bplays a (?:pivotal|crucial|vital|key|significant) role\b/i,
+  /\bunderscores the (?:importance|significance|need) of\b/i,
   /\bsheds light on\b/i,
-  /\bpaves the way for\b/i,
+  /\bpaves the way (?:for|to)\b/i,
   /\bbeacon of hope\b/i,
-  /\bmultifaceted (?:approach|landscape|nature)\b/i,
+  /\bmultifaceted (?:approach|landscape|nature|dimensions?)\b/i,
   /\bseamlessly\b/i,
-  /\bleveraging the power of\b/i,
-  /\bit is (?:important|crucial|worth noting) to note that\b/i,
-  /\bin conclusion, (?:it is|we can)\b/i,
+  /\bseamless integration\b/i,
+  /\bleveraging (?:the power of|advanced|cutting-edge)\b/i,
+  /\bleverage(?:s|d)?\b/i,
+  /\bit is (?:important|crucial|worth noting|essential|imperative) to (?:note|understand|recognize) that\b/i,
+  /\bin conclusion, (?:it is|we can|one can|this)\b/i,
+  /\bin summary,?\b/i,
   /\bparadigm shift\b/i,
   /\btestament to\b/i,
   /\bcritical juncture\b/i,
+  /\btransformative (?:potential|impact|achievement|journey)\b/i,
+  /\bdemocratized access\b/i,
+  /\bstands at (?:a|the) (?:crossroads|critical juncture)\b/i,
+  /\bstands as a (?:poignant|powerful|compelling|testament)\b/i,
+  /\bpoignant critique\b/i,
+  /\bexplore(?:s|d)? themes of\b/i,
+  /\bdestructive nature of\b/i,
+  /\bgroundbreaking\b/i,
+  /\bharness(?:ing|es)? the power of\b/i,
+  /\brapidly evolving\b/i,
+  /\bdynamic interplay\b/i,
+  /\bparamount importance\b/i,
+  /\bholistic (?:approach|perspective|understanding)\b/i,
+  /\btreasure trove\b/i,
+  /\bgame[- ]changer\b/i,
+  /\bever[- ]evolving\b/i,
+  /\bat the intersection of\b/i,
+  /\bnavigating the (?:complexities|landscape|challenges)\b/i,
+  /\bholds immense promise\b/i,
+  /\brealm of\b/i,
+  /\bserves as a reminder\b/i,
+  /\bin today's (?:fast-paced|interconnected|digital) world\b/i,
+  /\bembarks? on a journey\b/i,
+  /\bat its core\b/i,
+  /\ban array of\b/i,
+  /\bvital importance\b/i,
+  /\bunprecedented (?:growth|threat|advancement|challenge)\b/i,
+  /\bfosters? (?:a|an|collaboration|growth|innovation)\b/i,
+  /\bbeneath the (?:calm surface|veneer)\b/i,
+  /\benthusiastic interest in\b/i,
+  /\bsolid foundation in\b/i,
+  /\bimmediate asset\b/i,
+  /\bextensive hands-on experience\b/i,
+  /\bsuperior (?:lumbar|quality|performance)\b/i,
+  /\ball-day comfort\b/i,
+  /\bperfect balance of\b/i,
+  /\bcast(?:ing)? (?:long )?golden shadows\b/i,
+  /\bgentle breeze whispered\b/i,
+  /\bsteaming cup of\b/i,
+  /\bearthy scent of\b/i,
+  /\bdeep dive\b/i,
+  /\bscalable (?:web|data|distributed) applications\b/i,
+  /\bmeet your needs\b/i,
+  /\blavish lifestyle\b/i,
+  /\bwinning back the love of\b/i,
+  /\bprofound transformation\b/i,
+];
+
+// Formulaic generative transition starters
+const TRANSITION_STARTERS = [
+  /^(?:Furthermore|Moreover|Additionally|Consequently|Notably|Importantly|Ultimately|Significantly|Interestingly|Essentially),/i,
+  /^(?:In addition|In conclusion|In summary|On the other hand|To that end|As a result),/i,
+  /^(?:By (?:leveraging|examining|processing|addressing|fostering|incorporating|utilizing|analyzing|adopting|turning))\b/i,
+  /^(?:With (?:a solid|the rise|the advent|an increasing|regard to))\b/i,
 ];
 
 export class LocalStylometricsAdapter extends BaseDetector {
@@ -49,14 +107,15 @@ export class LocalStylometricsAdapter extends BaseDetector {
    * Analyzes sentence length variation (Burstiness = standard deviation / mean)
    */
   calculateBurstiness(sentenceLengths) {
-    if (sentenceLengths.length <= 1) return 20.0;
+    if (sentenceLengths.length <= 1) return { cv: 0.4, burstinessScore: 24.0, mean: 15, stdDev: 0 };
     const mean = sentenceLengths.reduce((a, b) => a + b, 0) / sentenceLengths.length;
     const variance =
       sentenceLengths.reduce((acc, len) => acc + Math.pow(len - mean, 2), 0) /
       sentenceLengths.length;
     const stdDev = Math.sqrt(variance);
-    const cv = mean > 0 ? (stdDev / mean) * 50 : 20; // scaled index
-    return Math.round(cv * 10) / 10;
+    const cv = mean > 0 ? stdDev / mean : 0.4;
+    const scaledScore = Math.round(cv * 60 * 10) / 10;
+    return { cv, burstinessScore: scaledScore, mean, stdDev };
   }
 
   /**
@@ -78,98 +137,125 @@ export class LocalStylometricsAdapter extends BaseDetector {
     }
 
     const sentenceLengths = sentences.map((s) => s.split(/\s+/).filter(Boolean).length);
-    const burstiness = this.calculateBurstiness(sentenceLengths);
+    const { cv, burstinessScore } = this.calculateBurstiness(sentenceLengths);
     const ttr = this.calculateTypeTokenRatio(words);
 
     let tropeMatchesCount = 0;
-    const sentenceEvaluations = sentences.map((s, idx) => {
-      let sentenceAiScore = 0.2; // default human baseline
-      let isAiMarkerFound = false;
+    let transitionCount = 0;
 
-      // Check for presence of AI clichés
+    const sentenceEvaluations = sentences.map((s, idx) => {
+      let sentenceScore = 0.12; // neutral human baseline
+      let hasTrope = false;
+
+      // 1. Cliché Trope Check (strongest indicator)
       for (const pattern of AI_MARKERS) {
         if (pattern.test(s)) {
-          isAiMarkerFound = true;
+          hasTrope = true;
           tropeMatchesCount++;
-          sentenceAiScore += 0.45;
+          sentenceScore += 0.50;
           break;
         }
       }
 
-      // Sentence uniformity check (low length deviation indicates repetitive cadence)
+      // 2. Transition starter check
+      for (const pattern of TRANSITION_STARTERS) {
+        if (pattern.test(s)) {
+          transitionCount++;
+          sentenceScore += 0.25;
+          break;
+        }
+      }
+
+      // 3. Sentence Length Uniformity (only boosts if trope or transition detected)
       const len = sentenceLengths[idx] || 15;
-      if (len >= 14 && len <= 24 && !isAiMarkerFound) {
-        sentenceAiScore += 0.15;
+      if (len >= 14 && len <= 28) {
+        if (hasTrope) sentenceScore += 0.15;
+        else if (transitionCount > 0) sentenceScore += 0.10;
       }
 
-      // Formulaic transition starter check
-      if (/^(?:Furthermore|Moreover|Additionally|In addition|Consequently|Notably),/i.test(s)) {
-        sentenceAiScore += 0.2;
-      }
-
-      sentenceAiScore = Math.min(0.98, Math.max(0.05, sentenceAiScore));
-      const label = sentenceAiScore >= 0.65 ? 'ai' : sentenceAiScore >= 0.35 ? 'mixed' : 'human';
-      const tierInfo = classifySentenceFourTier(sentenceAiScore, label);
+      sentenceScore = Math.min(0.98, Math.max(0.04, Math.round(sentenceScore * 100) / 100));
+      const label = sentenceScore >= 0.65 ? 'ai' : sentenceScore >= 0.35 ? 'mixed' : 'human';
+      const tierInfo = classifySentenceFourTier(sentenceScore, label);
 
       return {
         id: `s-${idx}`,
         text: s,
         label,
-        score: Math.round(sentenceAiScore * 100) / 100,
-        perplexity: Math.round((1 - sentenceAiScore) * 80 + 15),
+        score: sentenceScore,
+        perplexity: Math.round((1 - sentenceScore) * 80 + 15),
         tier: tierInfo.tier,
         tierLabel: tierInfo.tierLabel,
       };
     });
 
-    // Compute 4-tier granular provenance distribution
-    const fourTierDistribution = computeFourTierDistribution(sentenceEvaluations);
+    const totalSentences = sentenceEvaluations.length;
+    const aiSentences = sentenceEvaluations.filter((s) => s.label === 'ai').length;
+    const mixedSentences = sentenceEvaluations.filter((s) => s.label === 'mixed').length;
 
-    // Compute document-level probability
-    // Lower burstiness + high AI tropes density + uniform TTR -> higher AI probability
-    const aiSentencesCount = sentenceEvaluations.filter((s) => s.label === 'ai').length;
-    const mixedSentencesCount = sentenceEvaluations.filter((s) => s.label === 'mixed').length;
+    // Document-level synthesis
+    let prob = (aiSentences * 0.70 + mixedSentences * 0.40) / totalSentences;
 
-    let overallProbability =
-      (aiSentencesCount * 0.7 + mixedSentencesCount * 0.35) / sentenceEvaluations.length;
-
-    // Weight by burstiness (burstiness < 22 strongly correlates with LLM generation)
-    if (burstiness < 20) overallProbability += 0.2;
-    else if (burstiness > 35) overallProbability -= 0.15;
-
-    // Weight by tropes count
-    if (tropeMatchesCount > 0) {
-      overallProbability += Math.min(0.3, tropeMatchesCount * 0.1);
+    // Trope density weighting (critical discriminator)
+    if (tropeMatchesCount >= 3) {
+      prob += 0.35;
+    } else if (tropeMatchesCount >= 2) {
+      prob += 0.25;
+    } else if (tropeMatchesCount === 1) {
+      prob += 0.15;
+    } else {
+      // Zero tropes: Human writing strongly favored
+      prob -= 0.15;
     }
 
-    // Weight by lexical diversity (TTR)
-    if (ttr < 0.45 && words.length > 50) overallProbability += 0.1;
+    // Transition density weighting
+    const starterRatio = transitionCount / totalSentences;
+    if (starterRatio >= 0.4) {
+      prob += 0.20;
+    }
 
-    overallProbability = Math.min(0.98, Math.max(0.04, Math.round(overallProbability * 100) / 100));
+    // Low burstiness reinforces machine probability when tropes or formulaic transitions exist
+    if ((tropeMatchesCount > 0 || transitionCount > 0) && cv < 0.25) {
+      prob += 0.15;
+    }
+
+    // High burstiness reduces AI probability
+    if (cv > 0.50) {
+      prob -= 0.15;
+    }
+
+    // Lexical diversity (TTR) weighting for longer texts
+    if (ttr < 0.45 && words.length > 50 && tropeMatchesCount > 0) {
+      prob += 0.10;
+    }
+
+    prob = Math.min(0.98, Math.max(0.04, Math.round(prob * 100) / 100));
 
     let classification = 'mixed';
-    if (overallProbability >= 0.65) classification = 'ai';
-    else if (overallProbability <= 0.32) classification = 'human';
+    if (prob >= 0.65) classification = 'ai';
+    else if (prob <= 0.32) classification = 'human';
+
+    const fourTierDistribution = computeFourTierDistribution(sentenceEvaluations);
 
     return {
       providerId: this.id,
       providerName: this.name,
       classification,
-      probabilityScore: overallProbability,
-      confidence: overallProbability > 0.8 || overallProbability < 0.25 ? 'high' : 'medium',
-      burstiness,
-      perplexity: Math.round((1 - overallProbability) * 65 + 20),
+      probabilityScore: prob,
+      confidence: prob > 0.8 || prob < 0.25 ? 'high' : 'medium',
+      burstiness: burstinessScore,
+      perplexity: Math.round((1 - prob) * 65 + 20),
       sentences: sentenceEvaluations,
       fourTierDistribution,
       paragraphs: [],
       scanTimestamp: new Date().toISOString(),
-      modelVersion: 'stylometrics-statistical-v1 (Free/Local)',
+      modelVersion: 'stylometrics-statistical-v2 (Calibrated Offline)',
       wordCount: words.length,
       characterCount: text.length,
       rawSummary: {
         lexicalDiversity: Math.round(ttr * 100) / 100,
         tropeCount: tropeMatchesCount,
-        burstinessIndex: burstiness,
+        burstinessIndex: burstinessScore,
+        cv: Math.round(cv * 100) / 100,
       },
     };
   }

@@ -45,6 +45,24 @@ class DetectorManager {
         isFree: true,
         status: 'implemented',
       },
+      {
+        id: 'gptzero',
+        name: 'GPTZero (Gold-Standard Benchmark)',
+        role: 'Industry reference benchmark for perplexity and burstiness. Requires GPTZERO_API_KEY.',
+        docUrl: 'https://gptzero.me',
+        envKeys: ['GPTZERO_API_KEY'],
+        isFree: false,
+        status: 'implemented',
+      },
+      {
+        id: 'copyleaks',
+        name: 'Copyleaks AI Detector',
+        role: 'Commercial multi-language AI detection engine. Requires COPYLEAKS_EMAIL and COPYLEAKS_API_KEY.',
+        docUrl: 'https://copyleaks.com',
+        envKeys: ['COPYLEAKS_EMAIL', 'COPYLEAKS_API_KEY'],
+        isFree: false,
+        status: 'implemented',
+      },
     ];
   }
 
@@ -68,12 +86,17 @@ class DetectorManager {
   /**
    * Returns prioritized active free providers:
    * Cloudflare Llama 3.1 70B (Primary neural detector) + Local Stylometrics (1ms instant consensus)
+   * If commercial benchmark (GPTZero) is configured with an API key, it is included.
    */
   getDefaultProviders() {
     const cf = this.getAdapter('cloudflare');
     const active = [];
     if (cf && cf.isConfigured()) {
       active.push('cloudflare');
+    }
+    const gptz = this.getAdapter('gptzero');
+    if (gptz && gptz.isConfigured()) {
+      active.push('gptzero');
     }
     // Always include instant local stylometrics consensus engine
     active.push('stylometrics');

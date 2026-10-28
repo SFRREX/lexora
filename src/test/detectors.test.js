@@ -66,10 +66,20 @@ describe('Detectors & Service Layer', () => {
       const text = 'In recent years, we delve into the intricate tapestry of multi-agent architectures. Furthermore, this plays a pivotal role in modern software systems.';
       const result = await stylometrics.detect(text);
       expect(result.providerId).toBe('stylometrics');
-      expect(result.probabilityScore).toBeGreaterThan(0.6);
+      expect(result.probabilityScore).toBeGreaterThan(0.65);
+      expect(result.classification).toBe('ai');
       expect(result.sentences.length).toBeGreaterThanOrEqual(2);
       expect(typeof result.burstiness).toBe('number');
       expect(result.fourTierDistribution).toBeDefined();
+    });
+
+    it('correctly classifies genuine human writing with low probability and human-written tier', async () => {
+      const stylometrics = new LocalStylometricsAdapter();
+      const humanText = 'Archival records from late nineteenth-century municipal councils demonstrate that sanitary infrastructure projects were neither uniformly resisted nor passively accepted by working-class districts. Instead, neighborhood committees routinely petitioned magistrates for adjustments to sewer trajectories, demanding compensation for cellar flooding.';
+      const result = await stylometrics.detect(humanText);
+      expect(result.classification).toBe('human');
+      expect(result.probabilityScore).toBeLessThan(0.35);
+      expect(result.fourTierDistribution.humanWritten).toBeGreaterThan(50);
     });
 
     it('normalizes Gemini Neural Detector responses', () => {

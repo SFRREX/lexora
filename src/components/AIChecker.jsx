@@ -38,6 +38,7 @@ export default function AIChecker({ onSelectView }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [activeResultProviderId, setActiveResultProviderId] = useState(null);
   const [error, setError] = useState(null);
   const [activeSentence, setActiveSentence] = useState(null);
   const [activeSampleId, setActiveSampleId] = useState(null);
@@ -68,6 +69,7 @@ export default function AIChecker({ onSelectView }) {
           sessionStorage.removeItem('lexora_checker_text');
           setText(saved);
           setScanResult(null);
+          setActiveResultProviderId(null);
           setError(null);
           setActiveSentence(null);
         }
@@ -89,6 +91,8 @@ export default function AIChecker({ onSelectView }) {
   const isGeminiConfigured = geminiConfig?.configured;
   const cloudflareConfig = providers.find((p) => p.id === 'cloudflare');
   const isCloudflareConfigured = cloudflareConfig?.configured;
+  const gptzeroConfig = providers.find((p) => p.id === 'gptzero');
+  const isGptzeroConfigured = gptzeroConfig?.configured;
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const charCount = text.length;
@@ -270,7 +274,9 @@ Timestamp: ${primaryResult.scanTimestamp}`;
     }
   }
 
-  const ALL_DETECTOR_IDS = ['cloudflare', 'stylometrics', 'gemini'];
+  const ALL_DETECTOR_IDS = isGptzeroConfigured
+    ? ['cloudflare', 'stylometrics', 'gemini', 'gptzero']
+    : ['cloudflare', 'stylometrics', 'gemini'];
   const DEFAULT_DETECTOR_IDS = ['cloudflare', 'stylometrics'];
 
   function toggleProvider(id) {
@@ -336,10 +342,23 @@ Timestamp: ${primaryResult.scanTimestamp}`;
       isConfigured: isGeminiConfigured,
       tooltip: 'Google Gemini 3.8 / 3.5 Flash neural forensic stylometrics (Free tier)',
     },
+    {
+      id: 'gptzero',
+      name: 'GPTZero',
+      tier: 'Benchmark • Commercial',
+      isMajor: false,
+      isConfigured: isGptzeroConfigured,
+      tooltip: isGptzeroConfigured
+        ? 'Official GPTZero API: Industry reference perplexity and burstiness detection'
+        : 'Official GPTZero API benchmark: Add GPTZERO_API_KEY in .env to enable',
+    },
   ];
 
-  // Get primary successful result (if any)
-  const primaryResult = scanResult?.results?.find((r) => r.success && r.data)?.data;
+  // Get selected or primary successful result
+  const activeResultObj = scanResult?.results?.find(
+    (r) => r.success && r.data && (activeResultProviderId ? r.providerId === activeResultProviderId : true)
+  );
+  const primaryResult = activeResultObj?.data || scanResult?.results?.find((r) => r.success && r.data)?.data;
   const missingConfigResults = scanResult?.results?.filter((r) => r.notConfigured) || [];
   const isResultOutdated = Boolean(
     scanResult &&
@@ -816,6 +835,53 @@ Timestamp: ${primaryResult.scanTimestamp}`;
       {/* Scan Results Dashboard */}
       {primaryResult && (
         <div className={`space-y-6 mb-12 ${isResultOutdated ? 'opacity-75 transition-opacity' : ''}`}>
+          {/* Provider selector tabs when multiple providers succeed */}
+          {scanResult.results?.filter((r) => r.success && r.data).length > 1 && (
+            <div className="flex flex-wrap items-center gap-2 p-2 bg-slate-50/80 dark:bg-[#14171f] rounded-2xl border border-slate-200/80 dark:border-[#222734]">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide ml-2 mr-1">
+                Active Provider Report:
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {scanResult.results
+                  .filter((r) => r.success && r.data)
+                  .map((r) => {
+                    const isSelected = primaryResult?.providerId === r.providerId;
+                    const score = r.data?.probabilityScore !== null ? `${Math.round(r.data.probabilityScore * 100)}%` : 'N/A';
+                    return (
+                      <button
+                        key={r.providerId}
+                        type="button"
+                        onClick={() => {
+                          setActiveResultProviderId(r.providerId);
+                          setActiveSentence(null);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#2c6e73] text-white border-[#2c6e73] shadow-sm'
+                            : 'bg-white dark:bg-[#1b202c] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-[#2a3142] hover:border-slate-300'
+                        }`}
+                      >
+                        <span>{r.providerName}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                            isSelected
+                              ? 'bg-white/20 text-white'
+                              : r.data?.classification === 'ai'
+                              ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300'
+                              : r.data?.classification === 'human'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300'
+                          }`}
+                        >
+                          {score} {r.data?.classification}
+                        </span>
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
           {/* Main classification card */}
           <div className="bg-white dark:bg-[#14171f] rounded-2xl border border-slate-200/90 dark:border-[#222734] shadow-sm dark:shadow-none p-6 transition-colors">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-[#222734]">
@@ -1201,6 +1267,26 @@ Timestamp: ${primaryResult.scanTimestamp}`;
                           : r.error}
                       </p>
                     </div>
+                    {r.success && r.data && (
+                      <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-[#222734] flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveResultProviderId(r.providerId);
+                            setActiveSentence(null);
+                            const el = document.getElementById('ai-checker');
+                            if (el) el.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                            primaryResult?.providerId === r.providerId
+                              ? 'bg-[#2c6e73] text-white'
+                              : 'bg-white dark:bg-[#1b202c] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#282f3d] hover:border-slate-300'
+                          }`}
+                        >
+                          {primaryResult?.providerId === r.providerId ? '✓ Currently Viewing' : 'Inspect Sentence Highlights'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
