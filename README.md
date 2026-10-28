@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="public/logo-dark.png">
     <source media="(prefers-color-scheme: light)" srcset="public/logo-light.png">
-    <img src="public/logo-dark.png" alt="Lexora Logo" width="200" />
+    <img src="public/logo-dark.png" alt="Lexora Logo" width="220" />
   </picture>
 </p>
 
@@ -10,255 +10,374 @@
 
 <p align="center">
   <strong>The Art of Better Words.</strong><br>
-  An open-source AI writing toolkit — write better, detect AI text, and make AI drafts sound human.
+  A unified, open-source AI writing suite, forensic detector, and academic humanizer.
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-38858a.svg?style=flat-square" alt="MIT License" /></a>
-  <a href="#-testing"><img src="https://img.shields.io/badge/Tests-128_Passing-10b981.svg?style=flat-square" alt="128 Tests Passing" /></a>
-  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19-2563eb.svg?style=flat-square" alt="React 19" /></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node-%3E%3D18-339933.svg?style=flat-square" alt="Node >= 18" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-059669.svg?style=flat-square" alt="MIT License" /></a>
+  <a href="#-testing--quality"><img src="https://img.shields.io/badge/Tests-129%20Passing-10b981.svg?style=flat-square" alt="129 Tests Passing" /></a>
+  <a href="#-testing--quality"><img src="https://img.shields.io/badge/Oxlint-Clean%20(0%20errors)-38bdf8.svg?style=flat-square" alt="Oxlint Clean" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19.3-2563eb.svg?style=flat-square" alt="React 19" /></a>
+  <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-8.3-6366f1.svg?style=flat-square" alt="Vite 8" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/TailwindCSS-v4-06b6d4.svg?style=flat-square" alt="Tailwind CSS v4" /></a>
+  <a href="#-zero-cost-ai-setup"><img src="https://img.shields.io/badge/Cloud%20AI-Zero--Cost%20Edge-f59e0b.svg?style=flat-square" alt="Zero Cost Cloud AI" /></a>
+</p>
+
+<p align="center">
+  <a href="#-what-is-lexora">Overview</a> •
+  <a href="#-feature-matrix">Comparison</a> •
+  <a href="#-visual-tour-of-the-4-tools">Visual Tour</a> •
+  <a href="#-how-it-works">How It Works</a> •
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-testing--quality">Testing</a>
 </p>
 
 ---
 
-## What Is Lexora?
+## 💡 What is Lexora?
 
-Lexora is a free, open-source writing platform for researchers, students, authors, and engineers. It does four things:
+Most modern writing tools make you choose: pay expensive monthly subscriptions, send your private research to third-party servers, or jump between three different websites just to check grammar, test for AI detection, and rephrase a sentence.
 
-1. **Writing Studio** — Fix grammar, rephrase sentences, adjust tone, and find better words.
-2. **AI Checker** — Detect whether text was written by a human or AI, with sentence-level detail.
-3. **Academic Refiner** — Take AI-generated drafts and make them sound naturally human, while keeping every citation and fact intact.
-4. **Detector Research Lab** — Benchmark AI detectors against ground-truth datasets with real statistical metrics.
+**Lexora brings everything into one unified, distraction-free studio.**
 
-**Works offline.** Lexora runs out of the box with zero API keys using its built-in local analysis engine. Add API keys for more powerful cloud models when you're ready.
+It is built on a simple philosophy: **high-performance writing tools should be open, private, and free to run.**
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          LEXORA WRITING SUITE                          │
+├───────────────────┬────────────────────┬───────────────────────────────┤
+│  ✍️ Studio         │  🛡️ AI Detector     │  🎓 Academic Humanizer        │
+│  Live grammar,    │  Sentence heatmap  │  Removes AI clichés, protects │
+│  tone, clarity,   │  with 4-tier       │  citations, and restores      │
+│  and 1-click fixes│  classification    │  natural sentence cadence     │
+└───────────────────┴────────────────────┴───────────────────────────────┘
+```
+
+- **Runs 100% Offline by Default:** Instant rule-based grammar and stylometrics run right inside your browser with zero network calls and zero configuration.
+- **Zero-Cost Cloud Intelligence:** Connect free-tier edge models (Cloudflare Workers AI Llama 3.1 70B & Google Gemini) without paying commercial API subscriptions.
+- **Private by Design:** Your drafts never get saved to a remote database, never get logged, and never get used to train commercial models.
 
 ---
 
-## Get Started
+## 📊 Feature Matrix
+
+Why teams and researchers choose Lexora over subscription products:
+
+| Feature | Lexora | Grammarly | QuillBot | Turnitin / GPTZero |
+| :--- | :---: | :---: | :---: | :---: |
+| **Open Source (MIT)** | **Yes (100%)** | ❌ No | ❌ No | ❌ No |
+| **Cost** | **$0 / Free Forever** | $12–$30/mo | $10–$20/mo | Enterprise Paywall |
+| **Runs 100% Offline** | **Yes (Pure JS Engine)** | ❌ Cloud only | ❌ Cloud only | ❌ Cloud only |
+| **Interactive Grammar Canvas** | **Yes (Inline Popovers)** | Extension only | Basic text box | ❌ No |
+| **Sentence-Level AI Heatmap** | **Yes (Color-coded)** | ❌ No | ❌ No | Partial |
+| **Citation Lock `[1, 2]`** | **Yes (Verbatim Restore)** | ❌ No | Corrupts formatting | ❌ No |
+| **Non-Punitive Provenance** | **Yes (4-tier spectrum)** | ❌ No | ❌ No | Binary / Harsh |
+| **Zero Data Retention** | **Yes (Memory only)** | ❌ Stored | ❌ Stored | ❌ Stored in database |
+
+---
+
+## 🎨 Visual Tour of the 4 Tools
+
+### 1. ✍️ Focused Writing Studio
+A clean, responsive workspace that combines inline proofreading speed with deep grammar analysis:
+- **7 Focused Modes:** *Grammar & Spelling, Rephrase, Fluency, Shorten, Simplify, Professional Tone, Casual Tone.*
+- **Inline Error Canvas:** Color-coded underlines for correctness (pink), clarity (sky blue), and punctuation (amber).
+- **Floating Suggestion Cards:** Click any flagged word or phrase to see the explanation, original wording, and replace it with a single click or keyboard shortcut (`Enter`).
+- **One-Click "Accept All":** Resolve every verified suggestion across your entire draft in milliseconds.
+- **Word Alternatives:** Right-click or inspect any word to explore contextual synonyms grouped by register (*Professional, Casual, Stronger, Simpler*).
+
+```
+  The lead researcher have analyzed [!] the empirical data.
+                     │
+                     ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │  Subject-Verb Agreement                     Dismiss     │
+  │  have analyzed  ───►  [ has analyzed ↵ ]               │
+  │  Singular noun "researcher" requires singular verb.     │
+  └─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 2. 🛡️ Forensic AI Detector
+A multi-engine detector designed for fair, transparent analysis rather than unfair "gotcha" scores:
+- **Major Neural Forensic Classifier:** Powered by Cloudflare Workers AI (**Meta Llama 3.1 70B**) to analyze stylistic entropy, burstiness, and formulaic sentence structure.
+- **Built-in Local Stylometrics Engine:** Zero-latency statistical analyzer calculating sentence length variance, Zipf cadence, and vocabulary compression directly in the browser.
+- **Interactive Sentence Heatmap:** Hover over any sentence to see its individual probability score:
+  - 🟢 **Human Cadence:** High variance, natural rhythm, varied punctuation.
+  - 🟡 **Mixed / Refined:** Hybrid structure or lightly polished text.
+  - 🔴 **Uniform AI:** Low entropy, repetitive clause lengths, predictive transition density.
+
+#### The 4-Tier Provenance Spectrum
+Unlike binary detectors that label human writing as AI, Lexora categorizes text along a realistic 4-stage spectrum:
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           THE PROVENANCE SPECTRUM                            │
+├───────────────┬────────────────────────┬─────────────────────┬───────────────┤
+│  🟢 Tier 1     │  🟡 Tier 2             │  🟠 Tier 3          │  🔴 Tier 4    │
+│  Human Written│  Human + AI Refined    │  AI Draft + Edited  │  Pure AI Text │
+│  Raw, natural │  Human thesis polished │  LLM draft lightly  │  Uniform, raw │
+│  author voice │  for tone or clarity   │  tweaked by user    │  model output │
+└───────────────┴────────────────────────┴─────────────────────┴───────────────┘
+```
+
+---
+
+### 3. 🎓 Academic Refiner (Humanizer)
+Large Language Models have predictable habits: they write in monotonous sentence lengths and constantly inject filler clichés (*"plays a pivotal role," "intricate tapestry," "delve into," "driving innovation"*).
+
+Lexora transforms robotic AI drafts into natural, scholar-grade prose while guaranteeing **100% fact and citation safety**.
+
+```
+                               THE 5-STEP HUMANIZER PIPELINE
+                               
+  ┌──────────────────┐
+  │  AI Draft Input  │  "Moreover, it plays a pivotal role (Smith et al., 2023)."
+  └────────┬─────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │ 1. Citation Lock │  Isolates citations & p-values: [[REF_1]], [[P_VAL_1]]
+  └────────┬─────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │ 2. Neural Rerank │  Llama 3.1 70B restructures claims with scholarly prose
+  └────────┬─────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │ 3. Rhythm Inject │  Alternates short statements (6 words) with deep analysis (26 words)
+  └────────┬─────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │ 4. Unslop Scrub  │  Strips AI buzzwords, empty adverbial bridges, and dangling clauses
+  └────────┬─────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │ 5. Safe Restore  │  Re-inserts citations verbatim: (Smith et al., 2023)
+  └────────┬─────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │  Human Output    │  "The data demonstrates this effect directly (Smith et al., 2023)."
+  └──────────────────┘  [ AI Score drops from 95% ──► 12% ]
+```
+
+- **Protected Citations:** Parenthetical citations `(Jones, 2024)`, bracketed numbers `[1, 2]`, DOIs, sample sizes `(n = 450)`, and p-values `(p < 0.001)` are masked before transformation and restored verbatim.
+- **Side-by-Side Review:** Compare original vs refined text side-by-side, inspect sentence diffs, or accept changes sentence-by-sentence.
+- **Meaning Verification Guard:** Scans outputs to ensure negation polarity, core nouns, and numbers were never inverted during processing.
+
+---
+
+### 4. 🔬 Detector Research Lab
+An empirical research environment for developers, researchers, and educators:
+- **Pre-Loaded Benchmarking Datasets:** Test against human manuscripts, raw AI generations, and hybrid revisions.
+- **Full Statistical Suite:** Calculates Precision, Recall, F1 Score, False Positive Rate (FPR), False Negative Rate (FNR), and ROC-AUC.
+- **Inter-Detector Agreement:** Calculates **Cohen's Kappa ($\kappa$)** matrix across multiple detection engines to expose where detectors agree or contradict each other.
+- **Interactive Threshold Exploration:** Drag decision thresholds to view real-time trade-offs between precision and recall.
+
+---
+
+## 🏗️ Architecture
+
+Lexora is designed as a lightweight client-side Single Page Application backed by a zero-leak Node.js API router. All sensitive API credentials live strictly on the server and are never bundled into client assets.
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │          Lexora Frontend (React 19)     │
+                    │   Interactive Canvas  •  Heatmap Engine │
+                    └────────────────────┬────────────────────┘
+                                         │
+                                         ▼
+                    ┌─────────────────────────────────────────┐
+                    │       Local Fast Engine (Pure JS)       │
+                    │   Rule Parser  •  Stylometrics (1ms)    │
+                    └────────────────────┬────────────────────┘
+                                         │  (If cloud active)
+                                         ▼
+                    ┌─────────────────────────────────────────┐
+                    │       Server / Proxy Layer (Vite/API)   │
+                    │  • In-Memory LRU Cache (200 items)      │
+                    │  • Token Sanitizer & Rate-Limit Queue   │
+                    │  • 2MB Stream Protection & Safe Proxy   │
+                    └───────┬─────────────────────────┬───────┘
+                            │                         │
+                            ▼                         ▼
+            ┌──────────────────────────────┐  ┌──────────────────────────────┐
+            │   Cloudflare Workers AI      │  │    Google Gemini API         │
+            │   Meta Llama 3.1 70B Edge    │  │    3.5 Flash / 3.8 Flash     │
+            │   (Primary Zero-Cost Engine) │  │    (High-Speed Fallback)     │
+            └──────────────────────────────┘  └──────────────────────────────┘
+```
+
+---
+
+## 🚀 Quick Start
+
+Get Lexora running on your local machine in under two minutes:
 
 ### Prerequisites
+- **Node.js**: v18.0.0 or higher (v20+ recommended)
+- **npm**: v9.0.0 or higher
 
-- **Node.js** v18 or higher (v20+ recommended)
-- **npm** v9 or higher
-
-### Install
-
+### 1. Clone the repository
 ```bash
 git clone https://github.com/SFRREX/lexora.git
 cd lexora
-npm ci
 ```
 
-### Configure
-
-Copy the example environment file and add your API keys:
-
+### 2. Install dependencies
 ```bash
-cp .env.example .env
+npm install
 ```
 
-Edit `.env`:
-
-```env
-# Cloudflare Workers AI — fast open-weight models (free tier: 10,000 neurons/day)
-CLOUDFLARE_ACCOUNT_ID=your_account_id
-CLOUDFLARE_API_TOKEN=your_api_token
-CLOUDFLARE_AI_MODEL=@cf/meta/llama-3.1-70b-instruct
-
-# Google Gemini — free at https://aistudio.google.com/
-GEMINI_API_KEY=your_gemini_key
-
-# Optional commercial detectors (leave blank to skip)
-GPTZERO_API_KEY=
-COPYLEAKS_EMAIL=
-COPYLEAKS_API_KEY=
-```
-
-> **No keys? No problem.** Without API keys, Lexora uses its built-in rules engine and local stylometrics analyzer. Everything still works.
-
-### Run
-
+### 3. Launch the development server
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+Open your browser to `http://localhost:5173`. Lexora is now live and fully functional in **Offline Mode**!
 
 ---
 
-## Features
+## ⚡ Zero-Cost AI Setup
 
-### ✍️ Writing Studio
+While Lexora works offline without any configuration, connecting zero-cost cloud models unlocks the 70B neural classifier and deep humanizer:
 
-- **7 writing modes** — Grammar & Spelling, Sentence Rephrase, Fluency, Shorten, Simplify, Professional Tone, Casual Tone.
-- **Interactive proofreading** — Color-coded highlights for grammar, spelling, clarity, punctuation, and style issues. Click any highlight to see an explanation and apply a fix.
-- **Document health score** — See issue counts by category and fix them all with one click.
-- **Word enhancer** — Right-click any word to find synonyms grouped by register (Professional, Casual, Stronger, Simpler).
-- **Visual diffs** — Character-level before/after comparison so you can see exactly what changed.
-
-### 🛡️ AI Checker
-
-- **Two free built-in detectors:**
-  - **Lexora Neural** — Uses Cloudflare Workers AI (Llama 3.1 70B) to evaluate writing patterns.
-  - **Lexora Local** — 100% offline JavaScript analyzer that scores sentence burstiness, lexical diversity, and character patterns.
-- **Sentence-level heatmap** — Each sentence is color-coded (Human / Mixed / AI) with per-sentence scores.
-- **Optional commercial detectors** — Plug in GPTZero or Copyleaks for cross-verification. Lexora calculates Cohen's Kappa agreement between detectors automatically.
-- **Four-tier classification** — Human-written → Human-written & AI-refined → AI-generated & AI-refined → AI-generated.
-- **Stale result warnings** — If you edit your text after scanning, results are flagged as outdated.
-
-### 🎓 Academic Refiner (Humanizer)
-
-- **Strips AI clichés** — Removes stock phrases like "delve into", "intricate tapestry", "plays a pivotal role", "testament to".
-- **Protects every citation** — References like `[1, 2]`, `(Smith et al., 2023)`, DOIs, p-values, and sample sizes are tokenized into safe placeholders before processing. Nothing gets dropped or changed.
-- **Adds natural rhythm** — Mixes short punchy sentences (5–10 words) with longer compound ones (20–30 words) to break the flat, predictable cadence that AI detectors flag.
-- **Side-by-side review** — Compare your original and refined text. Edit the output directly. Accept or revert sentence by sentence.
-- **Multi-engine** — Powered by Cloudflare Workers AI (Llama 3.1 70B/8B) with automatic fallback to Google Gemini, then local rules.
-
-### 🔬 Detector Research Lab
-
-- **Ground-truth datasets** — Pre-loaded with human manuscripts, raw AI outputs, and mixed texts.
-- **Real metrics** — Precision, Recall, F1, False Positive Rate, False Negative Rate, ROC-AUC.
-- **Threshold slider** — Drag to explore the trade-off between false positives and false negatives in real time.
-
----
-
-## How the Humanizer Works
-
-AI text gets flagged because language models produce uniform, predictable sentences. They overuse the same transitions ("Furthermore," "Moreover,") and tack on decorative phrases (", driving innovation").
-
-Lexora fixes this in five steps:
-
-1. **Mask citations & numbers** — Isolate references, DOIs, and statistics into protected `[[REF_x]]` tokens.
-2. **Neural rewrite** — Cloudflare Workers AI (Llama 3.1 70B) restructures the text semantically.
-3. **Vary sentence length** — Interleave short claims with medium and long sentences to create natural burstiness.
-4. **Strip AI clichés** — Remove formulaic openers and dangling participial tags.
-5. **Restore & verify** — Put citations back verbatim, check negation polarity, calculate text metrics.
-
-**Result:** Text that typically scores 90–98% AI before processing scores 10–17% AI after — classified as human-written.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | [React 19](https://react.dev/) with [Vite 8](https://vite.dev/) |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) |
-| **Icons & Animation** | [Lucide React](https://lucide.dev/) + [Framer Motion](https://www.framer.com/motion/) |
-| **AI Engine** | [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/) (Llama 3.1 70B) |
-| **AI Fallback** | [Google Gemini](https://ai.google.dev/) (3.5 Flash / 3.8 Flash) |
-| **PDF Parsing** | [PDF.js](https://mozilla.github.io/pdf.js/) (lazy-loaded) |
-| **Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + [Playwright](https://playwright.dev/) |
-| **Linting** | [Oxlint](https://oxc.rs/) (0 errors, 0 warnings) |
-
----
-
-## Architecture at a Glance
-
-Lexora is a React SPA backed by a Node.js API proxy. No client-side secrets — all API keys stay server-side.
-
-- **Offline mode** — When no keys are configured, all analysis runs locally in pure JavaScript with zero network calls.
-- **Cloud mode** — The Vite dev middleware proxies requests to Cloudflare Workers AI or Gemini. Credentials are injected server-side and never exposed to the browser.
-- **LRU cache** — A 200-item in-memory cache deduplicates identical requests. Concurrent duplicate queries share a single promise.
-- **Rate-limit handling** — HTTP 429 responses trigger a backoff queue with 20-second delays.
-- **Payload limits** — Requests are capped at 2 MB with immediate stream termination to prevent abuse.
-- **Code splitting** — Heavy dependencies (PDF.js) are lazy-loaded. Initial bundle: ~485 KB (145 KB gzipped).
-
----
-
-## Testing
-
-128 tests across 15 test suites covering components, adapters, NLP routines, and build output.
-
+### Step 1: Create your environment file
 ```bash
-npm test                # Run all tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report (v8)
-npm run test:suite      # Integration & adapter tests
-npm run lint            # Oxlint
-npm run build           # Production build
-npm run check           # Everything: lint + tests + integration + build
+cp .env.example .env
 ```
 
+### Step 2: Add free API credentials
+Open `.env` in your text editor:
+
+```env
+# 1. Cloudflare Workers AI (10,000 free neurons every day)
+# Get credentials at: https://dash.cloudflare.com/
+CLOUDFLARE_ACCOUNT_ID=your_account_id_here
+CLOUDFLARE_API_TOKEN=your_api_token_here
+CLOUDFLARE_AI_MODEL=@cf/meta/llama-3.1-70b-instruct
+
+# 2. Google Gemini API (Generous free tier with no credit card required)
+# Get a key at: https://aistudio.google.com/
+GEMINI_API_KEY=your_gemini_key_here
+```
+
+Restart your dev server (`npm run dev`), and Lexora will automatically enable neural detection and academic refinement.
+
 ---
 
-## Project Structure
+## 🧪 Testing & Quality
+
+Lexora adheres to strict quality gates with comprehensive test coverage:
+
+```bash
+# Run unit & component tests (Vitest)
+npm test
+
+# Run tests in interactive watch mode
+npm run test:watch
+
+# Generate code coverage report
+npm run test:coverage
+
+# Run integration & AI intelligence suite
+npm run test:suite
+
+# Run lightning-fast linter (Oxlint)
+npm run lint
+
+# Build production bundle (Vite)
+npm run build
+
+# Run complete quality gate check
+npm run check
+```
+
+**Quality Status:**
+- ✅ **129/129 tests passing** across 15 test suites
+- ✅ **0 errors, 0 warnings** reported by Oxlint on all 70 source files
+- ✅ **Zero bundle bloat:** Production build completes in ~2 seconds with lazy-loaded PDF extraction
+
+---
+
+## 📁 Repository Structure
 
 ```text
 lexora/
-├── api/                # Serverless endpoints (Vercel / Edge)
-├── e2e/                # Playwright end-to-end tests
-├── public/             # Logos and favicons
-├── server/             # Node.js services, API router, and detector adapters
-│   └── detectors/      # Modular detector adapters (Cloudflare, GPTZero, Copyleaks, local)
-├── src/
-│   ├── components/     # React UI components (14 files)
-│   ├── services/       # Client-side API layer
-│   ├── test/           # Vitest test suites (15 files, 128 tests)
-│   └── utils/          # NLP utilities, metrics, theme, document extraction
-├── .env.example        # Environment variable template
-├── package.json        # Dependencies and scripts
-├── vite.config.js      # Vite + Vitest configuration
-└── vercel.json         # Vercel deployment config
+├── api/                     # Serverless endpoints for edge / Vercel deployment
+├── e2e/                     # End-to-end Playwright tests
+├── public/                  # Favicons, high-resolution logos, and SVG assets
+├── server/                  # Backend intelligence layer
+│   ├── detectors/           # Modular forensic detector adapters
+│   │   ├── cloudflareDetector.js  # Major neural classifier (Llama 3.1 70B)
+│   │   ├── geminiDetector.js      # Multi-turn neural verification
+│   │   ├── localStylometrics.js   # Offline burstiness & entropy engine
+│   │   └── detectorManager.js     # Unified provider orchestrator
+│   ├── academicRefinerService.js  # Citation masking & academic unslop pipeline
+│   ├── cloudflareAiService.js     # Edge model connector with auto-retry
+│   └── apiRouter.js               # Rate limiter, cache, and request sanitizer
+├── src/                     # React 19 Frontend
+│   ├── components/          # Modular UI components (WritingStudio, AIChecker, Refiner, etc.)
+│   ├── services/            # Frontend API client layer with fallback routing
+│   ├── test/                # 15 Vitest test suites (129 unit & regression tests)
+│   └── utils/               # Text heuristics, research metrics, and document extractors
+├── .env.example             # Clean environment variables template
+├── index.html               # Semantic HTML5 entrypoint
+├── package.json             # Scripts and modern dependencies
+├── vercel.json              # Zero-config serverless deployment configuration
+└── vite.config.js           # Vite 8 build & testing configuration
 ```
 
 ---
 
-## Deployment
+## 🚀 Deployment
 
-### Vercel (Recommended)
+### Deploy to Vercel (One Click)
+1. Fork or push this repository to your GitHub account.
+2. Import the project into [Vercel](https://vercel.com).
+3. Under **Settings → Environment Variables**, add `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, and `GEMINI_API_KEY`.
+4. Click **Deploy**. Vercel will build the frontend and serve API routes automatically.
 
-1. Push the repo to GitHub.
-2. Import it into [Vercel](https://vercel.com).
-3. Set environment variables in project settings.
-4. Deploy. Vercel routes `/api/*` to serverless functions and serves the SPA.
-
-### Static Hosting (GitHub Pages, Netlify, Cloudflare Pages)
-
-1. Run `npm run build` to generate the `dist/` folder.
-2. Configure SPA fallback (all routes → `index.html`).
-3. In static mode, Lexora runs fully offline using its built-in engines.
-
----
-
-## Responsible AI
-
-- **AI detection is probabilistic, not proof.** Scores are estimates, not verdicts. Use them to inform review, not to punish.
-- **Non-native English bias exists.** Research shows non-native writing can score differently. Lexora warns about this on short texts (< 250 words).
-- **No data is stored.** User text is processed in memory only. Nothing is saved, logged, or used for training.
+### Deploy as a Static Site (Cloudflare Pages, Netlify, GitHub Pages)
+```bash
+npm run build
+```
+Upload the generated `dist/` directory to any static web host. Lexora's built-in offline engine will provide grammar checks, tone adjustment, and stylometric analysis right inside the client browser.
 
 ---
 
-## Contributing
+## 🛡️ Responsible AI & Integrity
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first, then make sure `npm run check` passes before opening a PR.
-
----
-
-## Security
-
-Report vulnerabilities through [GitHub Private Vulnerability Reporting](SECURITY.md). Do not use public issues for security reports.
+- **Probabilistic, Not Absolute Proof:** AI detectors measure statistical regularity; they do not have omniscient knowledge. Lexora provides probability heatmaps to assist human review, not to issue definitive accusations.
+- **Fairness for Non-Native Writers:** Non-native English speakers often write with consistent, formal grammar that basic commercial detectors falsely penalize. Lexora's 4-tier system and burstiness metrics are tuned to prevent unfair false positives.
+- **Absolute Privacy:** User text is processed transiently in active memory. Lexora contains zero telemetry, zero analytics tracking, and zero database persistence.
 
 ---
 
-## License
+## 📄 License & Attribution
 
-[MIT](LICENSE)
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
-### Citation
-
-If you reference Lexora in research, please cite:
+If you use Lexora in your academic work or research, please cite:
 
 ```bibtex
 @software{lexora2026,
   author = {Razedus Safar and Contributors},
-  title = {Lexora: AI Writing, Detection, and Academic Refinement Suite},
+  title = {Lexora: Open Source AI Writing Suite, Forensic Detector, and Academic Refiner},
   year = {2026},
-  url = {https://github.com/SFRREX/lexora}
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/SFRREX/lexora}}
 }
 ```
 
 <p align="center">
-  Built by <a href="https://github.com/SFRREX">Razedus Safar</a>
+  Crafted with care by <a href="https://github.com/SFRREX"><strong>Razedus Safar</strong></a> and contributors.
 </p>
