@@ -583,6 +583,8 @@ export async function refineAcademicText(text, options = {}) {
       : '',
   ].filter(Boolean).join('\n');
 
+  const hasCitationsInDraft = originalCitations.length > 0;
+
   const systemInstructions = `
 You are the Lexora Academic Refiner, a premier scientific editor for high-impact journals (e.g., Nature, Science, Cell, IEEE Transactions, PNAS).
 Transform the academic draft into publication-grade scholarly prose that is precise, intellectually substantive, and naturally phrased.
@@ -591,14 +593,17 @@ CORE EDITING PRINCIPLES:
 1. ELIMINATE AI CLICHÉS, SLOP & FORMULAIC SIGNPOSTING:
    - Purge empty phrases: "delve into", "plays a pivotal role", "intricate tapestry", "sheds light on", "underscores the importance", "beacon of", "testament to", "it is worth noting that", "in recent years the realm of", "witnessed a profound transformation", "cutting-edge", "groundbreaking", "harnessing the power of", "a myriad of", "ever-evolving", "multifaceted", "holistic".
    - CRITICAL: NEVER start sentences with repetitive AI markers: "Consequently,", "Moreover,", "Furthermore,", "Therefore,", "Notably,", "In conclusion,". Connect thoughts organically or state assertions directly without mechanical signposts.
+   - NO trailing participial comma tags (avoid ", driving X", ", revealing Y", ", serving as Z"). Write direct, complete declarative clauses instead.
    - Replace throat-clearing openings with direct, substantive subject-verb statements.
 2. SCHOLARLY PRECISION & ACTIVE VERBS:
    - Use direct, authoritative analytical verbs: "demonstrates", "indicates", "measures", "reveals", "quantifies", "challenges", "isolates", "synthesizes".
 3. NATURAL HUMAN CADENCE & HIGH BURSTINESS (CRITICAL):
    - Human writing naturally fluctuates in sentence length and syntactic structure. Achieve high burstiness (>25) by intentionally varying sentence architecture: mix short punchy observations (5-10 words) with medium statements and longer, compound analytical thoughts (20-30 words).
    - NEVER output sentences of monotonous, uniform length.
-4. STRICT CITATION & NUMERICAL IMMUNITY (ZERO HALLUCINATION):
-   - Citation placeholders like [[REF_1]], [[REF_2]] isolate academic citations verbatim. You MUST retain all [[REF_x]] placeholders exactly where they belong in the sentences. NEVER remove, translate, or alter them.
+4. CITATION & NUMERICAL IMMUNITY:
+   ${hasCitationsInDraft
+     ? '- Citation placeholders like [[REF_1]], [[REF_2]] isolate academic citations verbatim. You MUST retain all [[REF_x]] placeholders exactly where they belong in the sentences. NEVER remove, translate, or alter them.'
+     : '- CRITICAL: The input draft contains NO citations. Do NOT invent, hallucinate, or add citation brackets or reference placeholders.'}
    - You MUST preserve all quantitative data, sample sizes, percentages, p-values, confidence intervals, and chemical/biological symbols verbatim.
 5. TRANSFORMATION METHOD DIRECTIVES:
 ${methodInstructions || '- Standard publication-grade editorial rigor.'}
@@ -612,22 +617,27 @@ ${methodInstructions || '- Standard publication-grade editorial rigor.'}
    - Balanced: Elevate vocabulary, eliminate stock AI tropes, improve rhythmic cadence, while preserving exact meaning.
 
 CALIBRATED EDITORIAL EXEMPLARS:
-[Example 1 - AI Fluff Removal & Contraction Expansion]
-Draft: "In recent years, the realm of artificial intelligence hasn't witnessed a slowdown. These cutting-edge frameworks delve into complex environments and play a pivotal role in unlocking new capabilities [[REF_1]]."
-Refined: "Recent advancements in artificial intelligence have not experienced a slowdown. These frameworks analyze complex environments to coordinate decentralized decisions [[REF_1]]."
+[Example 1 - AI Fluff Removal & Direct Assertion]
+Draft: "In recent years, the realm of artificial intelligence hasn't witnessed a slowdown. These cutting-edge frameworks delve into complex environments and play a pivotal role in unlocking new capabilities."
+Refined: "Recent advancements in artificial intelligence have not experienced a slowdown. These frameworks analyze complex environments to coordinate decentralized decisions."
 
-[Example 2 - Empirical Oncology Study]
-Draft: "It is worth noting that at median follow-up of 21.4 months, the cohort had a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002). This groundbreaking discovery sheds light on future clinical oncology pathways."
-Refined: "At a median follow-up of 21.4 months, the cohort demonstrated a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002). These findings establish a baseline for subsequent clinical trials in oncology."
+${hasCitationsInDraft ? `[Example 2 - Empirical Oncology Study with Protected Citations]
+Draft: "It is worth noting that at median follow-up of 21.4 months, the cohort had a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002) [[REF_1]]. This discovery sheds light on future pathways."
+Refined: "At a median follow-up of 21.4 months, the cohort demonstrated a 38% reduction in progression risk (hazard ratio 0.62, 95% CI 0.46-0.84, p = 0.002) [[REF_1]]. These findings establish a baseline for subsequent clinical trials in oncology."` : ''}
 
 MANDATORY PRESERVED DATA/STATS: ${JSON.stringify(originalStats)}
 
-Return ONLY the refined text directly. Do not include markdown code block quotes, conversational greetings, intros, or summaries.
+CRITICAL: Return ONLY the refined text directly. Do NOT include greetings, intros like "Here is the refined text:", summaries, or markdown formatting.
 `.trim();
 
   // Helper to post-process model response, restore citations, and run fact validation
   function finalizeRefinedText(rawText, sourceEngine) {
     let clean = rawText.replace(/^```[a-zA-Z]*\n?([\s\S]*?)\n?```$/g, '$1').trim();
+
+    // Strip common conversational introductory filler from LLMs
+    clean = clean.replace(/^(?:here(?:'s| is) (?:a |the )?(?:refined|revised|rewritten|edited|improved) (?:text|version|draft|prose)[^:\n]*:?\s*)+/i, '').trim();
+    clean = clean.replace(/^(?:certainly!|sure,|here you go:?)\s*/i, '').trim();
+
     clean = unmaskCitationsFromPlaceholders(clean, citationMapping);
 
     if (shouldExpandContractions) {
