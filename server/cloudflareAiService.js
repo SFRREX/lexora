@@ -7,9 +7,10 @@
  */
 
 const DEFAULT_MODELS = [
-  '@cf/meta/llama-3.3-70b-instruct',
+  '@cf/meta/llama-3.1-70b-instruct',
   '@cf/meta/llama-3.1-8b-instruct',
-  '@cf/qwen/qwen2.5-7b-instruct',
+  '@cf/meta/llama-3.2-3b-instruct',
+  '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
 ];
 
 // In-memory LRU Cache (Capacity: 200 items)

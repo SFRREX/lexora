@@ -74,7 +74,7 @@ describe('Cloudflare Workers AI Service', () => {
     it('returns default model hierarchy when no custom model is set', () => {
       delete process.env.CLOUDFLARE_AI_MODEL;
       const models = getCloudflareModels();
-      expect(models).toContain('@cf/meta/llama-3.3-70b-instruct');
+      expect(models).toContain('@cf/meta/llama-3.1-70b-instruct');
       expect(models).toContain('@cf/meta/llama-3.1-8b-instruct');
     });
 
